@@ -18,7 +18,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.1.4</version>
+            <version>1.2.2</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -68,6 +68,11 @@
                     <search>MDN_Antidot_Block_Catalogsearch_Layer</search>
                 </rewrite>
             </mana_filters>
+            <amshopby>
+                <rewrite>
+                    <search_layer>MDN_Antidot_Block_Catalogsearch_Layer</search_layer>
+                </rewrite>
+            </amshopby>
         </blocks>
         <models>
    	   		            
@@ -80,7 +85,12 @@
                 <class>MDN_Antidot_Model_Resource</class>
                 <entities></entities>
             </Antidot_engine>
-          
+
+            <enterprise_search>
+                <rewrite>
+                    <adminhtml_system_config_source_engine>MDN_Antidot_Model_System_Config_Source_Engine</adminhtml_system_config_source_engine>
+                </rewrite>
+            </enterprise_search>
         </models>
         <resources>
             <Antidot_setup>
@@ -123,25 +133,6 @@
                 </Antidot>
             </updates>
         </layout>
-        <acl>
-            <resources>
-                <admin>
-                    <children>
-                        <system>
-                            <children>
-                                <config>
-                                    <children>
-                                        <antidot module="Antidot">
-                                            <title>Antidot</title>
-                                        </antidot>
-                                    </children>
-                                </config>
-                            </children>
-                        </system>
-                    </children>
-                </admin>
-            </resources>
-        </acl>
     </adminhtml>
     
     <frontend>
@@ -175,23 +166,28 @@
        
     <admin>
         <routers>
-            <Antidotadmin>
-                <use>admin</use>
+            <adminhtml>
                 <args>
-                    <module>MDN_Antidot</module>
-                    <frontName>Antidotadmin</frontName>
+                    <modules>
+                        <antidot before="Mage_Adminhtml">MDN_Antidot_Adminhtml</antidot>
+                    </modules>
                 </args>
-            </Antidotadmin>
+            </adminhtml>
         </routers>
     </admin>
     
     <default>
         <antidot>
+            <ftp>
+                <upload_type>http</upload_type>
+            </ftp>
             <web_service>
                 <status>rc</status>
             </web_service>
             <engine>
                 <spellcheck>Did you mean {spellcheck} ?</spellcheck>
+                <spellcheck_query>No result found for '{originalQuery}'. Here the results for '{spellcheck}'.</spellcheck_query>
+                <redirect_product>1</redirect_product>
                 <price_facet>From {min}€ to {max}€</price_facet>
                 <feed_catalog>1</feed_catalog>
                 <facet_multiple>0</facet_multiple>
@@ -634,6 +630,11 @@
                 <profiler_varien_quota>0.001</profiler_varien_quota>
                 <!-- include fixed tax in exported price (somecommercant may have modified magento in order to use it but not include it (ie mooovin) -->
                 <include_fixed_tax>1</include_fixed_tax>
+                <!-- it will generate xml indentation  -->
+                <debug_xml_enabled>0</debug_xml_enabled>
+                <!-- class model of product type used for export  -->
+                <product_type_configurable>Antidot/export_model_product_type_configurable</product_type_configurable>
+                <product_type_grouped>Antidot/export_model_product_type_grouped</product_type_grouped>
             </export>
         </antidot>
     </default>

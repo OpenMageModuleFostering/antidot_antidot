@@ -19,7 +19,7 @@ class MDN_Antidot_Model_Transport_Ftp extends MDN_Antidot_Model_Transport_Abstra
     /**
      * {@inherit}
      */
-    public function send($file) 
+    public function send($file, $exportModel, SAI_CurlInterface $curlConnector=null)
     {
         $ftpConfig = Mage::getStoreConfig('antidot/ftp');
         if (!$ftpConfig)
@@ -31,7 +31,7 @@ class MDN_Antidot_Model_Transport_Ftp extends MDN_Antidot_Model_Transport_Abstra
             }
         }
         Mage::log('Send file '.$file, null, 'antidot.log');
-        
+
         if(!$fHandle = fopen($file, 'r')) {
             throw new Exception("Can't read file ".$file);
         }
@@ -52,6 +52,7 @@ class MDN_Antidot_Model_Transport_Ftp extends MDN_Antidot_Model_Transport_Abstra
         curl_setopt($curl, CURLOPT_PROTOCOLS, CURLPROTO_SFTP);
         curl_setopt($curl, CURLOPT_INFILE, $fHandle);
         curl_setopt($curl, CURLOPT_INFILESIZE, filesize($file));
+        curl_setopt($curl, CURLOPT_TIMEOUT, 0);
         curl_exec($curl);
         
         $errorNo = curl_errno($curl);

@@ -92,7 +92,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     /**
      * Generate the full catalog file
      */
-    public function catalogFullExport($runContext = 'cron')
+    public function catalogFullExport($runContext)
     {
         $this->log('FULL EXPORT');
         return $this->generate(Mage::getModel('Antidot/export_product'), self::GENERATE_FULL, $runContext);
@@ -101,7 +101,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     /**
      * Generate the  inc catalog file
      */
-    public function catalogIncExport($runContext = 'cron')
+    public function catalogIncExport($runContext)
     {
         return $this->generate(Mage::getModel('Antidot/export_product'), self::GENERATE_INC, $runContext);
     }
@@ -109,7 +109,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     /**
      * Generate the category file
      */
-    public function categoriesFullExport($runContext = 'cron')
+    public function categoriesFullExport($runContext)
     {
         return $this->generate(Mage::getModel('Antidot/export_category'), self::GENERATE_FULL, $runContext);
     }
@@ -123,6 +123,12 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
      */
     protected function generate($exportModel, $type, $runContext)
     {
+        if ($runContext instanceof Mage_Cron_Model_Schedule) {
+            $runContext = 'cron';
+        }
+
+        Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
+
         $this->type = $exportModel::TYPE;
         $this->log('start');
         $log['begin'] = time();
@@ -132,14 +138,14 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         
         try
         {
-        
-            $owner = $this->getOwnerForFilename(Mage::getStoreConfig('antidot/general/owner'));
+            $owner = Mage::getStoreConfig('antidot/general/owner', Mage_Core_Model_App::ADMIN_STORE_ID);
+            $ownerForFilename = $this->getOwnerForFilename($owner);
         	$files = array();
             foreach($this->getDefaultContext($runContext) as $context) {
-                $this->log('generate '.$exportModel::TYPE.' '.$context['owner']);
-                $context['store_id'] = array_keys($context['stores']);
 
-                $filename = $this->tmpDirectory.sprintf($exportModel::FILENAME_XML, $owner, $type, $context['lang']);
+                $this->log('generate '.$exportModel::TYPE.' '.$exportModel->getOwner());
+
+                $filename = $this->tmpDirectory.sprintf($exportModel::FILENAME_XML, $ownerForFilename, $type, $context->getLang());
                 $items    = $exportModel->writeXml($context, $filename, $type);
                 if($items === 0) {
                     $this->log('No items to export');
@@ -171,10 +177,10 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
             if(!empty($files)) {
                 $this->log('Compress files');
                 $filenameZip = $type === self::GENERATE_INC ? $exportModel::FILENAME_ZIP_INC : $exportModel::FILENAME_ZIP;
-                $filenameZip = sprintf($filenameZip, date('YmdHis'), $owner);
+                $filenameZip = sprintf($filenameZip, date('YmdHis'), $ownerForFilename);
                 $filename = $this->compress($files, $filenameZip);
                 $log['reference'] = md5($filename);
-                $this->send($filename);
+                $this->send($filename, $exportModel);
 
                 $log['status'] = 'SUCCESS';
             } else {
@@ -200,7 +206,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         }
         
         $log['end'] = time();
-        $this->log('generate '.$exportModel::TYPE.' '.$context['owner']);
+        $this->log('generate '.$exportModel::TYPE.' '.$exportModel->getOwner());
         $this->log('end');
 
         Mage::helper('Antidot/logExport')->add($log['reference'], $type, $exportModel::TYPE, $log['begin'], $log['end'], $log['items'], $log['status'], implode(',', $log['error']));
@@ -264,13 +270,13 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     * @param string $filename
     * @return boolean
     */
-   protected function send($filename)
+   protected function send($filename, $exportModel)
     {
        $this->log('send the file');
        
        $transport = Mage::getModel('Antidot/transport');
        
-       return $transport->send($filename, $transport::TRANS_FTP);
+       return $transport->send($filename, Mage::getStoreConfig('antidot/ftp/upload_type'), $exportModel);
    }
    
    /**
@@ -335,49 +341,38 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
    
    /**
     * Return the context default values
-    * 
-    * @todo retrieve these data from the db
+    *
     * @return array
     */
     private function getDefaultContext($runContext)
     {
-        $listStore = array();
+
+        $listContext = array();
         foreach (Mage::app()->getStores() as $store) {
             if ($store->getIsActive()) {
 	            list($lang) = explode('_', Mage::getStoreConfig('general/locale/code', $store->getId()));
-	            $listStore[$lang][$store->getId()] = $store;
+                /* @var $context \MDN_Antidot_Model_Export_Context */
+                if (isset($listContext[$lang])) {
+                    $context = $listContext[$lang];
+                } else {
+                    $context = Mage::getModel('Antidot/export_context', array($lang, $runContext));
+                    $listContext[$lang] = $context;
+                }
+                $context->addStore($store);
             }
         }
-        $owner      = 'AFS@Store for Magento v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version;
-        if (Mage::getStoreConfig('antidot/general/owner')) {
-            $owner = Mage::getStoreConfig('antidot/general/owner');
+        foreach ($listContext as $context) {
+            $context->initCategoryTree();
         }
 
-        $listContext = array();
-        foreach($listStore as $lang => $stores) {
-            $context['website_ids'] = array();
-            $context['owner']  = $owner;
-            $context['run']    = $runContext;
-            $context['lang']   = $lang;
-            $context['stores'] = $stores;
-            foreach ($stores as $store) {
-            	$websiteId = $store->getWebsite()->getId();
-            	if (!in_array($websiteId, $context['website_ids'])) {
-		            $context['website_ids'][] = $websiteId;
-            	}
-            }
-            $context['langs']  = count($listStore);
-            
-            $listContext[] = $context;
-        }
-        
         return $listContext;
+
    }
    
     /**
      * Write message to log
      * 
-     * @param string $action
+     * @param string $actiong
      */
     private function log($action)
     {

@@ -19,6 +19,7 @@ interface MDN_Antidot_Model_Transport_Interface
      * Send file to Antidot
      *
      * @param string $file Files to send
+     * @param MDN_Antidot_Model_Export_Abstract $exportModel the type of data exported
      */
-    public function send($files);
+    public function send($files, $exportModel, SAI_CurlInterface $curlConnector=null);
 }

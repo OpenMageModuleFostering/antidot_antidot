@@ -13,7 +13,7 @@
  * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstract 
+abstract class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstract
 {
     /**
      * Instance of XmlWriter
@@ -21,15 +21,6 @@ class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstract
      * @var XmlWriter
      */
     protected $xml;
-    
-    /**
-     * List website loaded
-     *
-     * @var array
-     */
-    protected $website = array();
-    
-    protected $storeLang = array();
     
     /**
      * The fields to load
@@ -46,27 +37,41 @@ class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstract
     );
 
     /**
+     * The name of the PAF export
+     *
+     * @return string
+     */
+    abstract public function getPafName();
+
+    /**
      * Init the xml writer
      */
     protected function initXml()
     {
         if($this->xml === null) {
             $this->xml = Mage::helper('Antidot/xmlWriter');
-            $this->xml->init();
+            $debug = Mage::getStoreConfig('antidot/export/debug_xml_enabled');
+            $this->xml->init($debug);
         }
     }
     
     /**
-     * Extract the uri from an url
-     * 
+     * Extract the exact uri from an url
+     * (When executed from cron script magento can generate url whith the script name instead of index.php)
+     * (MCNX-253)
+     *
      * @param string $url
+     * $param boolean $onlyPath
      * @return string
      */
-    protected function getUri($url)
+    protected function getExactUrl($url, $onlyPath = true)
     {
-        $urls = parse_url($url);
+        if ($onlyPath) {
+            $urls = parse_url($url);
+            $url = $urls['path'];
+        }
 		//replace all antidotExport*.php script by index.php in uri (in case of cron export) : 
-        return preg_replace('#\/(.*)\.php#', '/index.php', $urls['path']);
+        return preg_replace('#\/antidotExport(.*)\.php#', '/index.php', $url);
     }
     
     /**
@@ -112,52 +117,40 @@ class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstract
         
         return $entity->$method();
     }
-    
-    /**
-     * Get website by store
-     * 
-     * @param Store $store
-     * @return WebSite
-     */
-    protected function getWebSiteByStore($store)
-    {
-        if(!isset($this->website[$store->getId()])) {
-            $this->website[$store->getId()] = Mage::getModel('core/website')->load($store->getWebSiteId());
-        }
-        
-        return $this->website[$store->getId()];
-    }
-    
-    protected function getStoreLang($storeId)
-    {
-        if(!isset($this->storeLang[$storeId])) {
-            list($this->storeLang[$storeId]) = explode('_', Mage::getStoreConfig('general/locale/code', $storeId));
-        }
-        
-        return $this->storeLang[$storeId];
-    }
 
     /**
      * Write the xml header
-     *
+     * @param MDN_Antidot_Model_Export_Context $context
      */
     protected function writeHeader($context)
     {
         $this->xml->push('header');
-        $this->xml->element('owner', $context['owner']);
+        $this->xml->element('owner', $this->getOwner());
         $this->xml->element('feed', $this->getFeed($context));
         $this->xml->element('generated_at', date('c', Mage::getModel('core/date')->timestamp(time())));
         $this->xml->pop();
     }
 
     /**
+     * Get the value to insert in the owner tag
+     * @return string
+     */
+    public function getOwner() {
+        $owner      = 'AFS@Store for Magento v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version;
+        if (Mage::getStoreConfig('antidot/general/owner', Mage_Core_Model_App::ADMIN_STORE_ID)) {
+            $owner = Mage::getStoreConfig('antidot/general/owner', Mage_Core_Model_App::ADMIN_STORE_ID);
+        }
+        return $owner;
+    }
+
+    /**
      * Get the value to insert in the feed tag
      * @param $type (product, category, article)
-     * @param $context
+     * @param MDN_Antidot_Model_Export_Context $context
      * @return string
      */
     public function getFeed($context) {
-        return strtolower($this::TYPE) . ' ' . $context['run'] . ' v' . Mage::getConfig()->getNode()->modules->MDN_Antidot->version;
+        return strtolower($this::TYPE) . ' ' . $context->getRunType() . ' v' . Mage::getConfig()->getNode()->modules->MDN_Antidot->version;
     }
 
     /**

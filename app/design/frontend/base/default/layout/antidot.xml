@@ -5,7 +5,8 @@
     <catalogsearch_result_index>
         <reference name="search.result">
             <action method="setTemplate"><template>antidot/catalogsearch/result.phtml</template></action>
-            <block type="Antidot/Catalogsearch_Category" name="search_result_category" as="search_result_category" template="antidot/catalogsearch/result/category.phtml" />
+            <block type="Antidot/catalogsearch_category" name="search_result_category" as="search_result_category" template="antidot/catalogsearch/result/category.phtml" />
+            <block type="Antidot/catalogsearch_banner" name="search_result_banner" as="search_result_banner" template="antidot/catalogsearch/result/banner.phtml" />
         </reference>
 
         <!--  MCNX-230 ManaDev module manadev compatibility : don't show positioning right or above_product-->

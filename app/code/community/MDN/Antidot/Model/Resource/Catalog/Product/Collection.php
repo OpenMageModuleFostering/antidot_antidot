@@ -35,6 +35,17 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
     protected $_categoryIds = false;
 
     /**
+     * @var array banners
+     */
+    protected $_banners  = array();
+
+    /**
+     * @var boolen spellcheck
+     */
+    protected $_spellcheck = false;
+
+
+    /**
      * @var array Facets conditions.
      */
     protected $_facetsConditions = array();
@@ -211,6 +222,16 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
     }
 
     /**
+     * Returh the banners
+     *
+     * @return array
+     */
+    public function getBanners()
+    {
+        return $this->_banners;
+    }
+
+    /**
      * Returns collection size
      *
      * @return int
@@ -279,11 +300,11 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
      */
     protected function _beforeLoad()
     {
-        $ids = array();
+
         if ($this->_engine) {
             $this->initQueryResult($this->_getQuery(), $this->_getParams());
-            if(count($this->_searchedEntityIds) === 1) {
-                header('location: '. Mage::getModel('catalog/product')->load(current($this->_searchedEntityIds))->getProductUrl());
+            if ($this->redirectToProduct()) {
+                header('location: '.Mage::getModel('catalog/product')->load(current($this->_searchedEntityIds))->getProductUrl());
                 exit(0);
             }
         }
@@ -292,6 +313,25 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
         $this->_pageSize = false;
 
         return parent::_beforeLoad();
+    }
+
+    /**
+     * Return if the redirection to the product page must be done
+     * MCNX-260
+     * @return boolean
+     */
+    protected function redirectToProduct() {
+
+        if(count($this->_searchedEntityIds) === 1) {
+            $redirect = Mage::getStoreConfig('antidot/engine/redirect_product');
+            if ($redirect == MDN_Antidot_Model_System_Config_Source_Redirect::ALWAYS ||
+                ($redirect == MDN_Antidot_Model_System_Config_Source_Redirect::UNLESS_SPELLCHECK &&
+                    !$this->_spellcheck  )) {
+                return true;
+            }
+        }
+        return false;
+
     }
 
     /**
@@ -310,6 +350,8 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
             $this->_facetedData       = isset($this->queryResult['faceted_data']) ? $this->queryResult['faceted_data'] : array();
             $this->_searchedEntityIds = isset($this->queryResult['ids']) ? $this->queryResult['ids'] : array();
             $this->_categoryIds       = isset($this->queryResult['category_ids']) ? $this->queryResult['category_ids'] : array();
+            $this->_banners           = isset($this->queryResult['banners']) ? $this->queryResult['banners'] : array();
+            $this->_spellcheck        = isset($this->queryResult['spellcheck']) ? $this->queryResult['spellcheck'] : false;
         }
     }
 
@@ -346,8 +388,11 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
 
         return $this->_params;
     }
-    
+
     /**
+     *
+     * Override Mage_Eav_Model_Entity_Collection_Abstract#_loadEntities
+     *
      * Load entities records into items
      *
      * @throws Exception
@@ -355,10 +400,27 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
      */
     public function _loadEntities($printQuery = false, $logQuery = false)
     {
+
+        //ANTIDOT : don't paginate
+        //if ($this->_pageSize) {
+        //    $this->getSelect()->limitPage($this->getCurPage(), $this->_pageSize);
+        //}
+
         $this->printLogQuery($printQuery, $logQuery);
+
         try {
-            $query = $this->_prepareSelect($this->getSelect());
+            /**
+             * Prepare select query
+             * @var string $query
+             */
+            // ANTIDOT
+            if (method_exists($this, '_prepareSelect')) { //This method only exist after magento 1.5
+                $query = $this->_prepareSelect($this->getSelect());
+            } else {
+                $query = (string)$this->getSelect();
+            }
             $query = str_replace('INNER JOIN `catalog_category_product_index`', 'LEFT JOIN `catalog_category_product_index`', $query);
+            // FIN ANTIDOT
             $rows = $this->_fetchAll($query);
         } catch (Exception $e) {
             Mage::printException($e, $query);
@@ -367,7 +429,8 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
         }
 
         foreach ($rows as $v) {
-            $object = $this->getNewEmptyItem()->setData($v);
+            $object = $this->getNewEmptyItem()
+                ->setData($v);
             $this->addItem($object);
             if (isset($this->_itemsById[$object->getId()])) {
                 $this->_itemsById[$object->getId()][] = $object;

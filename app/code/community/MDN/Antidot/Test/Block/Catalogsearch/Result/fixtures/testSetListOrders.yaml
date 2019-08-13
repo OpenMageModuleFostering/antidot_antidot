@@ -1,0 +1,3 @@
+config:
+  default/antidot/engine/sortable: a:2:{s:17:"_1426771479065_65";a:1:{s:4:"sort";s:23:"afs:relevance|Relevance";}s:18:"_1445496660565_565";a:1:{s:4:"sort";s:11:"price|Price";}}
+  default/antidot/engine/default_sort: a:2:{s:18:"_1426771516777_777";a:2:{s:5:"field";s:23:"afs:relevance|Relevance";s:3:"dir";s:3:"asc";}s:18:"_1445849231624_624";a:2:{s:5:"field";s:11:"price|Price";s:3:"dir";s:3:"asc";}}

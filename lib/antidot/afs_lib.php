@@ -16,3 +16,10 @@ require_once 'AFS/SEARCH/FILTER/afs_filter.php';
 
 require_once 'AFS/ACP/afs_acp.php';
 
+/**
+ * Paf Upload
+ */
+require_once 'AIF/afs_document.php';
+require_once 'AIF/afs_paf_connector.php';
+require_once 'AIF/afs_authentication.php';
+require_once 'AIF/afs_user_authentication.php';

@@ -11,10 +11,12 @@ class MDN_Antidot_Test_Model_Export_Article extends EcomDev_PHPUnit_Test_Case
 
         $export = Mage::getModel('Antidot/export_article');
 
-        $feed = $export->getFeed(array('run'=>'UI'));
+        $context = Mage::getModel('Antidot/export_context', array('fr', 'phpunit'));
+
+        $feed = $export->getFeed($context);
 
         $this->assertEquals(
-            'article UI v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version,
+            'article phpunit v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version,
             $feed
         );
 

@@ -46,12 +46,13 @@ if(!function_exists('getItems')) {
         return $listItems;
     }
 
-    function writeItems($items, $isChild = false, $selectedNode = array())
+    function writeItems($items, $level = 0, $selectedNode = array())
     {
-        $tree = '<ul '.(!$isChild ? 'class="collapsibleList"' : '').'>%s</ul>';
+        $tree = '<ul '.($level==0 ? 'class="collapsibleList"' : '').'>%s</ul>';
         $node = '<li class="%s"><a %s href="%s"> %s (%d)%s</a>';
 
         $nodes = '';
+        $nbItems = count($items);
         foreach ($items as $item) {
             if ($item->getCount() > 0) {
 
@@ -60,7 +61,11 @@ if(!function_exists('getItems')) {
 
                 $selected = $item->isSelected() || in_array($nodeId, $selectedNode) ? 'checked="checked"': '';
                 $class    = $selected !== '' ? ' collapsibleListClosed' : '';
-                $child    = $item->getChild() ? writeItems($item->getChild(), true, $selectedNode) : '';
+                /* MCNX-94 : Expand first level of tree facet if there's only one item : */
+                if ($level==0 && $nbItems==1) {
+                    $class    = 'collapsibleListClosed';
+                }
+                $child    = $item->getChild() ? writeItems($item->getChild(), $level+1, $selectedNode) : '';
 
                 $nodes.= sprintf($node, $class, $selected, $item->getUrl(), $item->getLabel(), $item->getCount(), $child);
             }

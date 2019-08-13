@@ -13,7 +13,8 @@
  * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class MDN_Antidot_Model_Resource_Advanced extends Mage_CatalogSearch_Model_Resource_Advanced
+class MDN_Antidot_Model_Resource_Advanced extends Mage_CatalogSearch_Model_Mysql4_Advanced
+// instead of Mage_CatalogSearch_Model_Resource_Advanced for compatibility with magento < 1.6
 {
     
 }

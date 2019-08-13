@@ -37,7 +37,7 @@ class AfsFacetHelper extends AfsHelperBase
         $this->layout = $facet->layout;
         $this->type = $facet->type;
         if (property_exists($facet, 'sticky')
-            && 0 == strcmp('true', $facet->sticky)) {
+                && 0 == strcmp('true', $facet->sticky)) {
             $this->sticky = true;
         } else {
             $this->sticky = false;
@@ -155,7 +155,7 @@ class AfsFacetHelper extends AfsHelperBase
     public function format()
     {
         return array('label' => $this->get_label(),
-            'values' => $this->get_elements());
+                     'values' => $this->get_elements());
     }
 
 }
@@ -236,7 +236,7 @@ class AfsFacetValueHelper extends AfsHelperBase
      * @li @c label: label of the facet value,
      * @li @c key: key of the facet value,
      * @li @c count: number of element of the facet value,
-     * @li @c active: state of the facet value: true when this facet value is
+     * @li @c active: state of the facet value: true when this facet value is 
      * used in current query, false otherwise,
      * @li @c query: query associated to the facet value (see @a query property
      * for more details),
@@ -246,7 +246,7 @@ class AfsFacetValueHelper extends AfsHelperBase
      * @li @c meta: key-value pairs of meta data identifiers and values.
      *
      * @remark: When helpers are used to create such facet value, if @a link is
-     * generated from @a query, then the query is no more necessary and not
+     * generated from @a query, then the query is no more necessary and not 
      * provided. So one of @c query and @c link is null.
      *
      * @return array filled with key and values.
@@ -349,7 +349,7 @@ class AfsFacetElementBuilder
                 $link = null;
             }
             $elements[] = new AfsFacetValueHelper($label, $value_id, $elem->items,
-                $meta, $active, $query, $link, $children);
+                            $meta, $active, $query, $link, $children);
 
         }
         return $elements;
@@ -404,3 +404,5 @@ class AfsFacetElementBuilder
         return $result;
     }
 }
+
+

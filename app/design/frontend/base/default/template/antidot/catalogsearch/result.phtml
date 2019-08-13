@@ -41,13 +41,17 @@
     <?php endif; ?>
     <?php $productHtml = $this->getProductListHtml(); ?>
     <?php if($this->helper('Antidot')->isActiveEngine()): ?>
-    <?php echo $this->getChildHtml('search_result_category'); ?>
+        <?php echo $this->getChildHtml('search_result_banner'); ?>
+        <?php echo $this->getChildHtml('search_result_category'); ?>
     <?php endif; ?>
     <?php echo $productHtml; ?>
 <?php else: ?>
     <div class="page-title">
         <h1><?php echo ($this->getHeaderText() || $this->getHeaderText() === false) ? $this->getHeaderText() : $this->__("Search results for '%s'", $this->helper('catalogsearch')->getEscapedQueryText()) ?></h1>
     </div>
+    <?php if($this->helper('Antidot')->isActiveEngine()): ?>
+        <?php echo $this->getChildHtml('search_result_banner'); ?>
+    <?php endif; ?>
     <p class="note-msg">
         <?php echo ($this->getNoResultText()) ? $this->getNoResultText() : $this->__('Your search returns no results.') ?>
         <?php if ($messages = $this->getNoteMessages()):?>

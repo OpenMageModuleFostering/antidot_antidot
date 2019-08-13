@@ -22,7 +22,7 @@ class MDN_Antidot_Block_System_Config_Button_PushProducts extends Mage_Adminhtml
     protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element)
     {
         $this->setElement($element);
-        $url = $this->getUrl('Antidotadmin/Admin_Push/Product');
+        $url = Mage::helper("adminhtml")->getUrl('adminhtml/antidot_push/product');
         
         $html = $this->getLayout()->createBlock('adminhtml/widget_button')
                     ->setType('button')

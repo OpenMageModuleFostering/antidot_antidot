@@ -13,7 +13,7 @@
  * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class MDN_Antidot_Model_System_Config_Engine
+class MDN_Antidot_Model_System_Config_ExportType
 {
     /**
      * {@inherit}
@@ -21,12 +21,8 @@ class MDN_Antidot_Model_System_Config_Engine
     public function toOptionArray()
     {
         return array(
-            array(
-                'value' => 'Antidot/engine_antidot', 
-                'label' => Mage::helper('adminhtml')->__('AFS@Store')),
-            array(
-                'value' => 'catalogsearch/fulltext_engine',
-                'label' => Mage::helper('adminhtml')->__('Magento'))
+            array('value' => MDN_Antidot_Model_Transport::TRANS_HTTP, 'label' => 'HTTPS'),
+            array('value' => MDN_Antidot_Model_Transport::TRANS_FTP, 'label' => 'SFTP'),
         );
     }
 }

@@ -1,0 +1,6 @@
+<?php if ($this->hasBanner()): ?>
+<?php $banner = current($this->getBanners()); ?>
+<div style="width: 100%; margin-left: 0%; margin-bottom: 10px;" >
+   <a href="<?php echo $banner->getUrl(); ?>"><img src="<?php echo $banner->getImage(); ?>" /></a>
+</div>
+<?php endif; ?>

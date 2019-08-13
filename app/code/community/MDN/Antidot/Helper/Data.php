@@ -179,7 +179,7 @@ class MDN_Antidot_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function sendMail($subject, $message)
     {
-        if(!$email = Mage::getStoreConfig('antidot/general/email')) {
+        if(!$email = Mage::getStoreConfig('antidot/general/email', Mage_Core_Model_App::ADMIN_STORE_ID)) {
             return;
         }
 
@@ -285,4 +285,19 @@ class MDN_Antidot_Helper_Data extends Mage_Core_Helper_Abstract
         return (int) $val;
     }
 
+    const EDITION_COMMUNITY    = 'Community';
+    const EDITION_ENTERPRISE   = 'Enterprise';
+
+    public function getMagentoEdition() {
+        if (method_exists('Mage','getEdition')) {
+            $mageEdition = Mage::getEdition();
+        } else {
+            if (Mage::helper('core')->isModuleEnabled('Enterprise_Enterprise')) {
+                $mageEdition = 'Enterprise';
+            } else {
+                $mageEdition = 'Community';
+            }
+        }
+        return $mageEdition;
+    }
 }

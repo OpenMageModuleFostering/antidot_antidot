@@ -56,7 +56,9 @@ config:
   stores/germany/web/secure/base_url: http://www.meinwebseite.de/  
   stores/usa/web/unsecure/base_url: http://www.mywebsite.com/   
   stores/france/web/unsecure/base_url: http://www.monsiteweb.fr/   
-  stores/germany/web/unsecure/base_url: http://www.meinwebseite.de/   
+  stores/germany/web/unsecure/base_url: http://www.meinwebseite.de/
+  stores/france/currency/options/default: EUR
+
 eav:
   catalog_product:
     - entity_id: 1

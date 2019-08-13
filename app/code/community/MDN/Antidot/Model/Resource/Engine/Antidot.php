@@ -31,6 +31,13 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
     }
 
     /**
+     * reset addedNote (unit tests)
+     */
+    public function init() {
+        $this->addedNote = false;
+    }
+
+    /**
      * Returns search helper.
      *
      * @return MDN_Antidot_Helper_Antidot
@@ -377,18 +384,53 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
                     $result['redirect'] = $redirectUrl;
                 }
             }
-        }
-        
-        if (!$this->addedNote && $result['total_count'] == 0 && isset($resultAntidot->spellcheck)) {
-            if($spellcheck = $resultAntidot->spellcheck) {
-                $link = '<a href="'.Mage::helper('catalogsearch')->getResultUrl($spellcheck).'">'.$spellcheck.'</a>';
-                $spellcheck = str_replace('{spellcheck}', $link, Mage::getStoreConfig('antidot/engine/spellcheck'));
-
-                Mage::helper('catalogsearch')->addNoteMessage($spellcheck);
-                $this->addedNote = true;
+            $result['banners'] = array();
+            foreach ($replies as $promote) {
+                if ($promote->get_type() == 'banner') {
+                    $bannerObject = new Varien_Object();
+                    $bannerObject->setData('url', $promote->get_url());
+                    $bannerObject->setData('image', $promote->get_image_url());
+                    $result['banners'][] = $bannerObject;
+                }
             }
         }
-        
+
+        $result['spellcheck'] = false;
+        if (!$this->addedNote) {
+            if (isset($resultAntidot->spellcheck) && $resultAntidot->spellcheck) {
+                $redirect = Mage::getStoreConfig('antidot/engine/redirect_product');
+                if ($result['total_count'] == 0 ||
+                    ($result['total_count'] == 1 && $redirect == MDN_Antidot_Model_System_Config_Source_Redirect::UNLESS_SPELLCHECK) ) {
+                    $spellcheck = $resultAntidot->spellcheck;
+                    $message =  Mage::helper('Antidot')->__(Mage::getStoreConfig('antidot/engine/spellcheck'));
+                    $link = '<a href="'.Mage::helper('catalogsearch')->getResultUrl(
+                            $spellcheck
+                        ).'">'.$spellcheck.'</a>';
+                    $message = str_replace('{spellcheck}', $link, $message);
+
+                    Mage::helper('catalogsearch')->addNoteMessage($message);
+                    $this->addedNote = true;
+                    $result['spellcheck'] = true;
+                }
+            }
+        }
+
+        /**
+         * MCNX-64 query orchestration : add a message if the query has been re-executed by AFSStore based on spellcheck
+         */
+        if (!$this->addedNote && isset($resultAntidot->isOrchestrated) && isset($resultAntidot->spellcheck)) {
+            if(($spellcheck = $resultAntidot->spellcheck) && $resultAntidot->isOrchestrated) {
+                if ($message = Mage::getStoreConfig('antidot/engine/spellcheck_query')) {
+                    $message = Mage::helper('Antidot')->__($message);
+                    $message = str_replace('{spellcheck}', $spellcheck, $message);
+                    $message = str_replace('{originalQuery}', $resultAntidot->originalQuery, $message);
+
+                    Mage::helper('catalogsearch')->addNoteMessage($message);
+                    $this->addedNote = true;
+                }
+            }
+        }
+
         return $result;
     }
     

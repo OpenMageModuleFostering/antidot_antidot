@@ -44,8 +44,8 @@ class MDN_Antidot_Block_System_Config_Fieldset_Notice
             $html .= "<li><strong>" . $helper->__("The curl php extension is not installed, it's required to upload export files") . "</strong></li>";
         } else {
             $curl_version = curl_version();
-            if (!isset($curl_version['protocols']) || !in_array("sftp", $curl_version['protocols'])) {
-                $html .= "<li><strong>" . $helper->__("The curl php extension doesn't support sftp protocol, libcurl must be upgraded on your system, otherwise the export files won't be uploaded") . "</strong></li>";
+            if (!isset($curl_version['protocols']) || !in_array("https", $curl_version['protocols'])) {
+                $html .= "<li><strong>" . $helper->__("The curl php extension doesn't support https protocol, libcurl must be upgraded on your system, otherwise the export files won't be uploaded") . "</strong></li>";
             }
         }
 

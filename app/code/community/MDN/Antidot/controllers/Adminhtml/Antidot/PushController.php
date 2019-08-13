@@ -13,13 +13,22 @@
  * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class MDN_Antidot_Admin_PushController extends Mage_Adminhtml_Controller_Action 
+class MDN_Antidot_Adminhtml_Antidot_PushController extends Mage_Adminhtml_Controller_Action
 {
-    
+
+    /**
+     * Is the controller allowed (compatibility patch SUPEE-6285)
+     * @return mixed
+     */
+    protected function _isAllowed()
+    {
+        return Mage::getSingleton('admin/session')->isAllowed('system/config/antidot');
+    }
+
     /**
      * Generate the category file, call from back office
      */
-    public function CategoryAction()
+    public function categoryAction()
     {
         try
         {
@@ -44,7 +53,7 @@ class MDN_Antidot_Admin_PushController extends Mage_Adminhtml_Controller_Action
     /**
      * Generate the catalog file, call from back office
      */
-    public function ProductAction()
+    public function productAction()
     {
         try {
             if (Mage::getModel('Antidot/observer')->catalogFullExport('UI')) {

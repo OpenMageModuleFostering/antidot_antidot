@@ -4,6 +4,12 @@
 class MDN_Antidot_Test_Model_Observer extends EcomDev_PHPUnit_Test_Case
 {
 
+    public static function setUpBeforeClass()
+    {
+       //avoid errors when session_start is called during the test
+        @session_start();
+    }
+
 	/**
      * MCNX-27 : Test owner for filename generation
      * 
@@ -86,38 +92,21 @@ class MDN_Antidot_Test_Model_Observer extends EcomDev_PHPUnit_Test_Case
 
         $listContext= MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($observer, 'getDefaultContext', array('phpunit'));
 
-        $this->assertEquals(
-            2,
-            count($listContext[0]['stores'])
-        );
-        unset($listContext[0]['stores']);
+        $this->assertEquals(2, count($listContext));
 
-        $this->assertEquals(
-            1,
-            count($listContext[1]['stores'])
-        );
-        unset($listContext[1]['stores']);
+        if (count($listContext)> 1) {
+            $firstContext = $listContext['fr'];
+            $secondContext = $listContext['en'];
 
-        $expected = array();
-        $expected[] = array (
-            'website_ids' => array ('3', '5'),
-            'owner' => 'JETPULP',
-            'run' => 'phpunit',
-            'lang' => 'fr',
-            'langs' => 2
-        );
-        $expected[] = array (
-            'website_ids' => array ('2'),
-            'owner' => 'JETPULP',
-            'run' => 'phpunit',
-            'lang' => 'en',
-            'langs' => 2
-        );
+            $this->assertEquals(array('3', '5') , $firstContext->getStoreIds());
+            $this->assertEquals(array('2') , $secondContext->getStoreIds());
 
-        $this->assertEquals(
-            $expected,
-            $listContext
-        );
+            $this->assertEquals('phpunit' , $firstContext->getRunType());
+
+            $this->assertEquals('fr' , $firstContext->getLang());
+            $this->assertEquals('en' , $secondContext->getLang());
+
+        }
 
     }
 

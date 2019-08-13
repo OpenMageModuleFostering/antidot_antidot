@@ -13,7 +13,7 @@
  * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class MDN_Antidot_Block_CatalogSearch_Result extends Mage_CatalogSearch_Block_Result
+class MDN_Antidot_Block_Catalogsearch_Result extends Mage_CatalogSearch_Block_Result
 {
     /**
      * Set default order
@@ -40,7 +40,7 @@ class MDN_Antidot_Block_CatalogSearch_Result extends Mage_CatalogSearch_Block_Re
             if (isset($availableOrders[$dfield])) {
                 $field = $dfield;
                 $dir = $defaultSort['dir'];
-                continue;
+                break;
             }
         }
         /*

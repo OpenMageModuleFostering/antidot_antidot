@@ -97,12 +97,14 @@ abstract class MDN_Antidot_Model_Resource_Engine_Abstract
 	                $ids[] = $id['id'];
 	            }
 	        }
-	        
-	        $this->_idsByQuery[$paramsHash] = array(
+
+           $this->_idsByQuery[$paramsHash] = array(
 	            'ids' => $ids,
 	            'total_count' => (isset($resultTmp['total_count'])) ? $resultTmp['total_count'] : null,
 	            'faceted_data' => (isset($resultTmp['facets'])) ? $resultTmp['facets'] : array(),
 	            'category_ids' => (isset($resultTmp['category_ids'])) ? $resultTmp['category_ids'] : array(),
+                'banners' => (isset($resultTmp['banners'])) ? $resultTmp['banners'] : array(),
+                'spellcheck' => (isset($resultTmp['spellcheck'])) ? $resultTmp['spellcheck'] : false,
 	        );
         }
         

@@ -65,8 +65,6 @@ scope:
 
 config:
   default/antidot/general/owner: JETPULP
-  default/antidot/fields_product/model:
-  default/antidot/fields_product/gender: 
   default/antidot/fields_product/properties: a:2:{s:18:"_1426953698813_813";a:2:{s:5:"value";s:7:"authors";s:12:"autocomplete";s:1:"0";}s:18:"_1426953714346_346";a:2:{s:5:"value";s:6:"editor";s:12:"autocomplete";s:1:"0";}}
   default/web/secure/base_url: http://www.mywebsite.com/   
   default/web/unsecure/base_url: http://www.mywebsite.com/   

@@ -9,6 +9,7 @@ class MDN_Antidot_Test_Model_System_Config_Facet extends EcomDev_PHPUnit_Test_Ca
      * Test toOptionArray method
      *
      * MCNX-217 : translation of facets labels
+     * @test
      * @loadFixture
      */
     public function testToOptionArray()

@@ -19,20 +19,28 @@ class MDN_Antidot_Model_Export_Category extends MDN_Antidot_Model_Export_Abstrac
     const FILENAME_XML = 'categories-%s_%s-%s.xml';
     const FILENAME_ZIP = '%s_full_%s_categories.zip';
     const XSD = 'http://ref.antidot.net/store/latest/categories.xsd';
-    
+
+    /**
+     * {@inherit}
+     */
+    public function getPafName() {
+        return "Categories";
+    }
+
     /**
      * Get xml
      * 
-     * @param type $context
+     * @param MDN_Antidot_Model_Export_Context $context
      */
     public function writeXml($context, $filename)
     {
         $nbTotalCategories = 0;
-        $context['categories'] = array();
-        foreach($context['stores'] as $store) {
-            $categories = $this->getCategories($store);
-            $nbTotalCategories += $categories->getSize();
-            $context['categories'][$store->getId()] = $categories;
+        $categories = array();
+        foreach($context->getWebsiteAndStores() as $ws) {
+            $store = $ws['store'];
+            $categoriesColl = $this->getCategories($store);
+            $nbTotalCategories += $categoriesColl->getSize();
+            $categories[$store->getId()] = $categoriesColl;
         }
 
         if ($nbTotalCategories == 0) {
@@ -47,13 +55,14 @@ class MDN_Antidot_Model_Export_Category extends MDN_Antidot_Model_Export_Abstrac
         $this->writeHeader($context);
 
         $nbItems = 0;
-        foreach($context['stores'] as $store) {
-            foreach($context['categories'][$store->getId()] as $cat) {
+        foreach($context->getWebsiteAndStores() as $ws) {
+            $store = $ws['store'];
+            foreach($categories[$store->getId()] as $cat) {
 
                 if (!$this->getField($cat, 'name'))
                     continue;
 
-                $this->xml->push('category', array('id' => $cat->getId(), 'xml:lang' => $context['lang']));
+                $this->xml->push('category', array('id' => $cat->getId(), 'xml:lang' => $context->getLang()));
 
                 $this->xml->element('name', $this->xml->encloseCData($this->getField($cat, 'name')));
 
@@ -64,7 +73,7 @@ class MDN_Antidot_Model_Export_Category extends MDN_Antidot_Model_Export_Abstrac
                 } else {
                 	$cat->getUrlInstance()->setStore($store->getId());
                 }
-                $this->xml->element('url', $this->getUri($cat->getUrl()));
+                $this->xml->element('url', $this->getExactUrl($cat->getUrl()));
 
                 if ($cat->getImageUrl()) {
                     $this->xml->element('image', $cat->getImageUrl());
@@ -86,10 +95,10 @@ class MDN_Antidot_Model_Export_Category extends MDN_Antidot_Model_Export_Abstrac
                     $this->xml->emptyelement('broader', array('idref' => $cat->getParentId()));
                 }
 
-                $storeIds = array_intersect($context['store_id'], $cat->getStoreIds());
+                $storeIds = array_intersect($context->getStoreIds(), $cat->getStoreIds());
                 $this->xml->push('websites');
                 foreach($storeIds as $storeId) {
-                    $website = $this->getWebSiteByStore($context['stores'][$storeId]);
+                    $website = $context->getWebSiteByStore($storeId);
                     $this->xml->element('website', '', array('id' => $website->getId(), 'name' => $website->getName()));
                 }
                 $this->xml->pop();

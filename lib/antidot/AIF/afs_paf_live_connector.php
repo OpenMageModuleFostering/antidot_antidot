@@ -42,7 +42,7 @@ class AfsPafLiveConnector extends AfsBOWSConnector implements AfsBOWSConnectorIn
     {
         $url = parent::get_base_url('service');
 
-        $params = $this->authentication->format_as_url_param($context['version']);
+        $params = array();
         $params['afs:layers'] = $context['layers'];
 
         return sprintf($url . '/%d/instance/%s/paf/%s/process?%s',

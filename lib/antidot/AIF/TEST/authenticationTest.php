@@ -16,12 +16,7 @@ class AuthenticationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(array('Authorization' => 'Basic ' . base64_encode('foo:bar')), $auth->format_as_header_param());
     }
 
-    public function testTokenAuthenticationFormat76()
-    {
-        $auth = new AfsTokenAuthentication('foo');
-        $this->assertEquals(array('afs:login' => 'login://foo@SSO'), $auth->format_as_url_param('7.6'));
-    }
-    public function testTokenAuthenticationFormatNew()
+        public function testTokenAuthenticationFormatNew()
     {
         $auth = new AfsTokenAuthentication('foo');
         $this->assertEquals(array('access-token' => 'foo'), $auth->format_as_header_param());

@@ -72,44 +72,72 @@
                     <show_in_website>0</show_in_website>
                     <show_in_store>0</show_in_store>
                     <fields>
+                        <upload_type translate="label">
+                            <label>Upload Type</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/system_config_exportType</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                        </upload_type>
+                        <username translate="label">
+                            <label>AFS@Store BO Login</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment></comment>
+                            <depends><upload_type>http</upload_type></depends>
+                        </username>
+                        <passwd translate="label">
+                            <label>AFS@Store BO Password</label>
+                            <frontend_type>password</frontend_type>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment></comment>
+                            <depends><upload_type>http</upload_type></depends>
+                        </passwd>
                         <host translate="label">
                             <label>Host</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>1</sort_order>
+                            <sort_order>2</sort_order>
                             <show_in_default>1</show_in_default>
                             <comment>Host to connect to Antidot to push files</comment>
+                            <depends><upload_type>ftp</upload_type></depends>
                         </host>
                         <directory translate="label">
                             <label>Upload Directory</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>2</sort_order>
+                            <sort_order>3</sort_order>
                             <show_in_default>1</show_in_default>
                             <comment>Directory to upload files</comment>
+                            <depends><upload_type>ftp</upload_type></depends>
                         </directory>
                         <login translate="label">
                             <label>Login</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>3</sort_order>
+                            <sort_order>4</sort_order>
                             <show_in_default>1</show_in_default>
                             <comment>Your Antidot FTP Login</comment>
+                            <depends><upload_type>ftp</upload_type></depends>
                         </login>
                         <password translate="label">
                             <label>Password</label>
                             <frontend_type>password</frontend_type>
-                            <sort_order>4</sort_order>
+                            <sort_order>5</sort_order>
                             <show_in_default>1</show_in_default>
                             <comment>Your Antidot FTP Password</comment>
+                            <depends><upload_type>ftp</upload_type></depends>
                         </password>
                         <working_directory translate="label">
                             <label>Working directory</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>5</sort_order>
+                            <sort_order>6</sort_order>
                             <show_in_default>1</show_in_default>
                             <comment>Local directory to use to generate xml files. If empty, /tmp will be used</comment>
+                            <depends><upload_type>ftp</upload_type></depends>
                         </working_directory>
                     </fields>
                 </ftp>
-                
+
                 <web_service>
                     <label>Web services</label>
                     <frontend_type>text</frontend_type>
@@ -136,7 +164,7 @@
                             <label>Status</label>
                             <frontend_type>select</frontend_type>
                             <source_model>Antidot/System_Config_WSStatus</source_model>
-                            <sort_order>3</sort_order>
+                            <sort_order>5</sort_order>
                             <show_in_default>1</show_in_default>
                             <comment>Web service status. Go live only with 'stable' status on your production site</comment>
                         </status>
@@ -369,7 +397,7 @@
                         <enable translate="label">
                             <label>Enable</label>
                             <frontend_type>select</frontend_type>
-                            <source_model>Antidot/System_Config_Engine</source_model>
+                            <source_model>Antidot/system_config_source_acpengine</source_model>
                             <sort_order>1</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -516,8 +544,8 @@
                         <engine translate="label">
                             <label>Search Engine</label>
                             <frontend_type>select</frontend_type>
-                            <source_model>Antidot/System_Config_Engine</source_model>
-                            <backend_model>Antidot/System_Config_backend_engine</backend_model>
+                            <source_model>Antidot/system_config_source_engine</source_model>
+                            <backend_model>Antidot/system_config_backend_engine</backend_model>
                             <sort_order>19</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -543,6 +571,25 @@
                             <show_in_store>1</show_in_store>
                             <comment>Text to display when a spellcheck suggestion is available. Use {spellcheck} keyword to include AFS@Store suggestion in your text</comment>
                         </spellcheck>
+                        <spellcheck_query translate="label">
+                            <label>Query Spellcheck sentence</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>46</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Text to display when a spellcheck based query has been made. Use {originalQuery} and {spellcheck} keyword to include the original query and the spellcheck in your text, leave empty to disable the functionality</comment>
+                        </spellcheck_query>
+                        <redirect_product translate="label">
+                            <label>Redirect to the product page</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/system_config_source_redirect</source_model>
+                            <sort_order>47</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>In case there's only one result : redirect to product page</comment>
+                        </redirect_product>
                         <facets translate="label">
                             <label>Facets</label>
                             <frontend_model>Antidot/System_Config_Form_Field_Array_Facet</frontend_model>
@@ -665,5 +712,22 @@
                 </generation>
             </groups>
         </antidot>
+        <catalog>
+            <groups>
+                <search>
+                    <fields>
+                        <antidot_config_forward translate="label">
+                            <label>AFS@Store Configuration</label>
+                            <frontend_model>Antidot/system_config_button_forward</frontend_model>
+                            <sort_order>101</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <depends><engine>Antidot/engine_antidot</engine></depends>
+                        </antidot_config_forward>
+                    </fields>
+                </search>
+            </groups>
+        </catalog>
     </sections>
 </config>

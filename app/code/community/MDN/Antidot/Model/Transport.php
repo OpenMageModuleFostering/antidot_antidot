@@ -25,11 +25,12 @@ class MDN_Antidot_Model_Transport extends Mage_Core_Model_Abstract
      * 
      * @param string $file File to send
      * @param string $type The transport type used to send the file
+     * @param MDN_Antidot_Model_Export_Abstract $exportModel the type of data exported
      */
-    public function send($file, $type = self::TRANS_FILE) 
+    public function send($file, $type = self::TRANS_FILE, $exportModel) 
     {
-        if($transport = Mage::getModel('Antidot/transport_'.ucfirst($type))) {
-            return $transport->send($file);
+        if($transport = Mage::getModel('Antidot/transport_'.$type)) {
+            return $transport->send($file, $exportModel);
         }
         
         throw new Exception('The type transport "'.$type.'" does not exist');

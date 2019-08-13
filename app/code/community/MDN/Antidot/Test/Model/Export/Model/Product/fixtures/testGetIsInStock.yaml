@@ -1,0 +1,4 @@
+config:
+  default/antidot/fields_product/in_stock_only: 1
+  default/cataloginventory/options/show_out_of_stock: 0
+  default/cataloginventory/item_options/manage_stock: 0

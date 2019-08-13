@@ -96,9 +96,11 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         }
 
         $resultAntidot->spellcheck         = $this->getSpellcheckFromResult($results);
+        $resultAntidot->originalQuery      = Mage::helper('catalogsearch')->getEscapedQueryText();
         $resultAntidot->promote            = $this->getPromoteFromResult($results);
         $resultAntidot->replyset           = $this->getReplySetFromResult($results);
         $resultAntidot->replysetCategories = $this->getReplySetFromResult($results, 'Categories');
+        $resultAntidot->isOrchestrated     = $this->getOrchestratedFromResult($results);
 
         //save translations
         if ($resultAntidot->replyset) {
@@ -167,6 +169,24 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         }
 
         return $replyset;
+    }
+
+    /**
+     * Get Orchestraed boolean from results
+     *
+     * @param StdClass $results
+     * @return boolean
+     */
+    protected function getOrchestratedFromResult($results)
+    {
+        $orchestrated = false;
+        try {
+            $orchestrated = $results->is_orchestrated();
+        } catch (Exception $e) {
+            Mage::log($e->getMessage(), null, 'antidot.log');
+        }
+
+        return $orchestrated;
     }
 
     /**
@@ -244,16 +264,8 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         }
 
         $query = $query->add_log('AFS@Store for Magento v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version);
-        
-        if (method_exists('Mage','getEdition')) {
-        	$mageEdition = Mage::getEdition();
-        } else {
-        	if (Mage::helper('core')->isModuleEnabled('Enterprise_Enterprise')) {
-        		$mageEdition = 'Enterprise';
-        	} else {
-        		$mageEdition = 'Community';
-        	}
-        }
+
+        $mageEdition = Mage::helper('Antidot')-> getMagentoEdition();
         $query = $query->add_log('Magento '.$mageEdition.' '.Mage::getVersion());
 
         $query = $this->setSelectionFacets($query);

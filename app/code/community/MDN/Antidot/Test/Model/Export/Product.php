@@ -206,10 +206,12 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
     	/** @var $export MDN_Antidot_Model_Export_Product */
         $export = Mage::getModel('Antidot/export_product');
 
-        $feed = $export->getFeed(array('run'=>'UI'));
+        $context = Mage::getModel('Antidot/export_context', array('fr', 'phpunit'));
+
+        $feed = $export->getFeed($context);
 
         $this->assertEquals(
-            'catalog UI v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version,
+            'catalog phpunit v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version,
             $feed
         );
 
@@ -223,9 +225,9 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
 
         $export = Mage::getModel('Antidot/export_product');
 
-        $context = array();
-        $context['store_id'] = array(1);
-        $context['website_ids'] = array(1);
+        $context = Mage::getModel('Antidot/export_context', array('en', 'phpunit'));
+        $context->addStore(Mage::getModel('core/store')->load(1));
+
         $nbItem = $export->writeXml($context, 'catalog-magento_jetpulp_FULL-en.xml', MDN_Antidot_Model_Observer::GENERATE_INC);
 
         $this->assertEquals(0, $nbItem);
@@ -253,6 +255,37 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
 
         $off = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export, 'computePriceOff', array(44.5, 35.92));
         $this->assertEquals(19, $off);
+
+    }
+
+    /**
+     * MCNX-51 : limit name length under 255 in order to pass xsd validation
+     * @test
+     */
+    public function testWriteName() {
+
+        /* @var $export \MDN_Antidot_Model_Export_Product */
+        $export = Mage::getModel('Antidot/export_product');
+
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'initXml', array('product'));
+        /* @var $export \MDN_Antidot_Helper_Xml_Writer */
+        $xmlWriter = MDN_Antidot_Test_PHPUnitUtil::getPrivateProperty($export, 'xml');
+        $xmlWriter->flush();
+
+        /** @var  $mockProduct Mage_Catalog_Model_Product */
+        $mockProduct = $this->getModelMock('catalog/product', array('getName'));
+        $mockProduct->expects($this->any())
+            ->method('getName')
+            ->will($this->returnValue("Nom à ralonge qui dépasse les 255 caractères de long , vraiement très très long,"
+        ."voir extrèmement long, carrément trop long, quelle idée d'avoir un nom aussi long ?? jamais vu ça un nom "
+        ."aussi long , et vous ? mois jamais, ah ça y est on atteint presque les 255 !"));
+        $this->replaceByMock('model', 'catalog/product', $mockProduct);
+
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeName', array($mockProduct));
+
+        $xml = new SimpleXMLElement($xmlWriter->getXml());
+        $this->assertTrue( mb_strlen((string)$xml, "UTF-8") <= MDN_Antidot_Model_Export_Product::NAME_MAX_LENGTH);
+
 
     }
 
@@ -478,7 +511,7 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         $storeId = 3;
         $store = Mage::getModel('core/store')->load($storeId);
         $product = $this->loadProduct(1, $storeId);
-        $context = array('currency'=>'EUR', 'country'=>'FR');
+        Mage::app()->setCurrentStore($store);
 
         MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'initXml', array('product'));
         /* @var $export \MDN_Antidot_Helper_Xml_Writer */
@@ -487,17 +520,18 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
 
         /*
          * The writePrices is called without fixed tax price activated
-         * expected data also in dataProvider
          */
-        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $context, $store));
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $store));
 
-        $expected='<prices><price currency="EUR" type="PRICE_FINAL" vat_included="true" country="FR">12.99</price></prices>';
-        $this->assertEquals($expected, $xmlWriter->getXml());
+        $xml = new SimpleXMLElement($xmlWriter->getXml());
+        $this->assertEquals("EUR", $xml->price[0]['currency']);
+        $this->assertEquals("PRICE_FINAL", $xml->price[0]['type']);
+        $this->assertEquals("true", $xml->price[0]['vat_included']);
+        $this->assertEquals("12.99", $xml->price[0]);
         $xmlWriter->flush();
 
         /*
-         * The writePrices is called witout fixed tax price activated
-         * expected data also in dataProvider
+         * The writePrices is called with fixed tax price activated
          */
         $mockHelper = $this->getHelperMock('weee', array('isEnabled', 'getAmount', 'getPriceDisplayType'));
         $mockHelper->expects($this->any())
@@ -511,71 +545,39 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
             ->will($this->returnValue(3));  //Set a fixed tax price of 3 EUR  in the mock helper
         $this->replaceByMock('helper', 'weee', $mockHelper);
 
-        /*
-         * The writePrices is called with fixed tax price activated
-         * expected data also in dataProvider
-         */
-        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $context, $store));
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $store));
 
-        $expected='<prices><price currency="EUR" type="PRICE_FINAL" vat_included="true" country="FR">15.99</price></prices>';
-        $this->assertEquals($expected, $xmlWriter->getXml());
+        $xml = new SimpleXMLElement($xmlWriter->getXml());
+        $this->assertEquals("15.99", $xml->price[0]);
         $xmlWriter->flush();
 
+        /*
+         * The writePrices is called with fixed tax price activated
+         */
         $mockHelper = $this->getHelperMock('weee', array('isEnabled', 'getAmount', 'getPriceDisplayType'));
         $mockHelper->expects($this->any())
             ->method('isEnabled')
             ->will($this->returnValue(true)); //activate fixed tax in the mock helper
         $mockHelper->expects($this->any())
             ->method('getPriceDisplayType')
-            ->will($this->returnValue(3)); //activate display included fixed tax in the mock helper
+            ->will($this->returnValue(3)); //activate display excluded fixed tax in the mock helper
         $mockHelper->expects($this->any())
             ->method('getAmount')
             ->will($this->returnValue(3));  //Set a fixed tax price of 3 EUR  in the mock helper
         $this->replaceByMock('helper', 'weee', $mockHelper);
 
 
-        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $context, $store));
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $store));
 
-        $expected='<prices><price currency="EUR" type="PRICE_FINAL" vat_included="true" country="FR">12.99</price></prices>';
-        $this->assertEquals($expected, $xmlWriter->getXml());
-
-    }
-
-    /**
-     * MCNX-236 : test getProductCategories
-     * @loadFixture
-     */
-    public function testGetProductCategories()
-    {
-
-        /* @var $export \MDN_Antidot_Model_Export_Product */
-        $export = Mage::getModel('Antidot/export_product');
-
-        /**
-         * create mock product to simulate getCategoryCollection returning list of the two categories of the product
-         * because fixture doesn't simulate it...
-         */
-        $mockModel = $this->getModelMock('catalog/product', array('getCategoryCollection', 'getStoreId'));
-        $mockModel->expects($this->any())
-            ->method('getCategoryCollection')
-            ->will($this->returnValue(Mage::getResourceModel('catalog/category_collection')->addAttributeToFilter('entity_id', array(10,11))));
-        $mockModel->expects($this->any())
-            ->method('getStoreId')
-            ->will($this->returnValue(3));
-
-        /**
-         * Categories 10 and 11 are affected to the product in fixtures
-         * Category 11 is not active.
-         * We expect one category associated to the product
-         */
-        $categories = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'getProductCategories', array($mockModel, array(2)));
-
-        $this->assertEquals(1, count($categories));
+        $xml = new SimpleXMLElement($xmlWriter->getXml());
+        $this->assertEquals("12.99", $xml->price[0]);
+        $xmlWriter->flush();
 
     }
 
     /**
      * MCNX-243 : test categories with inactive parent category is not exported
+     * @test
      * @loadFixture
      */
     public function testInactiveParentCategory()
@@ -589,25 +591,15 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         $xmlWriter = MDN_Antidot_Test_PHPUnitUtil::getPrivateProperty($export, 'xml');
         $xmlWriter->flush();
 
-        /**
-         * create mock product to simulate getCategoryCollection returning the category of the product
-         * because fixture doesn't simulate it... :
-         * product is linked to category id=11 active, parent_id=10 is inactive
-         */
-        $mockModel = $this->getModelMock('catalog/product', array('getCategoryCollection'));
-        $mockModel->expects($this->any())
-            ->method('getCategoryCollection')
-            ->will($this->returnValue(Mage::getResourceModel('catalog/category_collection')->addAttributeToFilter('entity_id', array(11))));
+        $product = $this->loadProduct(1, 3);
 
-        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeClassification', array($mockModel, array(2)));
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeClassification', array($product));
 
         $this->assertEquals("", $xmlWriter->getXml());
 
 
     }
-
-
-
+    
     /**
      *
      * @param $productId
@@ -617,23 +609,33 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
      */
     private function loadProduct($productId, $storeId, $forceAvailabilityIndexing = false) {
 
-        $product = Mage::getModel('catalog/product');
+        $context = Mage::getModel('Antidot/export_context', array('fr', 'phpunit'));
+        $context->addAttributeToLoad(array('url_key' => 'url_key'));
+
+        $collection = Mage::getModel('Antidot/export_model_product')
+            ->getCollection();
+        $collection->addAttributeToFilter('entity_id', $productId);
+
+        $product = $collection->getFirstItem();
         if ($storeId) {
+            $context->addStore(Mage::getModel('core/store')->load($storeId));
             $product->setStoreId($storeId);
         }
-        $product->load($productId);
-
-        if ($forceAvailabilityIndexing){
-            /**
-             * HACK EcomDev : There's obviously a bug in the EcomDev Module with magento Enterprise 1.13 and 1.14
-             * (https://github.com/EcomDev/EcomDev_PHPUnit/issues/253 )
-             * The product fixture is not well indexed
-             * We force the stock reindexation by loading/update/saving the product
-             */
-            if (Mage::helper('core')->isModuleEnabled('Enterprise_Catalog')) {
-                $stockItem = $product->getStockItem()->setQty(100)->save();
-            }
+        if ($product->setContext($context)) {
+            $product->loadNeededAttributes();
         }
+
+//        if ($forceAvailabilityIndexing){
+//            /**
+//             * HACK EcomDev : There's obviously a bug in the EcomDev Module with magento Enterprise 1.13 and 1.14
+//             * (https://github.com/EcomDev/EcomDev_PHPUnit/issues/253 )
+//             * The product fixture is not well indexed
+//             * We force the stock reindexation by loading/update/saving the product
+//             */
+//            if (Mage::helper('core')->isModuleEnabled('Enterprise_Catalog')) {
+//                $stockItem = $product->getStockItem()->setQty(100)->save();
+//            }
+//        }
 
         /**
          * HACK EcomDev : with the product fixture, there's no data in core_url_rewrite, set request_path
@@ -660,27 +662,15 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
 
         /* @var $export \MDN_Antidot_Model_Export_Product */
     	$export = Mage::getModel('Antidot/export_product');
-    
-    	$context = array();
-    	$context['owner']  = 'JETPULP';
-    	$context['run']    = 'PHPUNIT';
-    	$context['lang'] = 'fr';
 
-        $context['stores'] = array();
-        $context['website_ids'] = array();
+        $context = Mage::getModel('Antidot/export_context', array('fr', 'PHPUNIT'));
         //Store id 3 : site FR, id5 : site FR discount
-        $storeIds = array(3, 5);
-        foreach ($storeIds as $storeId) {
-            $store = Mage::getModel('core/store')->load($storeId);
-            $context['stores'][$storeId] = $store;
-            $context['website_ids'][] = $store->getWebsite()->getId();
-        }
-    	$context['store_id'] = array_keys($context['stores']);
-    	$context['langs']  = 1;
-    		
+        $context->addStore(Mage::getModel('core/store')->load(3));
+        $context->addStore(Mage::getModel('core/store')->load(5));
+
     	$type = MDN_Antidot_Model_Observer::GENERATE_FULL;
     	
-    	$filename = sys_get_temp_dir().DS.sprintf(MDN_Antidot_Model_Export_Product::FILENAME_XML, 'jetpulp', $type, $context['lang']);
+    	$filename = sys_get_temp_dir().DS.sprintf(MDN_Antidot_Model_Export_Product::FILENAME_XML, 'jetpulp', $type, $context->getLang());
 
     	$items    = $export->writeXml($context, $filename, $type);
 
@@ -703,76 +693,89 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
 //        $valid = $xml->schemaValidate(MDN_Antidot_Model_Export_Product::XSD);
 //        $this->assertTrue($valid);
 
+        //echo ($result);
         /**
          * test the xml contains the correct owner tag
          */
-        $this->assertContains('<owner>JETPULP</owner>', $result);
+        $xml = new SimpleXMLElement($result);
+        $this->assertEquals("JETPULP", (string)$xml->header->owner);
 
         /**
          * test the xml contains the correct feed tag
          */
-        $this->assertContains('<feed>catalog PHPUNIT v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version.'</feed>', $result);
+        $this->assertEquals('catalog PHPUNIT v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version, (string)$xml->header->feed);
 
         /**
          * test the xml contains the correct websites tag
          */
-        $this->assertContains('<websites><website id="3">French Website</website><website id="5">France Website_discount</website></websites>', $result);
+        $this->assertEquals('3', $xml->product->websites->website[0]['id']);
+        $this->assertEquals('French Website', (string)$xml->product->websites->website[0]);
+        $this->assertEquals('5', $xml->product->websites->website[1]['id']);
+        $this->assertEquals('France Website_discount', (string)$xml->product->websites->website[1]);
 
         /**
          * test the xml contains the correct name tag
          */
-        $this->assertContains('<name><![CDATA[Book]]></name>', $result);
+        $this->assertEquals('Book', (string)$xml->product->name);
 
         /**
          * test the xml contains the variants variant fake tag
          */
-        $this->assertContains('<variants><variant id="fake">', $result);
+        $this->assertEquals('fake', $xml->product->variants->variant[0]['id']);
 
         /**
          * test the xml contains the correct descriptions tag
          */
-        $this->assertContains('<descriptions><description type="short_description"><![CDATA[Book]]></description></descriptions>', $result);
+        $this->assertEquals('Book', (string)$xml->product->variants->variant[0]->descriptions->description[0]);
 
         /**
          * test the xml contains the correct store tags
          */
-        $this->assertContains('<store id="3" name="France Store">', $result);
-        $this->assertContains('<store id="5" name="France Store Discount">', $result);
+        $this->assertEquals('3', $xml->product->variants->variant[0]->stores->store[0]['id']);
+        $this->assertEquals('France Store', $xml->product->variants->variant[0]->stores->store[0]['name']);
+        $this->assertEquals('5', $xml->product->variants->variant[0]->stores->store[1]['id']);
+        $this->assertEquals('France Store Discount', $xml->product->variants->variant[0]->stores->store[1]['name']);
 
         /**
          * test the xml contains the price tag
          */
-        $this->assertContains('<prices><price currency="USD" type="PRICE_FINAL" vat_included="true" country="FR">12.99</price></prices>', $result);
+        $this->assertEquals('EUR', $xml->product->variants->variant[0]->stores->store[0]->prices->price[0]['currency']);
+        $this->assertEquals('PRICE_FINAL', $xml->product->variants->variant[0]->stores->store[0]->prices->price[0]['type']);
+        $this->assertEquals('true', $xml->product->variants->variant[0]->stores->store[0]->prices->price[0]['vat_included']);
+        $this->assertEquals('12.99', (string)$xml->product->variants->variant[0]->stores->store[0]->prices->price[0]);
 
         /**
-         * test the xml contains the price tag
+         * test the xml contains the marketing tag
          */
-        $this->assertContains('<marketing><is_new>0</is_new><is_best_sale>0</is_best_sale><is_featured>0</is_featured><is_promotional>0</is_promotional></marketing>', $result);
+        $this->assertEquals('0', $xml->product->variants->variant[0]->stores->store[0]->marketing->is_new);
+        $this->assertEquals('0', $xml->product->variants->variant[0]->stores->store[0]->marketing->is_best_sale);
+        $this->assertEquals('0', $xml->product->variants->variant[0]->stores->store[0]->marketing->is_featured);
+        $this->assertEquals('0', $xml->product->variants->variant[0]->stores->store[0]->marketing->is_promotional);
 
         /**
          * test the xml contains the stock tags
          */
-        $this->assertContains('<stock>100</stock>', $result);
-
+        $this->assertEquals('100', $xml->product->variants->variant[0]->stores->store[0]->stock);
 
         /**
          * test the xml contains the correct url tags
          */
-        $this->assertContains('<url><![CDATA[http://www.monsiteweb.fr/catalog/product/view/id/1/s/book/]]></url>', $result);
-        $this->assertContains('<url><![CDATA[http://www.monsitediscount.fr/catalog/product/view/id/1/s/book/]]></url>', $result);
+        $this->assertEquals('http://www.monsiteweb.fr/catalog/product/view/id/1/', (string)$xml->product->variants->variant[0]->stores->store[0]->url);
+        $this->assertEquals('http://www.monsitediscount.fr/catalog/product/view/id/1/', (string)$xml->product->variants->variant[0]->stores->store[1]->url);
 
         /**
          * test the xml contains the correct images url tags
          */
-        $this->assertContains('<url_thumbnail><![CDATA[http://www.monsiteweb.fr/media/catalog/product/b/o/book_small.jpg]]></url_thumbnail>', $result);
-        $this->assertContains('<url_image><![CDATA[http://www.monsiteweb.fr/media/catalog/product/b/o/book.jpg]]>', $result);
-        $this->assertContains('<url_thumbnail><![CDATA[http://www.monsitediscount.fr/media/catalog/product/b/o/book_small.jpg]]></url_thumbnail>', $result);
-        $this->assertContains('<url_image><![CDATA[http://www.monsitediscount.fr/media/catalog/product/b/o/book.jpg]]>', $result);
+        $this->assertEquals('http://www.monsiteweb.fr/media/catalog/product/b/o/book_small.jpg', (string)$xml->product->variants->variant[0]->stores->store[0]->url_thumbnail);
+        $this->assertEquals('http://www.monsiteweb.fr/media/catalog/product/b/o/book.jpg', (string)$xml->product->variants->variant[0]->stores->store[0]->url_image);
+        $this->assertEquals('http://www.monsitediscount.fr/media/catalog/product/b/o/book_small.jpg', (string)$xml->product->variants->variant[0]->stores->store[1]->url_thumbnail);
+        $this->assertEquals('http://www.monsitediscount.fr/media/catalog/product/b/o/book.jpg', (string)$xml->product->variants->variant[0]->stores->store[1]->url_image);
 
         /**
          * test the xml contains the identifier
          */
-        $this->assertContains('<identifiers><identifier type="sku"><![CDATA[book]]></identifier></identifiers>', $result);
+        $this->assertEquals('sku', $xml->product->variants->variant[0]->identifiers->identifier[0]['type']);
+        $this->assertEquals('book', $xml->product->variants->variant[0]->identifiers->identifier[0]);
 
 
 

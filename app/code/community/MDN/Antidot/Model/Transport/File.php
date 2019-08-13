@@ -21,7 +21,7 @@ class MDN_Antidot_Model_Transport_File extends MDN_Antidot_Model_Transport_Abstr
     /**
      * {@inherit}
      */
-    public function send($file) 
+    public function send($file, $exportModel, SAI_CurlInterface $curlConnector=null)
     {
         return rename($file, self::DIRECTORY.'/'.basename($file));
     }

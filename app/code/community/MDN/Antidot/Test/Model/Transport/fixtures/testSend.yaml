@@ -1,0 +1,7 @@
+config:
+  default/antidot/general/owner: JETPULP
+  default/antidot/web_service/service: 1234
+  default/antidot/web_service/status: sandbox
+  default/antidot/ftp/upload_type: http
+  default/antidot/ftp/username: jetpulp
+  default/antidot/ftp/passwd: changeit

@@ -24,23 +24,17 @@ class AfsTokenAuthentication implements AfsAuthentication
      *        version information.
      * @return array representing authentication.
      */
-    public function format_as_url_param($version=null)
+    public function format_as_url_param()
     {
-        if ('7.6' == $version)
-            return array('afs:login' => sprintf('login://%s@%s', $this->token, AFS_AUTH_SSO));
-        else
-            return array();
+        return array();
     }
     /** @brief Formats authentication parameters.
      * @param $version [in] Format string representation according to provided
      *        version information.
      * @return array representing authentication.
      */
-    public function format_as_header_param($version=null)
+    public function format_as_header_param()
     {
-        if ('7.6' == $version)
-            return array();
-        else
-            return array('access-token' => $this->token);
+        return array('access-token' => $this->token);
     }
 }

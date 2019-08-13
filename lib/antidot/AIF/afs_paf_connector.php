@@ -62,8 +62,8 @@ class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterf
         if (! $mgr->has_document())
             throw new InvalidArgumentException('No document to be sent');
 
-        $version = $this->get_bo_version();
-        $context = new AfsPafConnectorContext($version, $mgr, $comment);
+//        $version = $this->get_bo_version();
+        $context = new AfsPafConnectorContext($mgr, $comment);
         return new AfsPafUploadReply(json_decode($this->query($context)));
     }
 
@@ -76,13 +76,13 @@ class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterf
     {
         $url = parent::get_base_url('service');
 
-        $params = $this->authentication->format_as_url_param($context->version);
+//        $params = $this->authentication->format_as_url_param($context->version);
         if (! is_null($context->comment))
             $params['comment'] = $context->comment;
 
         return sprintf($url . '/%d/instance/%s/paf/%s/upload?%s',
             $this->service->id, $this->service->status, $this->paf_name,
-            $this->format_parameters($params));
+            $this->format_parameters(array()));
     }
 
     /** @brief Retrieves authentication as HTTP header for new authentication policy (>=v7.7)
@@ -91,7 +91,7 @@ class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterf
      */
     public function get_http_headers($context=null)
     {
-        return $this->authentication->format_as_header_param($context->version);
+        return $this->authentication->format_as_header_param();
     }
 
     public function set_post_content(&$request, $context)
@@ -140,9 +140,9 @@ class AfsPafConnectorContext
      *        sent to Back Office.
      * @param $comment [in] Optional comment for uploaded files.
      */
-    public function __construct($version, AfsDocumentManager $doc_mgr, $comment)
+    public function __construct(AfsDocumentManager $doc_mgr, $comment)
     {
-        $this->version = $version;
+//        $this->version = $version;
         $this->doc_mgr = $doc_mgr;
         $this->comment = $comment;
     }

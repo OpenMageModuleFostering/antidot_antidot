@@ -24,7 +24,14 @@ class MDN_Antidot_Model_Export_Article extends MDN_Antidot_Model_Export_Product
     const imagePrefix = 'media/catalog/article';
     
     const ARTICLE_LIMIT  = 1000;
-    
+
+    /**
+     * {@inherit}
+     */
+    public function getPafName() {
+        return "Articles";
+    }
+
     /**
      * Write the xml file
      * 
@@ -43,12 +50,12 @@ class MDN_Antidot_Model_Export_Article extends MDN_Antidot_Model_Export_Product
         $this->writeHeader($context);
         $this->writePart($this->xml->flush());
         
-        foreach($context['store_id'] as $storeId) {
-            $store = Mage::getModel('core/store')->load($storeId);
+        foreach($context->getWebsiteAndStores() as $ws) {
+            $store = $ws['store'];
             $page = 1;
             while($articles = $this->getProducts($store, $page, self::ARTICLE_LIMIT)) {
                 foreach($articles as $article) {
-                    $this->xml->push('article', array('id' => $article->getId(), 'xml:lang' => $context['lang']));
+                    $this->xml->push('article', array('id' => $article->getId(), 'xml:lang' => $context->getLang()));
 
                     $this->xml->push('websites');
                     $this->xml->element('website', $store->getWebsite()->getName(), array('id' => $store->getWebsite()->getId()));
