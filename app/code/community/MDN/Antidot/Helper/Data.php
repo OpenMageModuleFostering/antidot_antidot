@@ -203,6 +203,9 @@ class MDN_Antidot_Helper_Data extends Mage_Core_Helper_Abstract
     /**
      * Translate facet name
      *
+     * This one is used in FO, to display the facet name in the result page, it is based
+     * on the label returned by the previous search ws search call
+     *
      * @param $facetcode
      * @param $defaultValue
      * @return mixed
@@ -215,6 +218,48 @@ class MDN_Antidot_Helper_Data extends Mage_Core_Helper_Abstract
         if (isset($model::$lastSearchTranslations[$facetcode]))
             $label = $model::$lastSearchTranslations[$facetcode];
         return $label;
+    }
+
+    /*
+     * MCNX-217 : Translate facet label on front office :
+     *  - The facet labels stemming from hard-coded module sorting (Relevance, Name, etc...) are
+     *    stored in English and translated by the magento module translation files
+     *  - the facet labels stemming from the AFS WS facets, are stored in a serialized array
+     *    contained all the translated labels, we change the one corresponding to the current language
+     *
+     * @param $label
+     * @return string
+     */
+    public function translateFacetlabel($label)
+    {
+        Mage::log($label, null, 'antidot.log');
+        if ($labels = @unserialize($label)) {
+            $magentoLocale = Mage::app()->getLocale()->getLocaleCode();
+            $antidotLanguage = $this->getLanguageFromCodeLocale($magentoLocale);
+            if (isset($labels[$antidotLanguage])) {
+                $label = $labels[$antidotLanguage];
+            } elseif (isset($labels[0])) {
+                $label = $labels[0];
+            } elseif (isset($labels['EN'])) {
+                $label = $labels['EN']; //default language
+            }
+        } else {
+            $label = Mage::helper('Antidot')->__($label);
+        }
+        return $label;
+    }
+
+    /*
+     * Get the language code (ex: en) from a locale code (ex: en_US)
+     *
+     * @param $codeLocale
+     * @return string
+     */
+    public function getLanguageFromCodeLocale($codeLocale)
+    {
+        $arr = explode('_', $codeLocale);
+        $antidotLanguage = array_shift($arr);
+        return $antidotLanguage;
     }
 
     /**

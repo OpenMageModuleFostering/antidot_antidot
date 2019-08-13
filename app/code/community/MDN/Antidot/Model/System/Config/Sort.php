@@ -43,7 +43,7 @@ class MDN_Antidot_Model_System_Config_Sort
 
             foreach($this->marketingFields as $field => $label) {
                 if(Mage::getStoreConfig('antidot/fields_product/'.$field) != '') {
-                    $options[] = array('value' => $field.'|'.$label, 'label' => $label);
+                    $options[] = array('value' => $field.'|'.$label, 'label' => Mage::helper('Antidot')->__($label));
                 }
             }
 
@@ -64,9 +64,9 @@ class MDN_Antidot_Model_System_Config_Sort
     public function initMarketingFields()
     {
         $this->marketingFields = array(
-            'is_new'         => Mage::helper('Antidot')->__('Is new'),
-            'is_best_sale'   => Mage::helper('Antidot')->__('Is top sale'),
-            'is_featured'    => Mage::helper('Antidot')->__('Is featured'),
+            'is_new'         => 'Is new',
+            'is_best_sale'   => 'Is top sale',
+            'is_featured'    => 'Is featured',
         );
     }
 

@@ -18,7 +18,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -31,6 +31,12 @@
                     <data>MDN_Antidot_Helper_CatalogSearch_Data</data>
                 </rewrite>
             </catalogsearch>
+            <!-- MCNX mcnx-210 : compatibility case : catalagSearch (solutionlevage), we duplicate the rewrite definition for this "special" case -->
+            <catalogSearch>
+                <rewrite>
+                    <data>MDN_Antidot_Helper_CatalogSearch_Data</data>
+                </rewrite>
+            </catalogSearch>
             <enterprise_search>
                 <rewrite>
                     <data>MDN_Antidot_Helper_Enterprise_Search_Data</data>
@@ -129,6 +135,16 @@
     </adminhtml>
     
     <frontend>
+        <!-- Antidot module translation are needed in front for the sort labels -->
+        <translate>
+            <modules>
+                <MDN_Antidot>
+                    <files>
+                        <default>MDN_Antidot.csv</default>
+                    </files>
+                </MDN_Antidot>
+            </modules>
+        </translate>
         <routers>
             <Antidot>
                 <use>standard</use>
@@ -192,7 +208,7 @@
     <xsl:variable name="categories-title">Categories</xsl:variable>
     <xsl:variable name="brands-title">Brands</xsl:variable>
     <!-- Thumbnail settings -->
-    <xsl:variable name="thumbnail_width">35</xsl:variable>
+    <xsl:variable name="thumbnail_width">40</xsl:variable>
     <!-- Price settings -->
     <xsl:variable name="display_price" select="true()"/>
     <xsl:variable name="decimal-separator">,</xsl:variable>
@@ -390,8 +406,13 @@
             <xsl:attribute name="class">image</xsl:attribute>
             <xsl:attribute name="style">float: left; margin-right:5px;</xsl:attribute>
             <xsl:element name="img">
-                <xsl:attribute name="width">
+                <xsl:attribute name="style">
+                    <xsl:text>max-width:</xsl:text>
                     <xsl:value-of select="$thumbnail_width"/>
+                    <xsl:text>px;</xsl:text>
+                    <xsl:text>max-height:</xsl:text>
+                    <xsl:value-of select="$thumbnail_width"/>
+                    <xsl:text>px;</xsl:text>
                 </xsl:attribute>
                 <xsl:attribute name="src">
                     <xsl:apply-templates select="@value"/>

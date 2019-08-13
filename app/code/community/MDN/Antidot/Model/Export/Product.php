@@ -43,7 +43,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
     protected $propertyLabel = array();
 
     protected $productsWithOperation = null;
-    
+
     protected $productVisible = array(
         Mage_Catalog_Model_Product_Visibility::VISIBILITY_IN_SEARCH,
         Mage_Catalog_Model_Product_Visibility::VISIBILITY_BOTH,
@@ -223,6 +223,35 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         if (count($stores) == 0)
             return;
 
+        /**
+         * MCNX-211 : check if grouped/configurables product has variant before begin export product
+         */
+        $variantProducts = array();
+        if ($product->getTypeID() == Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE
+            || $product->getTypeID() == Mage_Catalog_Model_Product_Type::TYPE_GROUPED) {
+
+            switch ($product->getTypeID()) {
+                case Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE:
+                    $variantProductsColl = $product->getTypeInstance(true)->getUsedProducts(null, $product);
+                    break;
+                case Mage_Catalog_Model_Product_Type::TYPE_GROUPED:
+                    $variantProductsColl = $product->getTypeInstance(true)->getAssociatedProducts($product);
+                    break;
+            }
+
+            foreach ($variantProductsColl as $variantProduct) {
+                //Do not include product if status is not enabled
+                if ($variantProduct->getStatus() == 1) {
+                    $variantProducts[] = $variantProduct;
+                }
+            }
+
+            //skip product if it has no active variant, but is a "variant" type
+            if (count($variantProducts) == 0) {
+                return;
+            }
+        }
+
         $this->xml->push('product', array('id' => $product->getId(), 'xml:lang' => $this->lang, 'autocomplete' => $this->autoCompleteProducts));
 
         $this->xml->push('websites');
@@ -259,7 +288,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $this->writeGenders($product);
         $this->writeMisc($product);
 
-        $this->writeVariants($product, $stores);
+        $this->writeVariants($product, $variantProducts, $stores);
 
         $this->xml->pop();
     }
@@ -783,15 +812,28 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writePrices($product, $parentProduct, $context, $store)
     {
+
+        /**
+         * MCNX-222 : Add Fixed Taxs to prices
+         */
+        $weeHelper = Mage::helper('weee');
+        $weeeAmount = 0;
+        if ($weeHelper->isEnabled($store)) {
+            $address = Mage::getModel('customer/address');
+            $address->setCountryId(Mage::helper('core')->getDefaultCountry($store));
+            $address->setQuote(Mage::getSingleton('sales/quote'));
+            $weeeAmount = $weeHelper->getAmount($product, $address, $address, $store->getWebsiteId(), false);
+        }
+
         $prices = ($this->getPrices($parentProduct->getId(), $store->getWebsiteId()));
 
-        $price = Mage::helper('tax')->getPrice($product, $prices['price'], true);
+        $price = Mage::helper('tax')->getPrice($product, $prices['price'] + $weeeAmount, true);
 
         //try to get price & pricecut
         if ($prices['final_price'] < $prices['price'])
         {
-            $priceCut = Mage::helper('tax')->getPrice($product, $prices['price'], true);
-            $price = Mage::helper('tax')->getPrice($product, $prices['final_price'], true);
+            $priceCut = Mage::helper('tax')->getPrice($product, $prices['price'] + $weeeAmount, true);
+            $price = Mage::helper('tax')->getPrice($product, $prices['final_price'] + $weeeAmount, true);
         }
 
         $price = Mage::helper('directory')->currencyConvert($price, Mage::app()->getStore()->getCurrentCurrencyCode(), $store->getCurrentCurrencyCode()); 
@@ -987,12 +1029,13 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
     }
     
     /**
-     * Write variants produt
+     * Write variants product
      * 
      * @param Product $product
+     * @param array $variantProducts
      * @param array $stores
      */
-    protected function writeVariants($product, $stores)
+    protected function writeVariants($product, $variantProducts, $stores)
     {
         $this->xml->push('variants');
         
@@ -1000,28 +1043,11 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $this->writeVariant($product, $product, $stores);
         $this->xml->pop();
 
-        $variantProducts = array();
-        switch($product->getTypeID())
-        {
-            case Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE:
-                $variantProducts = $product->getTypeInstance(true)->getUsedProducts(null, $product);
-                break;
-            case Mage_Catalog_Model_Product_Type::TYPE_GROUPED:
-                $variantProducts = $product->getTypeInstance(true)->getAssociatedProducts($product);
-                break;
-        }
+        foreach($variantProducts as $variantProduct) {
 
-        if(count($variantProducts) > 0) {
-            foreach($variantProducts as $variantProduct) {
-
-                //Do not include product if status is not enabled
-                if (!$variantProduct->getstatus() == 1)
-                    continue;
-
-                $this->xml->push('variant', array('id' => $variantProduct->getId()));
-                $this->writeVariant($variantProduct, $product, $stores);
-                $this->xml->pop();
-            }
+            $this->xml->push('variant', array('id' => $variantProduct->getId()));
+            $this->writeVariant($variantProduct, $product, $stores);
+            $this->xml->pop();
         }
 
         $this->xml->pop();

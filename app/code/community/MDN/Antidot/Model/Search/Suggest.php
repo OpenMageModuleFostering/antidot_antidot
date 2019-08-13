@@ -90,7 +90,7 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
         list($lang) = explode('_', Mage::getStoreConfig('general/locale/code', Mage::app()->getStore()->getId()));
         foreach($this->feed as $key => $feed) {
         	//take the storeId for product feed, website for others
-        	$id = ($key == 'products') ? Mage::app()->getStore()->getWebsiteId() : Mage::app()->getStore()->getId();
+        	$id = ($key == 'products') ? Mage::app()->getStore()->getId() : Mage::app()->getStore()->getWebsiteId();
         	$this->feed[$key]['name'] = sprintf($feed['tpl'], $id, $lang);
         }
         
@@ -104,13 +104,15 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
     protected function loadFacetAutocomplete()
     {
         $facets = @unserialize(Mage::getStoreConfig('antidot/fields_product/properties'));
-        foreach($facets as $facet) {
-            if($facet['autocomplete'] === '1') {
-                $this->feed['property_'.$facet['value']] = array(
-                    'tpl'    => 'property_'.$facet['value'].'_%d_%s',
-                    'number' => self::DEFAULT_REPLIES_NUMBER,
-                    'order' => (count($this->feed)+1),
-                );
+        if (is_array($facets)) {
+            foreach ($facets as $facet) {
+                if ($facet['autocomplete'] === '1') {
+                    $this->feed['property_'.$facet['value']] = array(
+                        'tpl' => 'property_'.$facet['value'].'_%d_%s',
+                        'number' => self::DEFAULT_REPLIES_NUMBER,
+                        'order' => (count($this->feed) + 1),
+                    );
+                }
             }
         }
     }
@@ -121,15 +123,17 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
      */
     protected function loadAdditionalFeeds()
     {
-    	$additionalFeeds = @unserialize(Mage::getStoreConfig('antidot/suggest/additionnal_feed'));
-    	foreach($additionalFeeds as $feed) {
-    		$addFeed = $feed['value'];
-    	    $this->feed[$addFeed] = array(
-   					'tpl'    => $addFeed,
-   					'number' => self::DEFAULT_REPLIES_NUMBER,
-    	            'order'  => (count($this->feed)+1),
-   			);
-    	}
+        $additionalFeeds = @unserialize(Mage::getStoreConfig('antidot/suggest/additionnal_feed'));
+        if (is_array($additionalFeeds)) {
+            foreach ($additionalFeeds as $feed) {
+                $addFeed = $feed['value'];
+                $this->feed[$addFeed] = array(
+                    'tpl' => $addFeed,
+                    'number' => self::DEFAULT_REPLIES_NUMBER,
+                    'order' => (count($this->feed) + 1),
+                );
+            }
+        }
     }
     
     

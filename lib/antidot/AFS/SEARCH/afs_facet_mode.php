@@ -8,7 +8,7 @@ require_once 'COMMON/afs_tools.php';
  */
 class AfsFacetMode extends BasicEnum
 {
- 		private static $instance = null;
+    private static $instance = null;
 
     static public function check_value($value, $msg=null)
     {
@@ -113,6 +113,38 @@ class AfsFacetMode extends BasicEnum
      *     - Blue   (2 products) X
      */
     const AND_MODE = 'AND_MODE';
+
+    /** @brief Or mode.
+     *
+     * New value set for the facet is appended to the list of values already
+     * set. All the values are and-combined.
+     *
+     * Example:<br/>
+     * Let's suppose your products have colors.
+     *
+     * - A query without any filter should get a reply with all products and
+     * following facet values:
+     *
+     *     - Red    (3 products)
+     *     - Green  (7 products)
+     *     - Blue   (4 products)
+     *
+     * - Then you can filter on Red, reply should only contains Red products
+     *  whereas facet values are not changed. All the colors
+     * are still available so that one can filter on other color.
+     *
+     *     - Red    (3 products) X
+     *     - Green  (7 products)
+     *     - Blue   (4 products)
+     *
+     * - You can add filter on Green so that you get all products that are Red And Green
+     *   whereas facet values are still unchanged:
+     *
+     *     - Red    (3 products) X
+     *     - Green  (7 products) X
+     *     - Blue   (4 products)
+     */
+    const STICKY_AND_MODE = 'STICKY_AND_MODE';
 
     /** @brief Unspecified mode.
      *

@@ -9,6 +9,7 @@ class SearchTest extends PHPUnit_Framework_TestCase
     {
         $search = new AfsSearch('127.0.0.1', 666);
 
+
         $service = $search->get_service();
         $this->assertEquals(666, $service->id);
         $this->assertEquals(AfsServiceStatus::STABLE, $service->status);
@@ -21,6 +22,17 @@ class SearchTest extends PHPUnit_Framework_TestCase
 
         $config = $search->get_helpers_configuration();
         $this->assertEquals(AfsHelperFormat::HELPERS, $config->get_helper_format());
+    }
+
+    public function testBuildFromUrl() {
+        $search = new AfsSearch('127.0.0.1', 666);
+
+        $_SERVER['QUERY_STRING'] = 'filter=key_val-k_v';
+        $_GET['filter'] = 'key_val-k_v';
+        $query = $search->build_query_from_url_parameters();
+
+        $this->assertTrue($query->has_filter('key', 'val'));
+        $this->assertTrue($query->has_filter('k', 'v'));
     }
 
     public function testRetrieveSpecificParameters()
@@ -41,6 +53,18 @@ class SearchTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(AfsHelperFormat::ARRAYS, $config->get_helper_format());
     }
 
+    public function testEncodedUrlRobustness() {
+        $_GET['query'] = 'perles';
+        $_GET['filter'] = 'marketing_"is|_promotional"-price|_eur_"[0 .. 1]"';
+
+        $search = new AfsSearch('127.0.0.2', 42, AfsServiceStatus::RC);
+        $query = $search->build_query_from_url_parameters();
+
+
+        $this->assertTrue($query->has_filter('marketing', "\"is_promotional\""));
+        $this->assertTrue($query->has_filter('price_eur', "\"[0 .. 1]\""));
+    }
+
     public function testSetQuery()
     {
         $search = new AfsSearch('127.0.0.1', 666);
@@ -52,6 +76,29 @@ class SearchTest extends PHPUnit_Framework_TestCase
 
         $search->execute();
         $this->assertTrue(strpos($search->get_generated_url(), 'query=foo') !== False, 'URL does not contain query!');
+    }
+
+    public function testBuildQueryFromUrlParametersType() {
+        $search = new AfsSearch('127.0.0.1', 666);
+
+        $_GET['page'] = 10;
+        $_GET['replies'] = 100;
+        $query = $search->build_query_from_url_parameters();
+
+        $this->assertTrue(is_int($query->get_replies()));
+        $this->assertTrue(is_int($query->get_page()));
+        $this->assertEquals(10, $query->get_page());
+        $this->assertEquals(100, $query->get_replies());
+    }
+
+    public function testSetFeedFilter() {
+        $search = new AfsSearch('127.0.0.1', 666);
+        $query = new AfsQuery();
+        $query = $query->set_filter_on_feed('foo', array('bar'), 'feed');
+        $search->set_query($query);
+
+        $search->execute();
+        $this->assertTrue(strpos($search->get_generated_url(), 'filter%40feed=foo%3Dbar') !== False, 'URL does not contain query!');
     }
 
     //Ensure custom parameters are kept

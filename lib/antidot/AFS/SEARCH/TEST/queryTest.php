@@ -11,6 +11,10 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $query = new AfsQuery();
         $query = $query->set_query('foo');
         $this->assertTrue($query->get_query() == 'foo');
+
+        $query = $query->set_query('foo', 'feed');
+        $this->assertFalse($query->has_feed('feed'));
+        $this->assertTrue($query->get_query('feed') == 'foo');
     }
     public function testSetNewQueryValue()
     {
@@ -19,19 +23,45 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $query = $query->set_query('bar');
         $this->assertFalse($query->get_query() == 'foo');
         $this->assertTrue($query->get_query() == 'bar');
+
+        $query = $query->set_query('foo', 'feed');
+        $query = $query->set_query('bar', 'feed');
+        $this->assertFalse($query->get_query('feed') == 'foo');
+        $this->assertTrue($query->get_query('feed') == 'bar');
     }
 
     public function testHasNoQuery()
     {
         $query = new AfsQuery();
         $this->assertFalse($query->has_query());
+        $this->assertFalse($query->has_query('feed'));
     }
     public function testHasQuery()
     {
         $query = new AfsQuery();
         $query = $query->set_query('foo');
+        $query = $query->set_query('foo', 'feed');
         $this->assertTrue($query->has_query());
+        $this->assertTrue($query->has_query('feed'));
     }
+
+    public function testaddFeedFilterValue() {
+        $query = new AfsQuery();
+        $query = $query->add_filter_on_feed('foo', array('bar'), 'feed');
+        $this->assertTrue($query->has_filter('foo', 'bar', 'feed'));
+    }
+
+    public function testfilteronBothfeedAndGeneric() {
+        $query = new AfsQuery();
+        $query = $query->add_filter('foo', 'bar');
+        $query = $query->add_filter_on_feed('foo', 	array('barr'), 'feed');
+
+        $this->assertTrue($query->has_filter('foo', 'bar'));
+        $this->assertTrue($query->has_filter('foo', 'barr', 'feed'));
+        $this->assertEquals($query->get_filter_values('foo', 'feed'), array('barr'));
+        $this->assertEquals($query->get_filter_values('foo'), array('bar'));
+    }
+
 
     public function testAddFilterValue()
     {
@@ -146,6 +176,12 @@ class QueryTest extends PHPUnit_Framework_TestCase
         } catch (Exception $e) {
             $this->fail('Exception raised: ' . $e);
         }
+
+        try {
+            $query->remove_filter('foo', 'bar', 'feed');
+        } catch (Exception $e) {
+            $this->fail('Exception raised: ' . $e);
+        }
     }
     public function testRemoveUnexistingFilterValue()
     {
@@ -156,13 +192,23 @@ class QueryTest extends PHPUnit_Framework_TestCase
         } catch (Exception $e) {
             $this->fail('Exception raised: ' . $e);
         }
+
+        $query = $query->add_filter('foo', 'baz', 'feed');
+        try {
+            $query->remove_filter('foo', 'bar', 'feed');
+        } catch (Exception $e) {
+            $this->fail('Exception raised: ' . $e);
+        }
     }
     public function testRemoveExistingFilterValue()
     {
         $query = new AfsQuery();
         $query = $query->add_filter('foo', 'bar');
+        $query = $query->add_filter('foo', 'bar', 'feed');
         $query = $query->remove_filter('foo', 'bar');
+        $query = $query->remove_filter('foo', 'bar', 'feed');
         $this->assertFalse($query->has_filter('foo', 'bar'));
+        $this->assertFalse($query->has_filter('foo', 'bar', 'feed'));
     }
 
     public function testGetListOfValuesForUnexistingFilter()
@@ -175,6 +221,18 @@ class QueryTest extends PHPUnit_Framework_TestCase
         }
         $this->fail('Getting values from unexisting filter should raise exception!');
     }
+
+    public function testGetListOfValuesForUnexistingFilterFeed()
+    {
+        $query = new AfsQuery();
+        try {
+            $values = $query->get_filter_values('foo', 'feed');
+        } catch (Exception $e) {
+            return;
+        }
+        $this->fail('Getting values from unexisting filter should raise exception!');
+    }
+
     public function testGetListOfFilterValues()
     {
         $query = new AfsQuery();
@@ -184,6 +242,8 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $this->assertTrue(in_array('bar', $values));
         $this->assertTrue(in_array('baz', $values));
     }
+
+
 
     public function testGetEmptyListOfFilters()
     {
@@ -266,6 +326,13 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $this->assertTrue(in_array('foo', $query->get_feeds()));
         $this->assertTrue(in_array('bar', $query->get_feeds()));
     }
+
+    public function testFilterOnFeedDoesntAddFeedOnquery() {
+        $query = new AfsQuery();
+        $query = $query->add_filter('FOO', 'bar', 'feed');
+        $this->assertFalse($query->has_feed());
+    }
+
     public function testResetFeedName()
     {
         $query = new AfsQuery();
@@ -399,6 +466,15 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($query->has_sort('afs:relevance'));
         $this->assertEquals(AfsSortOrder::DESC, $query->get_sort_order('afs:relevance'));
     }
+
+    public function testsetSortOnFeed() {
+        $query = new AfsQuery();
+        $query = $query->set_sort('afs:relevance', AfsSortOrder::DESC, 'feed');
+        $this->assertFalse($query->has_sort());
+        $this->assertTrue($query->has_sort('afs:relevance', 'feed'));
+        $this->assertEquals(AfsSortOrder::DESC, $query->get_sort_order('afs:relevance', 'feed'));
+    }
+
     public function testResetSortOrder()
     {
         $query = new AfsQuery();
@@ -664,6 +740,13 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($query->get_key(), 'test');
     }
 
+    public function testFilterFeedNotInParameterList() {
+        $query = new AfsQuery();
+        $query = $query->add_filter('foo', 'bar', 'Catalog');
+        $result = $query->get_parameters();
+        $this->assertFalse(in_array(array('Catalog'), $result));
+    }
+
     public function testCloneQuery()
     {
         $query = new AfsQuery();
@@ -737,6 +820,11 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $query = $query->add_filter('fox', 'bat');
         $query = $query->add_filter('fox', 'bas');
 
+        $query = $query->add_filter_on_feed('foo', array('bar'), 'feed');
+        $query = $query->add_filter_on_feed('foo', array('baz'), 'feed');
+        $query = $query->add_filter_on_feed('fox', array('bat'), 'feed');
+        $query = $query->add_filter_on_feed('fox', array('bas'), 'feed');
+
         $query = $query->add_feed('feed');
         $query = $query->add_feed('food');
 
@@ -773,6 +861,14 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $this->assertTrue(array_key_exists('fox', $result['filter']));
         $this->assertTrue(in_array('bat', $result['filter']['fox']));
         $this->assertTrue(in_array('bas', $result['filter']['fox']));
+
+        $this->assertTrue(array_key_exists('filter@feed', $result));
+        $this->assertTrue(array_key_exists('foo', $result['filter@feed']));
+        $this->assertTrue(in_array('bar', $result['filter@feed']['foo']));
+        $this->assertTrue(in_array('baz', $result['filter@feed']['foo']));
+        $this->assertTrue(array_key_exists('fox', $result['filter@feed']));
+        $this->assertTrue(in_array('bat', $result['filter@feed']['fox']));
+        $this->assertTrue(in_array('bas', $result['filter@feed']['fox']));
 
         $this->assertTrue(array_key_exists('feed', $result));
         $this->assertTrue(in_array('feed', $result['feed']));
@@ -825,6 +921,8 @@ class QueryTest extends PHPUnit_Framework_TestCase
             'query' => 'query',
             'filter' => array('foo' => array('bar', 'baz'),
                               'fox' => array('bat', 'bas')),
+            'filter@feed' => array('fooo' => array('bar', 'baz'),
+                'foxx' => array('bat', 'bas')),
             'feed' => array('feed', 'food'),
             'replies' => 666,
             'lang' => 'en',
@@ -847,6 +945,13 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $this->assertTrue(in_array('fox', $query->get_filters()));
         $this->assertTrue(in_array('bat', $query->get_filter_values('fox')));
         $this->assertTrue(in_array('bas', $query->get_filter_values('fox')));
+
+        $this->assertTrue(in_array('fooo', $query->get_filters('feed')));
+        $this->assertTrue(in_array('bar', $query->get_filter_values('fooo', 'feed')));
+        $this->assertTrue(in_array('baz', $query->get_filter_values('fooo', 'feed')));
+        $this->assertTrue(in_array('foxx', $query->get_filters('feed')));
+        $this->assertTrue(in_array('bat', $query->get_filter_values('foxx', 'feed')));
+        $this->assertTrue(in_array('bas', $query->get_filter_values('foxx', 'feed')));
 
         $this->assertTrue($query->has_feed());
         $this->assertTrue(in_array('feed', $query->get_feeds()));
@@ -985,6 +1090,7 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($facet_mgr->has_facet('FOO'));
         $facet = $facet_mgr->get_facet('FOO');
         $this->assertTrue($facet->has_single_mode());
+        $this->assertFalse($facet_mgr->is_sticky($facet));
     }
     public function testFacetsSingleValuedAsList()
     {
@@ -1021,6 +1127,145 @@ class QueryTest extends PHPUnit_Framework_TestCase
         $query = new AfsQuery();
         $query = $query->set_facet_order(array('foo', 'bar'), AfsFacetOrder::STRICT);
         $this->assertTrue($query->get_facet_manager()->is_facet_order_strict());
+    }
+
+    public function testFtsDefault()
+    {
+        $query = new AfsQuery();
+        $query->set_fts_default(AfsFtsMode::MANDATORY);
+        $parameters = $query->get_parameters();
+        $this->assertEquals('mandatory', $parameters['ftsDefault']);
+        $query->set_fts_default(AfsFtsMode::OPTIONAL);
+        $parameters = $query->get_parameters();
+        $this->assertEquals('optional', $parameters['ftsDefault']);
+        try {
+            $query->set_fts_default('InvalidValu3');
+            $this->fail();
+        } catch (InvalidArgumentException $e) {
+            $this->assertTrue(true);
+        }
+    }
+
+    public function testSetClientData()
+    {
+        $query = new AfsQuery();
+        $ids = array(1,2,3);
+        $query->set_client_data($ids);
+        $parameters = $query->get_parameters();
+        $clientData = $parameters['clientData'];
+        $this->assertEquals(3, count($clientData));
+        foreach ($ids as $id) {
+            $this->assertTrue(in_array($id, $clientData));
+        }
+        $query->set_client_data(4);
+        $parameters = $query->get_parameters();
+        $clientData = $parameters['clientData'];
+        $this->assertEquals(1, count($clientData));
+        $this->assertTrue(in_array(4, $clientData));
+    }
+
+    public function testAddClientData()
+    {
+        $query = new AfsQuery();
+        $ids = array(1,2,3);
+        $id = 4;
+        $query->add_client_data($id);
+        $query->add_client_data($ids);
+        $parameters = $query->get_parameters();
+        $clientData = $parameters['clientData'];
+        $this->assertEquals(4, count($clientData));
+        for ($i=1 ; $i <= 4 ; $i++) {
+            $this->assertTrue(in_array($i, $clientData));
+        }
+    }
+
+    public function testSetGeoDistFilterDefaultParameters() {
+        $query = new AfsQuery();
+
+        // test default parameters
+        $query = $query->set_geoDist_filter(45.5, 5.2, 1000);
+        $functionFilter = PHPUnit_Framework_Assert::readAttribute($query, "nativeFunctionFilter");
+        $expectedAdvancedFilter = array("geo:dist(45.5,5.2,geo:lat,geo:long)<1000");
+        $this->assertTrue($expectedAdvancedFilter == $functionFilter);
+    }
+
+    public function testSetGeoDistFilterFullParameters()
+    {
+        $query = new AfsQuery();
+
+        // test full parameters call
+        $query = $query->set_geoDist_filter(45.5, 5.2, 1000, 'MyLat', 'MyLong');
+        $functionFilter = PHPUnit_Framework_Assert::readAttribute($query, 'nativeFunctionFilter');
+        $expectedNativeFunctionFilter = array("geo:dist(45.5,5.2,MyLat,MyLong)<1000");
+        $this->assertTrue($expectedNativeFunctionFilter == $functionFilter);
+    }
+
+    public function testSetGeoDistMustEraseExistingsOne() {
+        $query = new AfsQuery();
+
+        $query = $query->set_geoDist_filter(45.5, 5.2, 1);
+        $query = $query->set_geoDist_filter(43, 5.2, 2000);
+
+        $functionFilter = PHPUnit_Framework_Assert::readAttribute($query, 'nativeFunctionFilter');
+        $expectedNativeFunctionFilter = "geo:dist(43,5.2,geo:lat,geo:long)<2000";
+        $this->assertTrue(in_array($expectedNativeFunctionFilter, $functionFilter));
+    }
+
+    public function testSetGeoDistMusntEraseOthersFilters()
+    {
+        $query = new AfsQuery();
+
+        $query = $query->set_advanced_filter(filter("FOO")->less->value(42));
+        $query = $query->set_filter('foo', 'bar');
+        $query = $query->set_geoDist_filter(43, 5.2, 2000);
+
+        $advancedFilter = PHPUnit_Framework_Assert::readAttribute($query, 'advancedFilter');
+        $functionFilter = PHPUnit_Framework_Assert::readAttribute($query, 'nativeFunctionFilter');
+        $expectedFunctionFilter = array("geo:dist(43,5.2,geo:lat,geo:long)<2000");
+        $filter = PHPUnit_Framework_Assert::readAttribute($query, 'filter');
+
+        // check in query object
+        $this->assertTrue(in_array('FOO<42', $advancedFilter));
+
+        $facet_id_found = false;
+        $filter_foo = null;
+        foreach ($filter as $f) {
+            if ($f->get_facet_id() === 'foo') {
+                $facet_id_found = true;
+                $filter_foo = $f;
+                break;
+            }
+        }
+        $this->assertTrue($facet_id_found);
+
+        $this->assertTrue($filter_foo->get_values() == array('bar'));
+        $this->assertTrue($expectedFunctionFilter == $functionFilter);
+    }
+
+    public function testFeedContextualization() {
+        $query = new AfsQuery();
+
+        $query = $query->set_filter_on_feed('foo', array('bar'), 'food');
+        $query = $query->set_page(7, 'food');
+        //$query = $query->set_count(10, 'food');
+        $query = $query->set_query('blabla', 'food');
+        $query = $query->set_replies(100, 'food');
+        $query = $query->set_from(AfsOrigin::PRODUCT_DESCRIPTION, 'food');
+        $query = $query->set_key('key1', 'food');
+        $query = $query->set_sort('lang', AfsSortOrder::ASC, 'food');
+
+        $this->assertTrue($query->get_page('food') == 7);
+        $this->assertTrue($query->get_page() == 1);
+        //$this->assertTrue($query->get_count('food') == 10);
+        //$this->assertFalse($query->has_count());
+        $this->assertTrue($query->get_query('food') == 'blabla');
+        $this->assertFalse($query->has_query());
+        $this->assertTrue($query->get_replies('food') == 100);
+        $this->assertTrue($query->get_replies() == 10);
+        $this->assertTrue($query->get_from('food') == AfsOrigin::PRODUCT_DESCRIPTION);
+        $this->assertTrue($query->get_key('food') == 'key1');
+        $this->assertFalse($query->has_key());
+        $this->assertTrue($query->has_sort('lang', 'food'));
     }
 }
 

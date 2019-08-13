@@ -30,6 +30,6 @@ class MDN_Antidot_Front_SearchController extends Mage_Core_Controller_Front_Acti
             $format = $formatParam;
         }
         
-        $this->getResponse()->setBody(Mage::getModel('Antidot/Search_Suggest')->get($query, $format));
+        $this->getResponse()->setBody(Mage::getModel('Antidot/search_suggest')->get($query, $format));
     }
 }

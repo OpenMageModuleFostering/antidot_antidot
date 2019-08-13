@@ -54,6 +54,94 @@ class FacetHelperTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(AfsFacetType::BOOL_TYPE, $helper->get_type());
         $this->assertEquals(AfsFacetLayout::TREE, $helper->get_layout());
         $this->assertEquals(false, $helper->is_sticky());
+
+        $labels = $helper->get_labels();
+        $this->assertEquals(array("ES" => "Faceta booleana", "FR" => "Facette booléenne", "Boolean facet"), $labels);
+    }
+
+    public function testRetrieveLabelsWhenNoLabelsExists() {
+        $input = json_decode('{
+            "afs:t": "FacetTree",
+            "node": [
+                {
+                    "key": "false",
+                    "labels": [
+                        {
+                            "label": "BAD"
+                        }
+                    ],
+                    "items": 67
+                }
+            ],
+            "layout": "TREE",
+            "type": "BOOL",
+            "id": "FOO",
+             "sticky": "true" }');
+
+        $config = new AfsHelperConfiguration();
+        $helper = new AfsFacetHelper($input, new AfsQuery(), $config);
+        $labels = $helper->get_labels();
+        $this->assertEquals(array("FOO"), $labels);
+        $this->assertEquals("FOO", $helper->get_label());
+    }
+
+    public function testRetrieveTags() {
+        $input = json_decode('{
+            "afs:t": "FacetTree",
+            "tags": "tag1 tag2 tag3",
+            "node": [
+                {
+                    "key": "false",
+                    "labels": [
+                        {
+                            "label": "BAD"
+                        }
+                    ],
+                    "items": 67
+                }
+            ],
+            "layout": "TREE",
+            "type": "BOOL",
+            "id": "FOO",
+            "labels": [
+                {
+                    "label": "String facet"
+                }
+             ],
+             "sticky": "true" }');
+
+        $config = new AfsHelperConfiguration();
+        $helper = new AfsFacetHelper($input, new AfsQuery(), $config);
+        $this->assertEquals(array('tag1', 'tag2', 'tag3'), $helper->get_tags());
+    }
+
+    public function testNotags() {
+        $input = json_decode('{
+            "afs:t": "FacetTree",
+            "node": [
+                {
+                    "key": "false",
+                    "labels": [
+                        {
+                            "label": "BAD"
+                        }
+                    ],
+                    "items": 67
+                }
+            ],
+            "layout": "TREE",
+            "type": "BOOL",
+            "id": "FOO",
+            "labels": [
+                {
+                    "label": "String facet"
+                }
+             ],
+             "sticky": "true" }');
+
+        $config = new AfsHelperConfiguration();
+        $helper = new AfsFacetHelper($input, new AfsQuery(), $config);
+        $this->assertEquals(array(), $helper->get_tags());
     }
 
     public function testRetrieveStickyness()

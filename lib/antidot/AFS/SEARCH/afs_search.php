@@ -56,6 +56,17 @@ class AfsSearch
         if (! $this->config->has_query_coder()) {
             $this->config->set_query_coder(new AfsQueryCoder());
         }
+        $parameters = array();
+        /*foreach (explode('&', urldecode($_SERVER['QUERY_STRING'])) as $param) {
+            list($key, $value) = explode('=', $param);
+            $separator = $this->config->get_query_coder()->get_separator($key);
+            if (array_key_exists($key, $parameters)) {
+                $parameters[$key] = $parameters[$key] . $separator . $value;
+            } else {
+                $parameters[$key] = $value;
+            }
+        }*/
+
         $this->query = $this->config->get_query_coder()->build_query($_GET);
         return $this->query;
     }
@@ -134,6 +145,14 @@ class AfsSearch
     public function get_helpers_configuration()
     {
         return $this->config;
+    }
+
+    /** @brief set helper configuration
+     * @param $helperConfiguration the new configuration
+     */
+    public function set_helper_configuration($helperConfiguration)
+    {
+        $this->config = $helperConfiguration;
     }
 
     /** @brief Retrieves search engine connector.

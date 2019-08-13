@@ -33,9 +33,8 @@ class MDN_Antidot_Block_System_Config_Button_AfsStore extends Mage_Adminhtml_Blo
          * we get the magento back-office session language to determine
          * the locale of the AfsStore Back-office link
          */
-        $locale = Mage::getSingleton('adminhtml/session')->getLocale();
-        $locArr = explode('_',$locale);
-        $urlLocale = array_shift($locArr);
+        $codeLocale = Mage::getSingleton('adminhtml/session')->getLocale();
+        $urlLocale = Mage::helper('Antidot')->getLanguageFromCodeLocale($codeLocale);
         if (in_array($urlLocale, $this->afsStoreLocales)) {
             $url .= $urlLocale;
         } else {

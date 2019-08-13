@@ -372,6 +372,90 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
     }
 
     /**
+     * MCNX-221 : test variant product without variant is not exported
+     * @test
+     * @loadFixture
+     */
+    public function testWriteProductNoVariant() {
+
+        /* @var $export \MDN_Antidot_Model_Export_Product */
+        $export = Mage::getModel('Antidot/export_product');
+
+        //Load a grouped product on store french, this product has no associated product
+        $storeId = 3;
+        Mage::app()->setCurrentStore($storeId);
+        $product = $this->loadProduct(1, $storeId);
+
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'initXml', array('product'));
+        /* @var $export \MDN_Antidot_Helper_Xml_Writer */
+        $xmlWriter = MDN_Antidot_Test_PHPUnitUtil::getPrivateProperty($export, 'xml');
+        $xmlWriter->flush();
+
+        /*
+         * The writeProduct method is called with the "empty" grouped product
+         */
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeProduct', array($product, array(Mage::app()->getStore())));
+
+        $this->assertEquals('', $xmlWriter->getXml());
+
+
+    }
+
+    /**
+     * MCNX-222 : test Write prices  : Fixed tax prices
+     * @test
+     * @loadFixture
+     */
+    public function testWritePricesFixedtax() {
+
+        /* @var $export \MDN_Antidot_Model_Export_Product */
+        $export = Mage::getModel('Antidot/export_product');
+
+        $storeId = 3;
+        $store = Mage::getModel('core/store')->load($storeId);
+        $product = $this->loadProduct(1, $storeId);
+        $context = array('currency'=>'EUR', 'country'=>'FR');
+
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'initXml', array('product'));
+        /* @var $export \MDN_Antidot_Helper_Xml_Writer */
+        $xmlWriter = MDN_Antidot_Test_PHPUnitUtil::getPrivateProperty($export, 'xml');
+        $xmlWriter->flush();
+
+        /*
+         * The writePrices is called without fixed tax price activated
+         * expected data also in dataProvider
+         */
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $context, $store));
+
+        $expected='<prices><price currency="EUR" type="PRICE_FINAL" vat_included="true" country="FR">12.99</price></prices>';
+        $this->assertEquals($expected, $xmlWriter->getXml());
+        $xmlWriter->flush();
+
+        /*
+         * The writePrices is called witout fixed tax price activated
+         * expected data also in dataProvider
+         */
+        $mockHelper = $this->getHelperMock('weee', array('isEnabled', 'getAmount'));
+        $mockHelper->expects($this->any())
+            ->method('isEnabled')
+            ->will($this->returnValue(true)); //activate fixed tax in the mock helper
+        $mockHelper->expects($this->any())
+            ->method('getAmount')
+            ->will($this->returnValue(3));  //Set a fixed tax price of 3 EUR  in the mock helper
+        $this->replaceByMock('helper', 'weee', $mockHelper);
+
+        /*
+         * The writePrices is called with fixed tax price activated
+         * expected data also in dataProvider
+         */
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $context, $store));
+
+        $expected='<prices><price currency="EUR" type="PRICE_FINAL" vat_included="true" country="FR">15.99</price></prices>';
+        $this->assertEquals($expected, $xmlWriter->getXml());
+
+
+    }
+    /**
      *
      * @param $productId
      * @param $storeId

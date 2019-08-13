@@ -11,7 +11,8 @@ function is_not_null($value) {
 class AfsFacetHelper extends AfsHelperBase
 {
     private $id = null;
-    private $label = null;
+    private $labels = null;
+    private $tags = null;
     private $layout = null;
     private $type = null;
     private $sticky = null;
@@ -23,19 +24,20 @@ class AfsFacetHelper extends AfsHelperBase
      * @param $query [in] @a AfsQuery which has produced current reply.
      * @param $config [in] helper configuration object.
      */
-    public function __construct($facet, AfsQuery $query, AfsHelperConfiguration $config)
+    public function __construct($facet, AfsQuery $query, AfsHelperConfiguration $config, $feed=null)
     {
         $this->id = $facet->id;
-        if (property_exists($facet, 'labels') && ! empty($facet->labels)
-                && property_exists($facet->labels[0], 'label')) {
-            $this->label = $facet->labels[0]->label;
-        } else {
-            $this->label = $this->id;
+        if (property_exists($facet, 'labels') && ! empty($facet->labels)) {
+            $this->labels = $facet->labels;
         }
+        if (property_exists($facet, 'tags')) {
+            $this->tags = $facet->tags;
+        }
+
         $this->layout = $facet->layout;
         $this->type = $facet->type;
         if (property_exists($facet, 'sticky')
-                && 0 == strcmp('true', $facet->sticky)) {
+            && 0 == strcmp('true', $facet->sticky)) {
             $this->sticky = true;
         } else {
             $this->sticky = false;
@@ -43,7 +45,7 @@ class AfsFacetHelper extends AfsHelperBase
         $facet_manager = $query->get_facet_manager();
         $facet_manager->check_or_add_facet(new AfsFacet($this->id, $this->type, $this->layout));
         $builder = new AfsFacetElementBuilder($facet_manager, $query);
-        $this->elements = $builder->create_elements($this->id, $facet, $config);
+        $this->elements = $builder->create_elements($this->id, $facet, $config, $feed);
     }
 
     /** @brief Retrieve facet label.
@@ -55,7 +57,44 @@ class AfsFacetHelper extends AfsHelperBase
      */
     public function get_label()
     {
-        return $this->label;
+        if (!is_null($this->labels)) {
+            return $this->labels[0]->label;
+        } else {
+            return $this->id;
+        }
+    }
+
+    /** @brief Retrieve all facet labels
+     *
+     * @return labels as a string array
+     */
+    public function get_labels() {
+        $labels = array();
+        if (!is_null($this->labels)) {
+            foreach ($this->labels as $label) {
+                if (property_exists($label, "lang")) {
+                    $labels[strtolower($label->lang)] = ($label->label);
+                } else {
+                    $labels[] = ($label->label);
+                }
+            }
+        }
+        else {
+            $labels[] = $this->id;
+        }
+        return $labels;
+    }
+
+    /** @brief Retrieve current facet tags
+     *
+     * @return tags as a string array or empty array if current facet have no tags
+     */
+    public function get_tags() {
+        if (! is_null($this->tags)) {
+            return explode(' ', $this->tags);
+        }
+
+        return array();
     }
 
     /** @brief Retrieves facet id.
@@ -116,7 +155,7 @@ class AfsFacetHelper extends AfsHelperBase
     public function format()
     {
         return array('label' => $this->get_label(),
-                     'values' => $this->get_elements());
+            'values' => $this->get_elements());
     }
 
 }
@@ -197,7 +236,7 @@ class AfsFacetValueHelper extends AfsHelperBase
      * @li @c label: label of the facet value,
      * @li @c key: key of the facet value,
      * @li @c count: number of element of the facet value,
-     * @li @c active: state of the facet value: true when this facet value is 
+     * @li @c active: state of the facet value: true when this facet value is
      * used in current query, false otherwise,
      * @li @c query: query associated to the facet value (see @a query property
      * for more details),
@@ -207,7 +246,7 @@ class AfsFacetValueHelper extends AfsHelperBase
      * @li @c meta: key-value pairs of meta data identifiers and values.
      *
      * @remark: When helpers are used to create such facet value, if @a link is
-     * generated from @a query, then the query is no more necessary and not 
+     * generated from @a query, then the query is no more necessary and not
      * provided. So one of @c query and @c link is null.
      *
      * @return array filled with key and values.
@@ -256,11 +295,11 @@ class AfsFacetElementBuilder
      * @return list of facet elements (see @ AfsFacetValueHelper).
      */
     public function create_elements($facet_id, $facet_element,
-        AfsHelperConfiguration $config)
+        AfsHelperConfiguration $config, $feed=null)
     {
         $formatter = AfsFacetHelperRetriever::get_formatter($facet_id, $this->query);
         return $this->create_elements_recursively($facet_id, $facet_element,
-            $formatter, $config);
+            $formatter, $config, $feed);
     }
 
     /** @internal
@@ -275,7 +314,7 @@ class AfsFacetElementBuilder
      * @return list of facet elements (see @ AfsFacetValueHelper).
      */
     private function create_elements_recursively($facet_id, $facet_element,
-        AfsFacetValueIdFormatter $formatter, AfsHelperConfiguration $config)
+        AfsFacetValueIdFormatter $formatter, AfsHelperConfiguration $config, $feed)
     {
         $elements = array();
 
@@ -290,22 +329,27 @@ class AfsFacetElementBuilder
             $children = array();
             if (property_exists($elem, 'node')) {
                 $children = $this->create_elements_recursively($facet_id,
-                    $elem, $formatter, $config);
+                    $elem, $formatter, $config, $feed);
             }
 
             $value_id = $formatter->format($elem->key);
             $label = $this->extract_label($elem);
             $meta = $this->extract_meta($elem);
-            $active = $this->query->has_filter($facet_id, $value_id);
-            $query = $this->generate_query($facet_id, $value_id, $active);
+
+            $active = ($this->query->has_filter($facet_id, $value_id)) ||
+                $this->query->has_filter($facet_id, $value_id, $feed);
+
+            $feed = (! $this->query->has_filter($facet_id, $value_id, $feed)) ? null : $feed;
+
+            $query = $this->generate_query($facet_id, $value_id, $active, $feed);
             if ($config->has_query_coder()) {
                 $link = $config->get_query_coder()->generate_link($query);
-                $query = null; // we don't need it anymore
+                //$query = null; // we don't need it anymore
             } else {
                 $link = null;
             }
             $elements[] = new AfsFacetValueHelper($label, $value_id, $elem->items,
-                            $meta, $active, $query, $link, $children);
+                $meta, $active, $query, $link, $children);
 
         }
         return $elements;
@@ -331,21 +375,32 @@ class AfsFacetElementBuilder
         return $result;
     }
 
-    private function generate_query($facet_id, $value_id, $active)
+    private function generate_query($facet_id, $value_id, $active, $feed=null)
     {
         $result = null;
         $facet = $this->facet_mgr->get_facet($facet_id);
+
         if ($active) {
-            $result = $this->query->remove_filter($facet_id, $value_id);
+            if (! is_null($feed)) {
+                $result = $this->query->remove_filter_on_feed($facet_id, $value_id, $feed);
+            } else {
+                $result = $this->query->remove_filter($facet_id, $value_id);
+            }
         } else {
             if ($facet->has_single_mode()) {
-                $result = $this->query->set_filter($facet_id, $value_id);
+                if (! is_null($feed)) {
+                    $result = $this->query->set_filter_on_feed($facet_id, array($value_id), $feed);
+                } else {
+                    $result = $this->query->set_filter($facet_id, $value_id);
+                }
             } else {
-                $result = $this->query->add_filter($facet_id, $value_id);
+                if (! is_null($feed)) {
+                    $result = $this->query->add_filter_on_feed($facet_id, array($value_id), $feed);
+                } else {
+                    $result = $this->query->add_filter($facet_id, $value_id);
+                }
             }
         }
         return $result;
     }
 }
-
-

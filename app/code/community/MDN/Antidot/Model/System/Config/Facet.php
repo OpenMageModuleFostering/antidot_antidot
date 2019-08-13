@@ -30,7 +30,11 @@ class MDN_Antidot_Model_System_Config_Facet
                 $this->options = array();
                 foreach($search->getFacets() as $facetId => $facet) {
                     if($typeExclude === null || $facet->get_type() !== $typeExclude) {
-                        $this->options[] = array('value' => $facetId.'|'.$facet->label, 'label' => $facetId.' ('.$facet->get_type().')');
+                        /*
+                         * MCNX-217 : we store all the labels returned by the afsstore WS in a serialized array
+                         * it will be used in front office using the current language
+                         */
+                        $this->options[] = array('value' => $facetId.'|'.serialize($facet->get_labels()), 'label' => $facetId.' ('.$facet->get_type().')');
                     }
                 }
 

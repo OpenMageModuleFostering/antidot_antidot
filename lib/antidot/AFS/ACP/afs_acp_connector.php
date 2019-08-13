@@ -37,4 +37,14 @@ class AfsAcpConnector extends AfsConnector
     {
         return array('error' => $message, 'details' => $details);
     }
+
+    /** @internal
+     * @brief Overloads default implementation by setting json version to 1 in order to make it work with the API. 
+     * @param $parameters [in-out] List of parameters to update with standard parameters.
+     */
+    protected function update_with_defaults(array& $parameters)
+    {
+        parent::update_with_defaults($parameters);
+        $parameters['afs:output'] = 'json,1';
+    }
 }

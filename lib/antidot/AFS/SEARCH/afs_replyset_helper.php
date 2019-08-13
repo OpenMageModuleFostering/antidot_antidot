@@ -42,7 +42,7 @@ class AfsReplysetHelper extends AfsBaseReplysetHelper
         $facets = array();
         if (property_exists($reply_set, 'facets') && property_exists($reply_set->facets, 'facet')) {
             foreach ($reply_set->facets->facet as $facet) {
-                $helper = new AfsFacetHelper($facet, $query, $config);
+                $helper = new AfsFacetHelper($facet, $query, $config, $this->get_meta()->get_feed());
                 $facets[$helper->get_id()] = $helper;
             }
         }
@@ -73,8 +73,9 @@ class AfsReplysetHelper extends AfsBaseReplysetHelper
 
     protected function initialize_pager($reply_set, $query, $config)
     {
-        if (property_exists($reply_set, 'pager'))
+        if (property_exists($reply_set, 'pager')) {
             $this->pager = new AfsPagerHelper($reply_set->pager, $this->meta, $query, $config);
+        }
     }
 
 

@@ -2,6 +2,9 @@
 require_once 'COMMON/afs_user_session_manager.php';
 require_once 'COMMON/afs_exception.php';
 require_once 'AFS/afs_origin.php';
+require_once 'AFS/afs_single_value_parameter.php';
+require_once 'AFS/afs_multiple_values_parameter.php';
+require_once 'AFS/afs_feed.php';
 
 /** @brief Represents an AFS query.
  *
@@ -14,7 +17,7 @@ abstract class AfsQueryBase
 {
     protected $feed = array();      // afs:feed
     protected $query = null;        // afs:query
-    protected $replies = 10;        // afs:replies
+    protected $replies = null;        // afs:replies
     protected $userId = null;       // afs:userId
     protected $sessionId = null;    // afs:sessionId
     protected $log = array();       // afs:log
@@ -31,19 +34,29 @@ abstract class AfsQueryBase
     public function __construct(AfsQueryBase $afs_query=null)
     {
         if (is_null($afs_query)) {
-            $this->userId = uniqid('user_');
-            $this->sessionId = uniqid('session_');
+            $this->userId = new AfsSingleValueParameter('userId', uniqid('user_'));
+            $this->sessionId = new AfsSingleValueParameter('sessionId', uniqid('session_'));
+            $this->replies = new AfsSingleValueParameter('replies', 10);
         } else {
-            $this->feed = $afs_query->feed;
-            $this->query = $afs_query->query;
-            $this->replies = $afs_query->replies;
-            $this->userId = $afs_query->userId;
-            $this->sessionId = $afs_query->sessionId;
-            $this->log = $afs_query->log;
-            $this->key = $afs_query->key;
-            $this->from = $afs_query->from;
-            $this->auto_set_from = $afs_query->auto_set_from;
+            foreach ($afs_query->feed as $feed) {
+                $this->feed[] = $feed->copy();
+            }
+
+            if (! is_null($afs_query->query)) $this->query = clone $afs_query->query;
+            if (!is_array($afs_query->replies)) $this->replies = clone $afs_query->replies;
+            else $this->replies = new AfsSingleValueParameter('replies', 10);
+            if (! is_null($afs_query->userId)) $this->userId = clone $afs_query->userId;
+            if (! is_null($afs_query->sessionId)) $this->sessionId = clone $afs_query->sessionId;
+
+            foreach ($afs_query->log as $log) {
+                $this->log[] = clone $log;
+            }
+
+            if (! is_null($afs_query->key)) $this->key = clone $afs_query->key;
+            if (! is_null($afs_query->from)) $this->from = clone $afs_query->from;
+            if (! is_null($afs_query->sessionId)) $this->sessionId = clone $afs_query->sessionId;
             $this->custom_parameters = $afs_query->custom_parameters;
+            $this->auto_set_from = $afs_query->auto_set_from;
         }
     }
 
@@ -64,9 +77,22 @@ abstract class AfsQueryBase
     /** @brief Checks whether feed parameter is set.
      * @return @c true when at least one feed is defined, @c false otherwise.
      */
-    public function has_feed()
+    public function has_feed($feed=null)
     {
-        return ! empty($this->feed);
+        if (is_null($feed)) {
+            foreach ($this->feed as $f) {
+                if ($f->is_activated())
+                    return true;
+            }
+            return false;
+        }
+        else {
+            foreach ($this->feed as $f) {
+                if ($f->is_activated() && $f->get_name() === $feed)
+                    return true;
+            }
+            return false;
+        }
     }
 
     /** @brief Assigns new feed name replacing any existing one.
@@ -75,8 +101,8 @@ abstract class AfsQueryBase
     public function set_feed($feed)
     {
         $copy = $this->copy();
-        $copy->on_assignment();
-        $copy->feed = array($feed);
+        is_null($assignment_res = $copy->on_assignment()) ? null : $copy = $assignment_res;
+        $copy->feed = array(new AfsFeed($feed, true));
         return $copy;
     }
 
@@ -86,9 +112,31 @@ abstract class AfsQueryBase
     public function add_feed($feed)
     {
         $copy = $this->copy();
-        $copy->on_assignment();
-        $copy->feed[] = $feed;
+        is_null($assignment_res = $copy->on_assignment()) ? null : $copy = $assignment_res;
+
+        $feed_found = false;
+        foreach ($copy->feed as $f) {
+            if ($f->get_name() === $feed) {
+                $f->set_activated(true);
+                $feed_found = true;
+                break;
+            }
+        }
+
+        if (! $feed_found) {
+            $copy->feed[] = new AfsFeed($feed, true);
+        }
+
         return $copy;
+    }
+
+    protected function get_feed($feed) {
+        foreach ($this->feed as $f) {
+            if ($f->get_name() === $feed) {
+                return $f;
+            }
+        }
+        return null;
     }
 
     /** @brief Retrieves all defined feeds.
@@ -96,7 +144,11 @@ abstract class AfsQueryBase
      */
     public function get_feeds()
     {
-        return $this->feed;
+        $feeds = array();
+        foreach ($this->feed as $feed) {
+            $feeds[] = $feed->get_name();
+        }
+        return $feeds;
     }
     /**  @} */
 
@@ -106,9 +158,9 @@ abstract class AfsQueryBase
     /** @brief Checks whether current instance has a query.
      * @return true when a query is defined, false otherwise.
      */
-    public function has_query()
+    public function has_query($feed=null)
     {
-        return $this->query != null;
+        return $this->has_parameter('query', $feed);
     }
     /** @brief Retrieves the query.
      *
@@ -116,9 +168,9 @@ abstract class AfsQueryBase
      * query by calling @a has_query.
      * @return the query.
      */
-    public function get_query()
+    public function get_query($feed=null)
     {
-        return $this->query;
+        return $this->get_parameter('query', $feed);
     }
     /** @brief Assigns new query value.
      *
@@ -126,11 +178,13 @@ abstract class AfsQueryBase
      * @param $new_query [in] query to assign to the instance.
      * @return new up to date instance.
      */
-    public function set_query($new_query)
+    public function set_query($new_query, $feed=null)
     {
         $copy = $this->copy();
-        $copy->on_assignment();
-        $copy->query = $new_query;
+        is_null($assignment_res = $copy->on_assignment()) ? null : $copy = $assignment_res;
+
+        $copy->set_parameter('query', $new_query, $feed);
+
         return $this->auto_set_from ? $copy->set_from(AfsOrigin::SEARCHBOX) : $copy;
     }
     /**  @} */
@@ -141,9 +195,9 @@ abstract class AfsQueryBase
     /** @brief Checks whether replies is set.
      * @return always true.
      */
-    public function has_replies()
+    public function has_replies($feed=null)
     {
-        return $this->replies != null;
+        return $this->has_parameter('replies', $feed);
     }
     /** @brief Defines new number of replies.
      * @param $replies_nb [in] requested number of replies. It should be
@@ -151,21 +205,21 @@ abstract class AfsQueryBase
      * @return new up to date instance.
      * @exception Exception on invalid replies number provided.
      */
-    public function set_replies($replies_nb)
+    public function set_replies($replies_nb, $feed=null)
     {
-        if ($replies_nb < 0)
-            throw new Exception('Invalid number of replies: ' . $replies_nb);
         $copy = $this->copy();
-        $copy->on_assignment();
-        $copy->replies = $replies_nb;
-        return $copy;
+        is_null($assignment_res = $copy->on_assignment()) ? null : $copy = $assignment_res;
+
+        $copy->set_parameter('replies', (int) $replies_nb, $feed);
+
+        return $this->auto_set_from ? $copy->set_from(AfsOrigin::SEARCHBOX) : $copy;
     }
     /** @brief Get number of replies per page.
      * @return number of replies per reply page.
      */
-    public function get_replies()
+    public function get_replies($feed=null)
     {
-        return $this->replies;
+        return  $this->get_parameter('replies', $feed);
     }
     /**  @} */
 
@@ -192,18 +246,18 @@ abstract class AfsQueryBase
      * @return current instance.
      * @exception Exception when provided origin value is invalid.
      */
-    public function set_from($from)
+    public function set_from($from, $feed=null)
     {
         AfsOrigin::check_value($from, 'Invalid query origin: ');
-        $this->from = $from;
+        $this->set_parameter('from', $from, $feed);
         return $this;
     }
     /** @brief Retrieves origin of the query.
      * @return origin of the query.
      */
-    public function get_from()
+    public function get_from($feed=null)
     {
-        return $this->from;
+        return $this->get_parameter('from', $feed);
     }
     /** @} */
 
@@ -220,7 +274,7 @@ abstract class AfsQueryBase
      */
     public function set_user_id($user_id)
     {
-        $this->userId = $user_id;
+        $this->set_parameter('userId', $user_id);
         return $this;
     }
     /** @brief Checks whether user id is set.
@@ -236,7 +290,7 @@ abstract class AfsQueryBase
      */
     public function get_user_id()
     {
-        return $this->userId;
+        return $this->get_parameter('userId');
     }
 
     /** @brief Defines session id.
@@ -246,7 +300,7 @@ abstract class AfsQueryBase
      */
     public function set_session_id($session_id)
     {
-        $this->sessionId = $session_id;
+        $this->set_parameter('sessionId', $session_id);
         return $this;
     }
     /** @brief Checks whether session id is set.
@@ -262,7 +316,7 @@ abstract class AfsQueryBase
      */
     public function get_session_id()
     {
-        return $this->sessionId;
+        return $this->get_parameter('sessionId');
     }
 
     /** @brief Initializes user id and session id.
@@ -324,7 +378,7 @@ abstract class AfsQueryBase
      */
     public function add_log($value)
     {
-        $this->log[] = $value;
+        $this->log[] = new AfsSingleValueParameter('log', $value);
         return $this;
     }
 
@@ -335,7 +389,12 @@ abstract class AfsQueryBase
      */
     public function get_logs()
     {
-        return $this->log;
+        $logs = array();
+        foreach ($this->log as $log) {
+            $logs[] = $log->get_value();
+        }
+
+        return $logs;
     }
     /** @} */
 
@@ -345,25 +404,25 @@ abstract class AfsQueryBase
     /** @brief Checks whether key parameter is set.
      * @return True when key parameter is set, false otherwise.
      */
-    public function has_key()
+    public function has_key($feed=null)
     {
-        return $this->key != null;
+        return $this->has_parameter('key', $feed);
     }
     /** @brief Defines key id.
      * @param $key_id [in] Key id to set.
      * @return Current instance.
      */
-    public function set_key($key_id)
+    public function set_key($key_id, $feed=null)
     {
-        $this->key = $key_id;
+        $this->set_parameter('key', $key_id, $feed);
         return $this;
     }
     /** @brief Retrieves key value.
      * @return Key value.
      */
-    public function get_key()
+    public function get_key($feed=null)
     {
-        return $this->key;
+        return $this->get_parameter('key', $feed);
     }
     /**  @} */
 
@@ -390,10 +449,52 @@ abstract class AfsQueryBase
             if ($own_param != null && !empty($own_param)) {
                 if (is_object($own_param) && is_callable(array($own_param, 'format')))
                     $own_param = $own_param->format();
+                elseif (is_array($own_param)) {
+                    $formatted_param = array();
+                    foreach ($own_param as $key => $param_value) {
+                        if (is_object($param_value) && is_callable(array($param_value, 'format'))) {
+                            $formatted_value = $param_value->format();
+                            if (is_array($formatted_value))
+                                $formatted_param = array_merge($formatted_param, $formatted_value);
+                            else
+                                $formatted_param[$key] = $formatted_value;
+                        } else {
+                            $formatted_param[$key] = $param_value;
+                        }
+                    }
+                    $own_param = $formatted_param;
+                }
                 $result[$param] = $own_param;
             }
         }
+
+        $result = $this->add_feed_parameters($parameters, $result);
         return $result;
+    }
+
+    private function add_feed_parameters(array $parameters_to_add, array $parameters) {
+
+        foreach($this->feed as $feed) {
+            if ($feed->is_activated()) {
+                if (! array_key_exists('feed', $parameters))
+                    $parameters['feed'] = array();
+
+                $parameters['feed'][] = $feed->get_name();
+            }
+
+            $feed_parameters = $feed->get_parameters($parameters_to_add);
+            /* feed parameter should override default parameter
+            foreach ($feed_parameters as $name => $parameter) {
+                list($name, $feed) = explode('@', $name);
+                if (array_key_exists($name, $parameters) === true) {
+                    unset($parameters[$name]);
+                }
+            }*/
+
+            $parameters = array_merge($parameters, $feed_parameters);
+        }
+
+        return $parameters;
     }
 
     private function get_aggregated_relevant_parameters()
@@ -413,7 +514,7 @@ abstract class AfsQueryBase
      */
     protected function get_relevant_parameters()
     {
-        return array_merge(array('replies', 'feed', 'query'), array_keys($this->custom_parameters));
+        return array_merge(array('replies', 'query'), array_keys($this->custom_parameters));
     }
 
     /** @brief Retrieves additional parameters.
@@ -431,7 +532,7 @@ abstract class AfsQueryBase
         return $this->custom_parameters;
     }
 
-    public function set_custom_parameter($key, $value)
+    public function set_custom_parameter($key, $value, $feed=null)
     {
         $this->custom_parameters[$key] = $value;
     }
@@ -442,6 +543,8 @@ abstract class AfsQueryBase
         if(property_exists($this, $name)) {
             //$name is a field of AfsQueryBase
             return $this->$name;
+        } elseif (method_exists($this, $name)) {
+            return $this->$name;
         } else {
             if (array_key_exists($name, $this->custom_parameters)) {
                 //$name is a custom parameter
@@ -449,6 +552,45 @@ abstract class AfsQueryBase
             } else {
                 throw new InvalidArgumentException();
             }
+        }
+    }
+
+
+    protected function has_parameter($param, $feed=null)
+    {
+        if (! is_null($feed) && ($f = $this->get_feed($feed)) !== null) {
+            return $f->get_parameter($param) == null ? false : true;
+        } else {
+            return $this->$param != null;
+        }
+    }
+
+    protected function get_parameter($param, $feed=null)
+    {
+        if (! is_null($feed) && ($f = $this->get_feed($feed)) != null) {
+            return $f->get_parameter($param)->get_value();
+        } else {
+            if (is_null($this->$param)) {
+                return null;
+            } else {
+                return $this->$param->get_value();
+            }
+        }
+    }
+
+    protected function set_parameter($param, $value, $feed=null) {
+        if (! is_null($feed) &&  ($f = $this->get_feed($feed)) !== null) {
+            if (($q = $f->get_parameter($param)) !== null) {
+                $f->get_parameter($param)->set_value($value);
+            } else {
+                $f->add_parameters(new AfsSingleValueParameter($param, $value));
+            }
+        } elseif (! is_null($feed)) {
+            $f = new AfsFeed($feed, false);
+            $f->add_parameters(new AfsSingleValueParameter($param, $value));
+            $this->feed[] = $f;
+        } else {
+            $this->$param = new AfsSingleValueParameter($param, $value);
         }
     }
 }
