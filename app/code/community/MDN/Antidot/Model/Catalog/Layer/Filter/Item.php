@@ -56,23 +56,20 @@ class MDN_Antidot_Model_Catalog_Layer_Filter_Item extends Mage_Catalog_Model_Lay
      */
     public function getUrl()
     {
-        $values = array();
-        if($currentValues = Mage::getSingleton('core/app')->getRequest()->getParam($this->getFilter()->getRequestVar())) {
-            $values = explode(',', $currentValues);
-        }
-        
+        $values = $this->getCurrentSelectedValues($this->getFilter()->getRequestVar());
+
         if(false !== $key = array_search($this->getValue(), $values)) {
             unset($values[$key]);
         } else {
             $values[] = $this->getValue();
         }
 
-        $values = count($values) > 1 ? implode(',', $values) : current($values);
+        $values = count($values) > 1 ? implode(',', $values) : array_shift($values);
         $query = array(
             $this->getFilter()->getRequestVar() => (empty($values) ? null : $values),
             Mage::getBlockSingleton('page/html_pager')->getPageVarName() => null // exclude current page from urls
         );
-        
+
         return Mage::getUrl('*/*/*', array('_current'=>true, '_use_rewrite'=>true, '_query'=>$query));
     }
 
@@ -144,8 +141,28 @@ class MDN_Antidot_Model_Catalog_Layer_Filter_Item extends Mage_Catalog_Model_Lay
      */
     public function isSelected()
     {
-        $selected = Mage::getSingleton('core/app')->getRequest()->getParam($this->getFilter()->getRequestVar());
-        
-        return in_array($this->getValue(), explode(',', $selected), true);
-    } 
+
+        $selectedArray = $this->getCurrentSelectedValues($this->getFilter()->getRequestVar());
+
+        return in_array($this->getValue(), $selectedArray, true);
+    }
+
+    /**
+     * Return array of the selected values of
+     * the given filter
+     *
+     * @param string $filter
+     * @return array
+     */
+    public function getCurrentSelectedValues($filter) {
+
+        $selected = Mage::getSingleton('core/app')->getRequest()->getParam($filter);
+
+        if ($selected) {
+            $antidotEngine = Mage::getResourceSingleton('Antidot/engine_Antidot');
+            return $antidotEngine->extractMultiSelectValues($selected);
+        } else {
+            return array();
+        }
+    }
 }

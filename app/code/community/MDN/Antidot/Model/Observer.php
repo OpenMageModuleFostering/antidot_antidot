@@ -9,14 +9,15 @@
  * It is also available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
  *
- * @copyright  Copyright (c) 2009 Maison du Logiciel (http://www.maisondulogiciel.com)
- * @author : Olivier ZIMMERMANN
+ * @copyright  Copyright (c) 2015 Antidot (http://www.antidot.net)
+ * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
 {
     const GENERATE_FULL = 'FULL';
     const GENERATE_INC = 'INC';
+    const MINIMUM_MEMORY_LIMIT = '2048M';
 
     /**
      * @var string @tmpDirectory
@@ -48,9 +49,52 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         $this->begin        = microtime(true);
         $this->initTmpDirectory();
 
-        ini_set('memory_limit', '1024M');
+        /*
+         * If the default memory limit is below 2048M set it to 2048M
+         * else if it is above 2048M let it as it is
+         */
+	    if ($this->return_bytes(ini_get('memory_limit')) < $this->return_bytes(self::MINIMUM_MEMORY_LIMIT)) {
+			ini_set('memory_limit', self::MINIMUM_MEMORY_LIMIT);
+		}
+
     }
 
+    /**
+     * Gives the value in bytes
+     */
+    protected function return_bytes ($val)
+	{
+	    if(empty($val))return 0;
+
+	    $val = trim($val);
+	
+	    preg_match('#([0-9]+)[\s]*([a-z]+)#i', $val, $matches);
+	
+	    $last = '';
+	    if(isset($matches[2])){
+	        $last = $matches[2];
+	    }
+	
+	    if(isset($matches[1])){
+	        $val = (int) $matches[1];
+	    }
+	
+	    switch (strtolower($last))
+	    {
+	        case 'g':
+	        case 'gb':
+	            $val *= 1024;
+	        case 'm':
+	        case 'mb':
+	            $val *= 1024;
+	        case 'k':
+	        case 'kb':
+	            $val *= 1024;
+	    }
+	
+	    return (int) $val;
+	}
+	
     /**
      * Init the tmp directory
      */
@@ -77,26 +121,26 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     /**
      * Generate the full catalog file
      */
-    public function catalogFullExport() 
+    public function catalogFullExport($runContext = 'cron')
     {
         $this->log('FULL EXPORT');
-        $this->generate(Mage::getModel('Antidot/Export_Product'), self::GENERATE_FULL);
+        return $this->generate(Mage::getModel('Antidot/Export_Product'), self::GENERATE_FULL, $runContext);
     }
     
     /**
      * Generate the  inc catalog file
      */
-    public function catalogIncExport() 
+    public function catalogIncExport($runContext = 'cron')
     {
-        $this->generate(Mage::getModel('Antidot/Export_Product'), self::GENERATE_INC);
+        return $this->generate(Mage::getModel('Antidot/Export_Product'), self::GENERATE_INC, $runContext);
     }
     
     /**
      * Generate the category file
      */
-    public function categoriesFullExport() 
+    public function categoriesFullExport($runContext = 'cron')
     {
-        $this->generate(Mage::getModel('Antidot/Export_Category'), self::GENERATE_FULL);
+        return $this->generate(Mage::getModel('Antidot/Export_Category'), self::GENERATE_FULL, $runContext);
     }
     
     /**
@@ -106,7 +150,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
      * @param string $type
      * @throws Exception
      */
-    protected function generate($exportModel, $type)
+    protected function generate($exportModel, $type, $runContext)
     {
         $this->type = $exportModel::TYPE;
         $this->log('start');
@@ -118,12 +162,13 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         try
         {
         
-            $files = array();
-            foreach($this->getDefaultContext() as $context) {
+            $owner = $this->getOwnerForFilename(Mage::getStoreConfig('antidot/general/owner'));
+        	$files = array();
+            foreach($this->getDefaultContext($runContext) as $context) {
                 $this->log('generate '.$exportModel::TYPE.' '.$context['owner']);
                 $context['store_id'] = array_keys($context['stores']);
 
-                $filename = $this->tmpDirectory.sprintf($exportModel::FILENAME_XML, $type, $context['lang']);
+                $filename = $this->tmpDirectory.sprintf($exportModel::FILENAME_XML, $owner, $type, $context['lang']);
                 $items    = $exportModel->writeXml($context, $filename, $type);
                 if($items === 0) {
                     $this->log('No items to export');
@@ -131,30 +176,31 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
                 }
 
                 $log['items']+= $items;
-                if ($this->schemaValidate($filename, $exportModel::XSD)) {
-                    $this->log('Schema validated');
+                $validationErrors = $this->schemaValidate($filename, $exportModel::XSD);
+                if (count($validationErrors)==0) {
                     $files[] = $filename;
                 } else {
+
                     $this->fileError($filename);
 
-                    $errors = Mage::helper('Antidot/XmlWriter')->getErrors();
-                    $this->log('xml schema not valid '.print_r($errors, true));
-                    Mage::helper('Antidot')->sendMail('Export failed', print_r($errors, true));
-                    foreach($errors as $error)
+                    foreach ($validationErrors as $error) {
                         $log['error'][] = $error;
+                    }
                     continue;
+
                 }
             }
 
             if($log['items'] === 0) {
                 $this->log('No items available, cancel export');
-                return;
+                return 0;
             }
 
             $log['reference'] = 'unknown';
             if(!empty($files)) {
                 $this->log('Compress files');
                 $filenameZip = $type === self::GENERATE_INC ? $exportModel::FILENAME_ZIP_INC : $exportModel::FILENAME_ZIP;
+                $filenameZip = sprintf($filenameZip, date('YmdHis'), $owner);
                 $filename = $this->compress($files, $filenameZip);
                 $log['reference'] = md5($filename);
                 $this->send($filename);
@@ -163,8 +209,11 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
             } else {
                 $log['status'] = 'FAILED';
                 $lastError = current(Mage::helper('Antidot/XmlWriter')->getErrors());
-                if ($lastError)
-                   $log['error'][] = $lastError;
+                if ($lastError) {
+                    $log['error'][] = $lastError;
+                } else {
+                    $log['error'][] = 'No file to export';
+                }
             }
 
             if(file_exists($filename)) {
@@ -184,6 +233,15 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         $this->log('end');
 
         Mage::helper('Antidot/LogExport')->add($log['reference'], $type, $exportModel::TYPE, $log['begin'], $log['end'], $log['items'], $log['status'], implode(',', $log['error']));
+
+        if ( count($log['error']) ) {
+            //send error alert mail
+            Mage::helper('Antidot')->sendMail('Export failed', print_r($log['error'], true));
+            //throw Exception in order to dispay error message in UI
+            Mage::throwException(implode(',', $log['error']));
+        }
+
+        return $log['items'];
     }
 
     /**
@@ -223,7 +281,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     {
         $this->log('compress the file');
        
-        $compressFile = dirname(current($files)).'/'.sprintf($compressFile, date('YmdHis'));
+        $compressFile = dirname(current($files)).'/'.$compressFile;
         Mage::helper('Antidot/Compress')->zip($files, $compressFile);
        
         return $compressFile;
@@ -246,27 +304,61 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
    
    /**
     * Check if the xml file is valid
+    * Returns array of error message, empty if schema is valid
     * 
     * @param string $filename xml file
     * @param string $xsd xsd file
-    * @return boolean
+    * @return array
     */
    protected function schemaValidate($filename, $xsd)
     {
+        $errors = array();
+
         //disable schema validation
         if (Mage::getStoreConfig('antidot/xsd_verification/disable') == 1)
         {
             $this->log('schema validation is DISABLED');
-            return true;
-        }
+        } else {
 
-       libxml_use_internal_errors(true);
-       $this->log('schema validate');
-       
-       $xml = new DOMDocument();
-       $xml->load($filename);
-       
-       return $xml->schemaValidate($xsd);
+            libxml_use_internal_errors(true);
+            $this->log('schema validate');
+
+            $xml = new DOMDocument();
+            $xml->load($filename);
+
+            try {
+
+                if ($xml->schemaValidate($xsd)) {
+                    $this->log('Schema validated');
+                } else {
+
+                    $errors = Mage::helper('Antidot/XmlWriter')->getErrors();
+
+                    $match = array();
+                    if (preg_match('#Warning 1549: failed to load external entity "(.*)\.xsd"#', $errors[0], $match)) {
+                        $errors = array();
+                        //In case XSD is not reacheable, disable the schema validation
+                        $this->log('failed to load external entity '.$match[1].'.xsd, schema validation is DISABLED');
+                        $this->log('Schema validated');
+                    }
+                }
+
+            } catch (Exception $e) {
+                $match = array();
+                if (preg_match(
+                    "#Warning: DOMDocument::schemaValidate\(http://(.*)\.xsd\): failed to open stream:#",
+                    $e->getMessage(),
+                    $match
+                )) {
+                    //In case xsd is not reacheable, disable the schema validation
+                    $this->log('http://'.$match[1].'.xsd is not reacheable, schema validation is DISABLED');
+                } else {
+                    throw $e;
+                }
+            }
+        }
+        return $errors;
+
    }
    
    /**
@@ -275,7 +367,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     * @todo retrieve these data from the db
     * @return array
     */
-    private function getDefaultContext() 
+    private function getDefaultContext($runContext)
     {
         $listStore = array();
         foreach (Mage::app()->getStores() as $store) {
@@ -284,12 +376,16 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
 	            $listStore[$lang][$store->getId()] = $store;
             }
         }
-        
+        $owner      = 'AFS@Store for Magento v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version;
+        if (Mage::getStoreConfig('antidot/general/owner')) {
+            $owner = Mage::getStoreConfig('antidot/general/owner');
+        }
+
         $listContext = array();
-        $context['website_ids'] = array();
         foreach($listStore as $lang => $stores) {
-            $defaultOwner      = 'AFS@Store for Magento v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version;
-            $context['owner']  = Mage::getStoreConfig('antidot/general/owner') === '' ? $defaultOwner : Mage::getStoreConfig('antidot/general/owner');
+            $context['website_ids'] = array();
+            $context['owner']  = $owner;
+            $context['run']    = $runContext;
             $context['lang']   = $lang;
             $context['stores'] = $stores;
             foreach ($stores as $store) {
@@ -318,5 +414,36 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
                  . $action.' ('.round(microtime(true)-$this->begin, 2)."sec)";
 
         Mage::log($message, null, 'antidot.log');
+    }
+    
+    /**
+     * MCNX-27 Return the Owner defined in the AFSStore Config Area
+     * formated in order tu be used in the export filename
+     * 
+     * @return string
+     */
+    private function getOwnerForFilename($owner = null) {
+    	 
+    	$filename = 'magento';
+    	if ($owner) {
+    
+    		/// convert non-alphanumeric characters
+    		// - see the rules below on the page
+    		$owner = Mage::helper('catalog/product_url')->format($owner);
+    
+    		// replace remaining non-alphanumeric characters
+    		// with dashes
+    		$owner = preg_replace('#[^0-9a-z]+#i', '_', $owner);
+    
+    		// make it lowercase
+    		$owner = strtolower($owner);
+    
+    		// trim dashes on the left and right
+    		$owner = trim($owner, '_');
+
+    		$filename .= '_'.$owner;
+    	}
+
+    	return $filename;
     }
 }

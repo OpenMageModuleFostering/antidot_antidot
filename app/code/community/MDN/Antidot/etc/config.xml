@@ -18,7 +18,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.0.19</version>
+            <version>1.1.0</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -203,6 +203,10 @@
     <xsl:variable name="IN">in</xsl:variable>
     <!-- Default search url: customize if needed -->
     <xsl:variable name="searchUrl">/index.php/catalogsearch/result/?q=</xsl:variable>
+    <!-- if set to false, will display 'promo text' instead of promo percentage -->
+    <xsl:variable name="display_promo" select="true()"/>
+    <xsl:variable name="display_price_off" select="true()"/>
+    <xsl:variable name="promo_text">PROMO</xsl:variable>
 
     <!-- Main HTML template -->
     <xsl:template match="afs:replies">
@@ -258,17 +262,39 @@
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        <li class="title">
-            <span>
+        <xsl:element name="li">
+            <xsl:attribute name="class">title</xsl:attribute>
+            <xsl:element name="span">
                 <xsl:value-of select="$title"/>
-            </span>
-        </li>
+            </xsl:element>
+        </xsl:element>
         <xsl:apply-templates select="afs:reply"/>
     </xsl:template>
 
     <!-- Template common to basic and products replies -->
     <xsl:template match="afs:reply">
-        <li>
+        <xsl:variable name="parent" select="parent::afs:replySet/@name"/>
+        <xsl:element name="li">
+            <!-- Add css class for custom rendering -->
+            <xsl:attribute name="class">
+                <xsl:choose>
+                    <xsl:when test="starts-with($parent,'categories')">category</xsl:when>
+                    <xsl:when test="starts-with($parent,'featured_products')">product</xsl:when>
+                    <xsl:when test="starts-with($parent,'brands')">brand</xsl:when>
+                    <xsl:when test="starts-with($parent,'property_')">
+                        <xsl:value-of
+                            select="substring(substring-after($parent,'property_'),1,string-length($parent)-14)"
+                        />
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$parent"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:attribute>
+            <!-- Show discount percentage if any  -->
+            <xsl:if test="$display_promo">
+                <xsl:apply-templates select="afs:option[@key='price_off']" mode="price_off"/>
+            </xsl:if>
             <!-- Show thumbnail if any  -->
             <xsl:apply-templates select="afs:option[@key='url_thumbnail']" mode="url_thumbnail"/>
             <a>
@@ -335,53 +361,63 @@
             </a>
             <!-- Needed to avoir cascaded results -->
             <div style="clear:both;"/>
-        </li>
+        </xsl:element>
+    </xsl:template>
+
+    <!-- Price discount percentage -->
+    <xsl:template match="afs:option" mode="price_off">
+        <xsl:element name="span">
+            <xsl:attribute name="class">promo_flag</xsl:attribute>
+            <!-- Default  style: Feel free to customize by using above class -->
+            <xsl:attribute name="style">border-radius: 100px; background: #FE9A2E; color : white;
+                padding : 5px 5px;</xsl:attribute>
+            <xsl:choose>
+                <xsl:when test="$display_price_off">
+                    <xsl:text>-</xsl:text>
+                    <xsl:value-of select="@value"/>
+                    <xsl:text>%</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$promo_text"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:element>
     </xsl:template>
 
     <!-- Thumbnail display -->
     <xsl:template match="afs:option" mode="url_thumbnail">
-        <div class="image" style="float: left; margin-right:5px;">
-            <img>
+        <xsl:element name="div">
+            <xsl:attribute name="class">image</xsl:attribute>
+            <xsl:attribute name="style">float: left; margin-right:5px;</xsl:attribute>
+            <xsl:element name="img">
                 <xsl:attribute name="width">
                     <xsl:value-of select="$thumbnail_width"/>
                 </xsl:attribute>
                 <xsl:attribute name="src">
-                    <xsl:apply-templates select="@value" mode="baseUri"/>
+                    <xsl:apply-templates select="@value"/>
                 </xsl:attribute>
-            </img>
-        </div>
+            </xsl:element>
+        </xsl:element>
     </xsl:template>
 
     <!-- Creates href link -->
     <xsl:template match="afs:option" mode="href">
         <xsl:attribute name="href">
-            <xsl:apply-templates select="@value" mode="baseUri"/>
+            <xsl:apply-templates select="@value"/>
         </xsl:attribute>
-    </xsl:template>
-
-    <!-- Transform absolute url into a relative one -->
-    <xsl:template match="@value" mode="baseUri">
-        <xsl:choose>
-            <xsl:when test="contains(.,'http')">
-                <xsl:value-of select="concat('/',substring-after(substring-after(.,'http://'),'/'))"
-                />
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:value-of select="."/>
-            </xsl:otherwise>
-        </xsl:choose>
     </xsl:template>
 
     <!-- Basic suggestion template with a custom rendering for categories -->
     <xsl:template match="afs:reply" mode="basic">
-        <div class="name">
+        <xsl:element name="div">
+            <xsl:attribute name="class">name</xsl:attribute>
             <xsl:value-of select="@label"/>
             <span style="padding-left: 5px;"/>
             <xsl:if
                 test="$display_parent_category=true() and starts-with(ancestor::afs:replySet/@name,'categories')">
                 <xsl:apply-templates select="afs:option[@key='parent']" mode="parent"/>
             </xsl:if>
-        </div>
+        </xsl:element>
     </xsl:template>
 
     <!-- Display parent category -->
@@ -395,7 +431,8 @@
 
     <!-- Product rich template: uses custom metadata like price -->
     <xsl:template match="afs:reply" mode="product">
-        <div class="name">
+        <xsl:element name="div">
+            <xsl:attribute name="class">name</xsl:attribute>
             <xsl:value-of select="@label"/>
             <xsl:if test="$display_price=true()">
                 <xsl:variable name="price_display">
@@ -415,7 +452,7 @@
                     </xsl:choose>
                 </span>
             </xsl:if>
-        </div>
+        </xsl:element>
     </xsl:template>
 
     <!-- Display price using regional settings -->
@@ -446,6 +483,7 @@
             </xsl:when>
             <xsl:otherwise>
                 <xsl:value-of select="translate(@value,'.',$decimal-separator)"/>
+                <xsl:text> </xsl:text>
                 <xsl:value-of select="$currency"/>
             </xsl:otherwise>
         </xsl:choose>
@@ -543,4 +581,11 @@
             </promote>
         </antidot>
     </default>
+    <phpunit>
+		 <suite>
+			 <modules>
+				 <MDN_Antidot />
+			 </modules>
+		 </suite>
+	</phpunit>
 </config>

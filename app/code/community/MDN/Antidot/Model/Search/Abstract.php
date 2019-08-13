@@ -9,8 +9,8 @@
  * It is also available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
  *
- * @copyright  Copyright (c) 2009 Maison du Logiciel (http://www.maisondulogiciel.com)
- * @author : Olivier ZIMMERMANN
+ * @copyright  Copyright (c) 2015 Antidot (http://www.antidot.net)
+ * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class MDN_Antidot_Model_Search_Abstract extends Mage_Core_Model_Abstract 
@@ -28,12 +28,13 @@ class MDN_Antidot_Model_Search_Abstract extends Mage_Core_Model_Abstract
     {
         //set_include_path(get_include_path().':'.MAGENTO_ROOT.DS.'lib'.DS.'antidot'.DS);
         require_once "antidot/afs_lib.php";
-        
-        if($config = Mage::getStoreConfig('antidot/web_service')) {
+
+        $config = Mage::getStoreConfig('antidot/web_service');
+        if(isset($config['host']) && isset($config['service'])) {
             $this->afsHost    = $config['host'];
             $this->afsService = (int)$config['service'];
             $this->afsStatus  = $config['status'];
-            
+
             $this->isConfigured = true;
         }
     }

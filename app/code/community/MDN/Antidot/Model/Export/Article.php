@@ -9,16 +9,16 @@
  * It is also available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
  *
- * @copyright  Copyright (c) 2009 Maison du Logiciel (http://www.maisondulogiciel.com)
- * @author : Olivier ZIMMERMANN
+ * @copyright  Copyright (c) 2015 Antidot (http://www.antidot.net)
+ * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class MDN_Antidot_Model_Export_Article extends MDN_Antidot_Model_Export_Product 
 {
     
     const TYPE = 'ARTICLE';
-    const FILENAME_XML   = 'articles-mdn-fr.xml';
-    const FILENAME_ZIP   = '%s_full_mdn_articles.zip';
+    const FILENAME_XML   = 'articles-%s-fr.xml';
+    const FILENAME_ZIP   = '%s_full_%s_articles.zip';
     const XSD   = 'http://ref.antidot.net/store/latest/articles.xsd';
     
     const imagePrefix = 'media/catalog/article';
@@ -81,20 +81,6 @@ class MDN_Antidot_Model_Export_Article extends MDN_Antidot_Model_Export_Product
         $this->xml->pop();
         
         $this->writePart($this->xml->flush(), true);
-    }
-    
-    /**
-     * Write the xml header
-     * 
-     * @param array $context
-     */
-    protected function writeHeader($context)
-    {
-        $this->xml->push('header');
-        $this->xml->element('owner', $context['owner']);
-        $this->xml->element('feed', 'article');
-        $this->xml->element('generated_at', date('c', Mage::getModel('core/date')->timestamp(time())));
-        $this->xml->pop();
     }
     
     /**

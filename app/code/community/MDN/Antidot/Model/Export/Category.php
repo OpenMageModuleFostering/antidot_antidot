@@ -9,15 +9,15 @@
  * It is also available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
  *
- * @copyright  Copyright (c) 2009 Maison du Logiciel (http://www.maisondulogiciel.com)
- * @author : Olivier ZIMMERMANN
+ * @copyright  Copyright (c) 2015 Antidot (http://www.antidot.net)
+ * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class MDN_Antidot_Model_Export_Category extends MDN_Antidot_Model_Export_Abstract 
 {
     const TYPE = 'CATEGORY';
-    const FILENAME_XML = 'categories-mdn_%s-%s.xml';
-    const FILENAME_ZIP = '%s_full_mdn_categories.zip';
+    const FILENAME_XML = 'categories-%s_%s-%s.xml';
+    const FILENAME_ZIP = '%s_full_%s_categories.zip';
     const XSD = 'http://ref.antidot.net/store/latest/categories.xsd';
     
     /**
@@ -27,20 +27,28 @@ class MDN_Antidot_Model_Export_Category extends MDN_Antidot_Model_Export_Abstrac
      */
     public function writeXml($context, $filename)
     {
+        $nbTotalCategories = 0;
+        $context['categories'] = array();
+        foreach($context['stores'] as $store) {
+            $categories = $this->getCategories($store);
+            $nbTotalCategories += $categories->getSize();
+            $context['categories'][$store->getId()] = $categories;
+        }
+
+        if ($nbTotalCategories == 0) {
+            return 0;
+        }
+
         $this->initXml();
         $this->initFields('category');
         
         $this->xml->push('categories', array('xmlns' => "http://ref.antidot.net/store/afs#"));
         
-        $this->xml->push('header');
-        $this->xml->element('owner', $context['owner']);
-        $this->xml->element('feed', 'category');
-        $this->xml->element('generated_at', date('c', Mage::getModel('core/date')->timestamp(time())));
-        $this->xml->pop();
+        $this->writeHeader($context);
 
         $nbItems = 0;
         foreach($context['stores'] as $store) {
-            foreach($this->getCategories($store) as $cat) {
+            foreach($context['categories'][$store->getId()] as $cat) {
 
                 if (!$this->getField($cat, 'name'))
                     continue;

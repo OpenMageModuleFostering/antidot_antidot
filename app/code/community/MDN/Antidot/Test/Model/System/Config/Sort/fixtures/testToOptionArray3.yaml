@@ -1,0 +1,4 @@
+config:
+  default/antidot/fields_product/is_new: new
+  default/antidot/fields_product/is_best_sale: best
+  default/antidot/fields_product/is_featured: featured

@@ -9,17 +9,17 @@
  * It is also available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
  *
- * @copyright  Copyright (c) 2009 Maison du Logiciel (http://www.maisondulogiciel.com)
- * @author : Olivier ZIMMERMANN
+ * @copyright  Copyright (c) 2015 Antidot (http://www.antidot.net)
+ * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract 
 {
     
     const TYPE = 'CATALOG';
-    const FILENAME_XML = 'catalog-mdn_%s-%s.xml';
-    const FILENAME_ZIP = '%s_full_mdn_catalog.zip';
-    const FILENAME_ZIP_INC = '%s_inc_mdn_catalog.zip';
+    const FILENAME_XML = 'catalog-%s_%s-%s.xml';
+    const FILENAME_ZIP = '%s_full_%s_catalog.zip';
+    const FILENAME_ZIP_INC = '%s_inc_%s_catalog.zip';
     const XSD   = 'http://ref.antidot.net/store/latest/catalog.xsd';
 
     /*
@@ -88,7 +88,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             ->joinField('qty',
                 'cataloginventory/stock_item',
                 'qty',
-                'product_id = entity_id',
+                'product_id=entity_id',   // warning : no spaces between = and entity_id , magento1.5 isn't robust enought
                 '{{table}}.stock_id = 1'.$productsInStock)
         ;
 
@@ -130,15 +130,20 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                 Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
 
                 foreach($collection as $product) {
-	
-	                //if($context['langs'] > 1) {
-	                    $store = current($this->getProductStores($product, $context)); //we take the "first" store of the current lang
-	                    if ($store)
-	                        $product = Mage::getModel('catalog/product')->setStoreId($store->getId())->load($product->getId());
-	                //}
-	                $this->writeProduct($product, $context);
-	
-	                $product->clearInstance();  //memory flush
+
+                    $stores = $this->getProductStores($product, $context);
+                    if ($store = current($stores)) { //we take the "first" store of the current lang
+                        $product = Mage::getModel('catalog/product')->setStoreId($store->getId())->load(
+                            $product->getId()
+                        );
+
+                        $this->writeProduct($product, $stores);
+
+                        $product->clearInstance();  //memory flush
+                        $product = null;
+                        unset($product);
+                        gc_collect_cycles();
+                    }
 
 	            }
 	            $this->writePart($this->xml->flush());
@@ -204,30 +209,16 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             }
         }
     }
-    
-    /**
-     * Write the xml header
-     * 
-     */
-    protected function writeHeader($context)
-    {
-        $this->xml->push('header');
-        $this->xml->element('owner', $context['owner']);
-        $this->xml->element('feed', 'product');
-        $this->xml->element('generated_at', date('c', Mage::getModel('core/date')->timestamp(time())));
-        $this->xml->pop();
-    }
-    
+
     /**
      * Write the product
      * 
      * @param Product $product
-     * @param Array $context
+     * @param Array $stores
      */
-    protected function writeProduct($product, $context)
+    protected function writeProduct($product, $stores)
     {
-        $stores = $this->getProductStores($product, $context);
-        
+
         //skip product if no websites
         if (count($stores) == 0)
             return;
@@ -259,11 +250,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         if ($keywords = $this->getField($product, 'keywords')) {
             $this->xml->element('keywords', $this->xml->encloseCData($keywords));
         }
-        $this->writeDescriptions($product);
-        $this->xml->element('url', $this->xml->encloseCData($product->getProductUrl()));
-        $this->writeImageUrl($product);
         $this->writeClassification($product, $rootCategoriesIds);
-        $this->writeProperties($product, $stores);
         $this->writeBrand($product);
         $this->writeMaterials($product);
         $this->writeColors($product);
@@ -287,7 +274,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
     {
         $this->xml->push('stores');
 
-        /* Qty is the same for all stores, better copute it outside the loop: */
+        /* Qty is the same for all stores, better compute it outside the loop: */
         $qty = Mage::getModel('cataloginventory/stock_item')->loadByProduct($variantProduct)->getQty();
         $qty = ($qty > 0 ? $qty : 0);
 
@@ -297,10 +284,12 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             /*
              * reload the $variantProduct if this is a real variant or if we are on a different store
              */
+            $reloaded = false;
             if ($product->getId() != $variantProduct->getId() || $store->getId() != $product->getStoreId()) {
                 $reloadedVariantProduct = Mage::getModel('catalog/product')->setStoreId($store->getId())->load(
                     $variantProduct->getId()
                 );
+                $reloaded = true;
             } else {
                 $reloadedVariantProduct = $variantProduct;
             }
@@ -310,7 +299,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             $storeContext['country']  = $this->getStoreLang($store->getId());
 
             $operations = $this->getOperations($product, $store);
-            $this->writePrices($reloadedVariantProduct, $product, $storeContext, $store, $operations);
+            $this->writePrices($reloadedVariantProduct, $product, $storeContext, $store);
             $this->writeMarketing($reloadedVariantProduct, $operations);
 
             $isAvailable = $reloadedVariantProduct->isSalable() || (in_array($reloadedVariantProduct->getTypeId(), $this->productMultiple) && $product->isInStock());
@@ -318,8 +307,18 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 
             $this->xml->element('stock', (int)$qty);
 
-            $this->xml->element('url', $this->xml->encloseCData($reloadedVariantProduct->getProductUrl(false)));
+            $this->writeProductUrl($reloadedVariantProduct);
+            $this->writeImageUrl($reloadedVariantProduct);
+
             $this->xml->pop();
+
+            if ($reloaded) {
+                $reloadedVariantProduct->clearInstance();  //memory flush
+                $reloadedVariantProduct = null;
+                unset($reloadedVariantProduct);
+                gc_collect_cycles();
+            }
+
 
         }
         $this->xml->pop();
@@ -354,7 +353,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             if (in_array($storeId, $this->enabledStores))
                 $stores[] = $context['stores'][$storeId];
         }
-        
+
         return $stores;
     }
     
@@ -458,26 +457,46 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             }
         }
     }
-    
+
     /**
      * Write the product urls
+     *
+     * @param Product $product
+     * @param string $urlImg
+     */
+    protected function writeProductUrl($product)
+    {
+        $this->xml->element('url', $this->xml->encloseCData($product->getProductUrl(false)));
+    }
+
+
+    /**
+     * Write the product images urls
      * 
      * @param Product $product
      * @param string $urlImg
      */
     protected function writeImageUrl($product, $urlImg = true)
     {
-        try {
+    	
+    	//Set the current store to generate correct URls (even in unit tests)
+    	Mage::app()->setCurrentStore($product->getStoreId());
+    	
+    	try {
             if ($product->getThumbnail() && ($product->getThumbnail() != 'no_selection')) {
-                $this->xml->element('url_thumbnail', $this->xml->encloseCData(Mage::getModel('catalog/product_media_config')->getMediaUrl($product->getThumbnail())));
+            	$this->xml->element('url_thumbnail', $this->xml->encloseCData(Mage::getModel('catalog/product_media_config')->getMediaUrl($product->getThumbnail())));
             }
-        } catch(Exception $e) {}
+        } catch(Exception $e) {
+        	Mage::log($e, Zend_Log::ERR, 'antidot.log');	 
+        }
 
         try {
             if ($urlImg && $product->getImage() && ($product->getImage() != 'no_selection')) {
-                $this->xml->element('url_image', $this->xml->encloseCData(Mage::getModel('catalog/product_media_config')->getMediaUrl($product->getImage())));
+            	$this->xml->element('url_image', $this->xml->encloseCData(Mage::getModel('catalog/product_media_config')->getMediaUrl($product->getImage())));
             }
-        } catch(Exception $e) {}
+        } catch(Exception $e) {
+        	Mage::log($e, Zend_Log::ERR, 'antidot.log');	 
+        }
     }
 
     /**
@@ -684,9 +703,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      * Write the product properties
      * 
      * @param Product $product
-     * @param array   $stores List product store
      */
-    protected function writeProperties($product, $stores)
+    protected function writeProperties($product)
     {
         $properties = array();
         if(!empty($this->fields['properties'])) {
@@ -697,16 +715,20 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                     
                     $attribute = $product->getResource()->getAttribute($property['value']);
                     if ($attribute) {
+                        $attribute->setStoreId($product->getStoreId());
 	                    $value = $attribute->getFrontend()->getValue($product);
-	                    $label = $attribute->getStoreLabel();
-	                    if (!$label) {
-	                    	$labels = $attribute->getStoreLabels();
-	                    	if (isset($labels[current($stores)->getId()])) {
-	                    		$label = $labels[current($stores)->getId()];
-	                    	}
-	                    }                    
-	                    
-	                    $labels = array();
+	                    $label = $attribute->getFrontendLabel(); // we use Admin label as default value
+                        $labels = $attribute->getStoreLabels();
+                        if (isset($labels[$product->getStoreId()])) {
+                            $label = $labels[$product->getStoreId()];
+                        }
+                        /**
+                         * Note : we don't use $attribute->getStoreLabel() method because
+                         * $product->getResource() is a singleton which cache the attributes
+                         * then the attribute (and his store label) is loaded for the first store
+                         * processed, and we get wrong label for the next stores.
+                         * Flush this cache would be less performance
+                         */
 	                    switch($attribute->getfrontend_input())
 	                    {
 	                        case 'multiselect':
@@ -723,15 +745,18 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 	                            break;
 	                        default:
 	                            $optionName = $value;
-	                            if(!empty($this->propertyLabel[$property['value']]['options'][$id]['per_store'][current($stores)->getId()])) {
-	                                $optionName = $this->propertyLabel[$property['value']]['options'][$id]['per_store'][current($stores)->getId()];
+	                            if(!empty($this->propertyLabel[$property['value']]['options'][$id]['per_store'][$product->getStoreId()])) {
+	                                $optionName = $this->propertyLabel[$property['value']]['options'][$id]['per_store'][$product->getStoreId()];
 	                            }
-	                            $value = is_bool($value) ? (int)$value : $value;
-	                            $properties[] = array(
-	                                'name' => $property['value'],
-	                                'display_name' => substr($label, 0, self::FACET_MAX_LENGTH),
-	                                'label' => substr($optionName, 0, self::FACET_MAX_LENGTH),
-	                                'autocomplete' => ($property['autocomplete'] == 1 ? 'on' : 'off'));
+                                //do not insert the properties tag if it has no value (in label attribute) :
+                                if ($optionName) {
+                                    $properties[] = array(
+                                        'name' => $property['value'],
+                                        'display_name' => substr($label, 0, self::FACET_MAX_LENGTH),
+                                        'label' => substr($optionName, 0, self::FACET_MAX_LENGTH),
+                                        'autocomplete' => ($property['autocomplete'] == 1 ? 'on' : 'off')
+                                    );
+                                }
 	                            break;
 	                    }
                     } else {
@@ -756,7 +781,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      * 
      * @param Product $product
      */
-    protected function writePrices($product, $parentProduct, $context, $store, $operations)
+    protected function writePrices($product, $parentProduct, $context, $store)
     {
         $prices = ($this->getPrices($parentProduct->getId(), $store->getWebsiteId()));
 
@@ -775,7 +800,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $attributes = array('currency' => $context['currency'], 'type' => 'PRICE_FINAL', 'vat_included' => 'true', 'country' => strtoupper($context['country']));
         if (isset($priceCut))
         {
-            $off = (int)(($priceCut - $price) / $priceCut * 100);
+            $off = $this->computePriceOff($priceCut, $price);
             $attributes['off'] = $off;
         }
         $this->xml->element(
@@ -789,13 +814,23 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             $priceCut = Mage::helper('directory')->currencyConvert($priceCut, Mage::app()->getStore()->getCurrentCurrencyCode(), $store->getCurrentCurrencyCode());
             $this->xml->element(
                     'price',
-                    Mage::helper('Antidot')->round($priceCut, 2),
+                    Mage::helper('Antidot')->round($priceCut),
                     array('currency' => $context['currency'], 'type' => 'PRICE_CUT', 'vat_included' => 'true', 'country' => strtoupper($context['country']))
             );
             
         }
         
         $this->xml->pop();
+    }
+
+    /**
+     * Return The price reduction percentage
+     *
+     * @param $priceCut
+     * @param $price
+     */
+    protected function computePriceOff($priceCut, $price) {
+        return round(($priceCut - $price) / $priceCut * 100);
     }
 
     /**
@@ -858,7 +893,10 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             $result['min_price'] = $product->getPrice();
             $result['price'] = $product->getPrice();
             $result['final_price'] = $product->getPrice();
-            $product->clearInstance();
+            $product->clearInstance();  //memory flush
+            $product = null;
+            unset($product);
+            gc_collect_cycles();
         }
         
         return $result;
@@ -1002,13 +1040,12 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $this->writeDescriptions($variantProduct);
         $this->writeStore($product, $stores, $variantProduct);
         $this->writeIdentifiers($variantProduct);
-        $this->writeProperties($variantProduct, $stores);
+        $this->writeProperties($variantProduct);
         $this->writeMaterials($variantProduct);
         $this->writeColors($variantProduct);
         $this->writeModels($variantProduct);
         $this->writeSizes($variantProduct);
         $this->writeGenders($product);
-        $this->writeImageUrl($variantProduct);
         $this->writeMisc($variantProduct);
     }
     

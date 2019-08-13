@@ -9,8 +9,8 @@
  * It is also available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
  *
- * @copyright  Copyright (c) 2009 Maison du Logiciel (http://www.maisondulogiciel.com)
- * @author : Olivier ZIMMERMANN
+ * @copyright  Copyright (c) 2015 Antidot (http://www.antidot.net)
+ * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resource_Engine_Abstract
@@ -163,10 +163,11 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
                         foreach ($value as $part) {
                             //explode values if facet is multi select
                             $isMultiSelect = $this->isMultiSelect($field);
-                            if ($isMultiSelect)
-                                $fieldCondition = array($field => explode(',', $part));
-                            else
+                            if ($isMultiSelect) {
+                                $fieldCondition = array($field => $this->extractMultiSelectValues($part));
+                            } else {
                                 $fieldCondition = array($field => $part);
+                            }
                             break;
                         }
                     }
@@ -179,6 +180,24 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
         }
 
         return $result;
+    }
+
+    /**
+     * Extract the multi select values from his raw value
+     *
+     * @param $rawValue
+     * @return array
+     */
+    public function extractMultiSelectValues($rawValue)
+    {
+        /* MCNX-171 : String facet with coma were sent as two facet
+         * Correction : we use str_getcsv because fields are separated by , and enclosed by ", then we re-add the enclosing "
+         */
+        $partArray = str_getcsv($rawValue);
+        array_walk($partArray, function(&$value, $key) {
+            $value='"' . $value . '"';
+        });
+        return $partArray;
     }
 
     /**

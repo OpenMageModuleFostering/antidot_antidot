@@ -9,8 +9,8 @@
  * It is also available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
  *
- * @copyright  Copyright (c) 2009 Maison du Logiciel (http://www.maisondulogiciel.com)
- * @author : Olivier ZIMMERMANN
+ * @copyright  Copyright (c) 2015 Antidot (http://www.antidot.net)
+ * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstract 
@@ -136,4 +136,28 @@ class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstract
         
         return $this->storeLang[$storeId];
     }
+
+    /**
+     * Write the xml header
+     *
+     */
+    protected function writeHeader($context)
+    {
+        $this->xml->push('header');
+        $this->xml->element('owner', $context['owner']);
+        $this->xml->element('feed', $this->getFeed($context));
+        $this->xml->element('generated_at', date('c', Mage::getModel('core/date')->timestamp(time())));
+        $this->xml->pop();
+    }
+
+    /**
+     * Get the value to insert in the feed tag
+     * @param $type (product, category, article)
+     * @param $context
+     * @return string
+     */
+    public function getFeed($context) {
+        return strtolower($this::TYPE) . ' ' . $context['run'] . ' v' . Mage::getConfig()->getNode()->modules->MDN_Antidot->version;
+    }
+
 }
