@@ -14,11 +14,19 @@
                 <schedule><cron_expr>00 21 * * *</cron_expr></schedule>
                 <run><model>Antidot/Observer::categoriesFullExport</model></run>
             </antidot_categories_full_export>
+            <antidot_articles_full_export>
+                <schedule><cron_expr>00 26 * * *</cron_expr></schedule>
+                <run><model>Antidot/Observer::articlesFullExport</model></run>
+            </antidot_articles_full_export>
+            <antidot_stores_full_export>
+                <schedule><cron_expr>00 31 * * *</cron_expr></schedule>
+                <run><model>Antidot/Observer::storesFullExport</model></run>
+            </antidot_stores_full_export>
         </jobs>
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.2.2</version>
+            <version>1.2.3</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -196,23 +204,21 @@
             </engine>
             <suggest>
                 <enable>1</enable>
-                <products>1</products>
-                <brands>1</brands>
-                <categories>1</categories>
-                <products_displayed>10</products_displayed>
-                <brands_displayed>10</brands_displayed>
-                <categories_displayed>10</categories_displayed>
+                <feeds>a:5:{s:17:"_feeds_categories";a:3:{s:4:"feed";s:10:"categories";s:6:"active";s:2:"on";s:14:"suggest_number";s:2:"10";}s:15:"_feeds_products";a:3:{s:4:"feed";s:8:"products";s:6:"active";s:2:"on";s:14:"suggest_number";s:2:"10";}s:13:"_feeds_brands";a:3:{s:4:"feed";s:6:"brands";s:6:"active";s:2:"on";s:14:"suggest_number";s:2:"10";}s:15:"_feeds_articles";a:2:{s:4:"feed";s:8:"articles";s:14:"suggest_number";s:2:"10";}s:13:"_feeds_stores";a:2:{s:4:"feed";s:6:"stores";s:14:"suggest_number";s:2:"10";}}</feeds>
                 <template>
 <![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:afs="http://ref.antidot.net/v7/afs#"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+    <xsl:output indent="yes"/>
     <!-- Titles to translate in localized storeviews  -->
     <xsl:variable name="see-more-products">See more products</xsl:variable>
     <!-- Column titles -->
     <xsl:variable name="products-title">Products</xsl:variable>
     <xsl:variable name="categories-title">Categories</xsl:variable>
     <xsl:variable name="brands-title">Brands</xsl:variable>
+    <xsl:variable name="articles-title">Articles</xsl:variable>
+    <xsl:variable name="stores-title">Stores</xsl:variable>
     <!-- Thumbnail settings -->
     <xsl:variable name="thumbnail_width">40</xsl:variable>
     <!-- Price settings -->
@@ -229,12 +235,14 @@
     <xsl:variable name="display_promo" select="true()"/>
     <xsl:variable name="display_price_off" select="true()"/>
     <xsl:variable name="promo_text">PROMO</xsl:variable>
-
+    <xsl:variable name="display_block" select="false()"/>
     <!-- Main HTML template -->
     <xsl:template match="afs:replies">
         <xsl:if test="afs:replySet">
             <ul class="ajax-search">
-                <li class="search-container-top"/>
+                <li class="search-container-top">
+                    <div class="empty_column"/>
+                </li>
                 <xsl:apply-templates select="afs:replySet"/>
                 <a style="float:right;">
                     <xsl:attribute name="href"><xsl:value-of select="$searchUrl"/><xsl:value-of
@@ -244,7 +252,6 @@
             </ul>
         </xsl:if>
     </xsl:template>
-
     <!-- Suggestions column main template -->
     <xsl:template match="afs:replySet">
         <xsl:variable name="title">
@@ -258,6 +265,12 @@
                 </xsl:when>
                 <xsl:when test="starts-with(@name,'brands')">
                     <xsl:value-of select="$brands-title"/>
+                </xsl:when>
+                <xsl:when test="starts-with(@name,'articles')">
+                    <xsl:value-of select="$articles-title"/>
+                </xsl:when>
+                <xsl:when test="starts-with(@name,'stores')">
+                    <xsl:value-of select="$stores-title"/>
                 </xsl:when>
                 <xsl:when test="starts-with(@name,'property_')">
                     <xsl:call-template name="upperCaseFirstLetter">
@@ -284,15 +297,29 @@
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        <xsl:element name="li">
-            <xsl:attribute name="class">title</xsl:attribute>
-            <xsl:element name="span">
-                <xsl:value-of select="$title"/>
+        <xsl:variable name="block_content">
+            <xsl:element name="li">
+                <xsl:attribute name="class">title</xsl:attribute>
+                <xsl:element name="span">
+                    <xsl:value-of select="$title"/>
+                </xsl:element>
             </xsl:element>
-        </xsl:element>
-        <xsl:apply-templates select="afs:reply"/>
+            <xsl:apply-templates select="afs:reply"/>
+        </xsl:variable>
+        <xsl:choose>
+            <xsl:when test="$display_block">
+                <div>
+                    <xsl:attribute name="class">
+                        <xsl:value-of select="concat('column_',format-number(position(),'00'))"/>
+                    </xsl:attribute>
+                    <xsl:copy-of select="$block_content"/>
+                </div>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:copy-of select="$block_content"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
-
     <!-- Template common to basic and products replies -->
     <xsl:template match="afs:reply">
         <xsl:variable name="parent" select="parent::afs:replySet/@name"/>
@@ -303,6 +330,8 @@
                     <xsl:when test="starts-with($parent,'categories')">category</xsl:when>
                     <xsl:when test="starts-with($parent,'featured_products')">product</xsl:when>
                     <xsl:when test="starts-with($parent,'brands')">brand</xsl:when>
+                    <xsl:when test="starts-with($parent,'articles')">article</xsl:when>
+                    <xsl:when test="starts-with($parent,'stores')">store</xsl:when>
                     <xsl:when test="starts-with($parent,'property_')">
                         <xsl:value-of
                             select="substring(substring-after($parent,'property_'),1,string-length($parent)-14)"
@@ -385,7 +414,6 @@
             <div style="clear:both;"/>
         </xsl:element>
     </xsl:template>
-
     <!-- Price discount percentage -->
     <xsl:template match="afs:option" mode="price_off">
         <xsl:element name="span">
@@ -405,7 +433,6 @@
             </xsl:choose>
         </xsl:element>
     </xsl:template>
-
     <!-- Thumbnail display -->
     <xsl:template match="afs:option" mode="url_thumbnail">
         <xsl:element name="div">
@@ -426,14 +453,12 @@
             </xsl:element>
         </xsl:element>
     </xsl:template>
-
     <!-- Creates href link -->
     <xsl:template match="afs:option" mode="href">
         <xsl:attribute name="href">
             <xsl:apply-templates select="@value"/>
         </xsl:attribute>
     </xsl:template>
-
     <!-- Basic suggestion template with a custom rendering for categories -->
     <xsl:template match="afs:reply" mode="basic">
         <xsl:element name="div">
@@ -446,7 +471,6 @@
             </xsl:if>
         </xsl:element>
     </xsl:template>
-
     <!-- Display parent category -->
     <xsl:template match="afs:option" mode="parent">
         <xsl:text>(</xsl:text>
@@ -455,7 +479,6 @@
         <xsl:value-of select="@value"/>
         <xsl:text>)</xsl:text>
     </xsl:template>
-
     <!-- Product rich template: uses custom metadata like price -->
     <xsl:template match="afs:reply" mode="product">
         <xsl:element name="div">
@@ -481,7 +504,6 @@
             </xsl:if>
         </xsl:element>
     </xsl:template>
-
     <!-- Display price using regional settings -->
     <xsl:template match="afs:option" mode="price_display">
         <xsl:variable name="currency">
@@ -515,7 +537,6 @@
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
-
     <!-- Translate first letter of a string into a upper case if it was lower -->
     <xsl:template name="upperCaseFirstLetter">
         <xsl:param name="str"/>
@@ -524,7 +545,6 @@
         <xsl:value-of
             select="concat(translate(substring($str,1,1),$vLower,$vUpper),substring($str,2))"/>
     </xsl:template>
-
 </xsl:stylesheet>
 ]]>
                 </template>
@@ -580,9 +600,6 @@
 &lt;/feeds&gt;
 ]]>
                 </suggest_xml>
-                <order_1>categories</order_1>
-                <order_2>products</order_2>
-                <order_3>brands</order_3>
             </suggest>
             <fields_category>
                 <name>name</name>

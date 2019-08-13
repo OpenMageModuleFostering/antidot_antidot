@@ -66,24 +66,29 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
     {
         parent::_construct();
         
-        $config = Mage::getStoreConfig('antidot/suggest');
-        $this->template = trim($config['template']);
-        foreach($config as $field => $value) {
-            if(isset($this->feed[$field]) && $value === '0') {
-                unset($this->feed[$field]);
-            } elseif(preg_match('/([a-z]+)_displayed/', $field, $matches)) {
-                $field = $matches[1];
-                if(isset($this->feed[$field])) {
-                    $this->feed[$field]['number'] = (int)$value;
+        $template = Mage::getStoreConfig('antidot/suggest/template');
+        libxml_use_internal_errors(true);
+        $this->template = simplexml_load_string(trim($template));
+        if ($this->template === false) {
+            Mage::log('Error loading xsl template (suggest) : ', null, 'antidot.log');
+            Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');
+        }
+
+        if ($feeds = Mage::getStoreConfig('antidot/suggest/feeds')) {
+            $feeds = unserialize($feeds);
+            $i = 1;
+            foreach ($feeds as $configFeed) {
+                $feed = $configFeed['feed'];
+                if (isset($this->feed[$feed]) && !isset($configFeed['active'])) {
+                    unset($this->feed[$feed]);
+                } else {
+                    $this->feed[$feed]['number'] = (int)$configFeed['suggest_number'];
+                    $this->feed[$feed]['order'] = $i;
                 }
-            } elseif(preg_match('/order_([0-4])/', $field, $matches)) {
-                $order = $matches[1];
-                if(isset($this->feed[$value])) {
-                    $this->feed[$value]['order'] = $order;
-                }
+                $i++;
             }
         }
-        
+
         $this->loadFacetAutocomplete();
         $this->loadAdditionalFeeds();
         
@@ -155,7 +160,7 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
         	 Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');         
 			 return "";
         }
-        
+
 		$xml = $this->postProcessXml($xml);
         
         if($format === 'xml') {
@@ -174,8 +179,18 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
      */
     private function postProcessXml(&$xml)
     {
-        
-    	$ns = $xml->getNamespaces(true);
+
+        $thumbWidth = 40;
+        if ($this->template) {
+            /* Exctract thumbWidth from the xslt template */
+            $xpath = $this->template->xpath("//xsl:variable[@name='thumbnail_width']");
+            if (isset($xpath[0])) {
+                $thumbWidth = $xpath[0]->__toString();
+            }
+        }
+
+
+        $ns = $xml->getNamespaces(true);
     	foreach ($xml->children($ns['afs'])->replySet as $replySet) {
 
     		$type = (string)$replySet->attributes()->name;
@@ -189,6 +204,23 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
 	    			unset($replySet->reply[$i]);
 	    		}
     		}
+
+            //PRE-PROCESSING OF URL THUMBNAILS : resize base images to the size defined in xslt template
+            foreach ($replySet->reply as $reply) {
+                foreach ($reply->option as $option) {
+                    if ($option->attributes()->key == 'url_thumbnail') {
+
+                        $thumb = $option->attributes()->value;
+                        $thumb = basename($thumb);
+                        $product = Mage::getModel('catalog/product');
+                        $product->setData('thumbnail', '/'.$thumb[0].'/'.$thumb[1].'/'.$thumb);
+                        $thumb = Mage::helper('catalog/image')->init($product, 'thumbnail')->resize($thumbWidth)->__toString();
+
+                        $option->attributes()->value = $thumb;
+
+                    }
+                }
+            }
 		}
         
      	return $xml;
@@ -306,16 +338,13 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
     		return '';
     	}
     	
-        libxml_use_internal_errors(true);
-        $xsl = simplexml_load_string($this->template);
-        if ($xsl === false) {
-        	Mage::log('Error loading xsl template (suggest) : ', null, 'antidot.log');
-        	Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');
+        if (!$this->template) {
         	return '';
         }
-        
+
+        libxml_use_internal_errors(true);
         $xslt = new XSLTProcessor();
-        $xslt->importStylesheet($xsl);
+        $xslt->importStylesheet($this->template);
         
         $xml = $xslt->transformToXml($xml);
         if ($xml === false) {

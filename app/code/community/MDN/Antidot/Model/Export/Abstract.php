@@ -37,12 +37,29 @@ abstract class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstrac
     );
 
     /**
+     * @var boolean isIncremental
+     */
+    protected $isIncremental = false;
+
+    /**
      * The name of the PAF export
      *
      * @return string
      */
     abstract public function getPafName();
 
+    /**
+     * Is an incremental export
+     *
+     * @return string
+     */
+    public function getIsIncremental() {
+        return $this->isIncremental;
+    }
+
+    public function setIsIncremental($bool) {
+        $this->isIncremental = $bool;
+    }
     /**
      * Init the xml writer
      */
@@ -59,19 +76,42 @@ abstract class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstrac
      * Extract the exact uri from an url
      * (When executed from cron script magento can generate url whith the script name instead of index.php)
      * (MCNX-253)
+     * Remove also SID param
      *
      * @param string $url
-     * $param boolean $onlyPath
+     * $param boolean $onlyPath (remove http://domain.com )
      * @return string
      */
     protected function getExactUrl($url, $onlyPath = true)
     {
-        if ($onlyPath) {
-            $urls = parse_url($url);
-            $url = $urls['path'];
+        $urls = parse_url($url);
+        $url = '';
+        if (!$onlyPath) {
+            //add scheme, host
+            $url.=$urls['scheme'].'://';
+            $url.=$urls['host'];
         }
-		//replace all antidotExport*.php script by index.php in uri (in case of cron export) : 
-        return preg_replace('#\/antidotExport(.*)\.php#', '/index.php', $url);
+
+        $path = $urls['path'];
+        //replace all antidotExport*.php script by index.php in uri (in case of cron export) :
+        $path =  preg_replace('#\/antidotExport(.*)\.php#', '/index.php', $path);
+        $url .= $path;
+
+        if (isset($urls['query'])) {
+            //construct query string without SID
+            $query = array();
+            parse_str($urls['query'], $query);
+            $queryStr = '';
+            foreach ($query as $key => $value) {
+                if ($key!='SID'){
+                    $queryStr .= $key . '=' . $value;
+                }
+            }
+            if ($queryStr) {
+                $url .= '?' . $queryStr;
+            }
+        }
+        return $url;
     }
     
     /**
@@ -83,19 +123,21 @@ abstract class MDN_Antidot_Model_Export_Abstract extends Mage_Core_Model_Abstrac
     {
         $this->fields = array();
         $values = Mage::getStoreConfig('antidot/fields_'.$section);
-        foreach($values as $key => $value) {
-            if(in_array($key, $this->fieldsSerialized) && $value = @unserialize($value)) {
-                $values = array_values($value);
-                foreach($values as $value) {
-                    if($key !== 'properties') {
-                        $this->fields[$key][] = $value['value'];
-                    } else {
-                        $this->fields[$key][] = $value;
+        if ($values) {
+            foreach ($values as $key => $value) {
+                if (in_array($key, $this->fieldsSerialized) && $value = @unserialize($value)) {
+                    $values = array_values($value);
+                    foreach ($values as $value) {
+                        if ($key !== 'properties') {
+                            $this->fields[$key][] = $value['value'];
+                        } else {
+                            $this->fields[$key][] = $value;
+                        }
                     }
+                    continue;
                 }
-                continue;
+                $this->fields[$key] = $value;
             }
-            $this->fields[$key] = $value;
         }
     }
     

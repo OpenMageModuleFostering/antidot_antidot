@@ -21,7 +21,7 @@ class MDN_Antidot_Helper_LogExport extends Mage_Core_Helper_Abstract
      * 
      * @param string $uid Reference to 
      * @param string $type FULL|INC
-     * @param string $element CATALOG|CATEGORY
+     * @param string $element CATALOG|CATEGORY|STORE|ARTICLE
      * @param string $begin
      * @param string $end
      * @param int $items

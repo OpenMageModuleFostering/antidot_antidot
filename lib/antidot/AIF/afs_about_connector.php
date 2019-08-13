@@ -7,7 +7,7 @@ require_once 'AIF/afs_bows_information.php';
 /** @brief Simple connector to retrieve AFS Back Office information. */
 class AfsAboutConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterface
 {
-    public function __construct($host, AfsService $service=null, $scheme=AFS_SCHEME_HTTP, SAI_CurlInterface $curlConnector=null, $params=null)
+    public function __construct($host, AfsService $service=null, $scheme=AFS_SCHEME_HTTP, SAI_CurlInterface $curlConnector=null)
     {
         parent::__construct($host, $service, $scheme, $curlConnector);
     }

@@ -29,12 +29,18 @@ class MDN_Antidot_Helper_CatalogSearch_Data extends Mage_CatalogSearch_Helper_Da
     /**
      * {@inherit}
      */
-    public function getResultUrl($query = null, $store = null)
+    public function getResultUrl($query = null, $store = null, $useSid = null)
     {
-    	return $this->_getUrl('catalogsearch/result', array(
-    			'_query' => array(self::QUERY_VAR_NAME => $query),
-    			'_secure' => Mage::app()->getFrontController()->getRequest()->isSecure(),
-    	        '_store' => $store
-    	));
+        $params = array('_query' => array(self::QUERY_VAR_NAME => $query),
+            '_secure' => Mage::app()->getFrontController()->getRequest()->isSecure(),
+            '_store' => $store);
+
+        if ($useSid===null) {
+            $useSid = Mage::app()->getUseSessionInUrl();
+        }
+        if (!$useSid) {
+            $params['_nosid'] = true;
+        }
+    	return $this->_getUrl('catalogsearch/result', $params);
     }
 }

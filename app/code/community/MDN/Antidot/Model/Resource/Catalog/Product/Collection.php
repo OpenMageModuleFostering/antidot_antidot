@@ -232,6 +232,26 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
     }
 
     /**
+     * Returh the articles
+     *
+     * @return array
+     */
+    public function getArticles()
+    {
+        return $this->_articles;
+    }
+
+    /**
+     * Returh the stores
+     *
+     * @return array
+     */
+    public function getStores()
+    {
+        return $this->_stores;
+    }
+
+    /**
      * Returns collection size
      *
      * @return int
@@ -352,9 +372,37 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
             $this->_categoryIds       = isset($this->queryResult['category_ids']) ? $this->queryResult['category_ids'] : array();
             $this->_banners           = isset($this->queryResult['banners']) ? $this->queryResult['banners'] : array();
             $this->_spellcheck        = isset($this->queryResult['spellcheck']) ? $this->queryResult['spellcheck'] : false;
+            $this->_articles          = isset($this->queryResult['articles']) ? $this->queryResult['articles'] : array();
+            $this->_stores            = isset($this->queryResult['stores']) ? $this->queryResult['stores'] : array();
         }
     }
 
+    /**
+     * Return the number of result given the tab
+     * If tab is not define it return the total number of result on every tabs
+     *
+     * @param null $tab
+     * @return int
+     */
+    public function getTotalResult($tab = null) {
+        $this->initQueryResult($this->_getQuery(), $this->_getParams());
+        switch ($tab) {
+            case 'products':
+                return (int)$this->_totalRecords;
+                break;
+            case 'articles':
+                return count($this->_articles);
+                break;
+            case 'stores':
+                return count($this->_stores);
+                break;
+            case null;
+                return (int)$this->_totalRecords + count($this->_articles) + count($this->_stores);
+
+        }
+
+
+    }
     /**
      * Retrieves parameters.
      *

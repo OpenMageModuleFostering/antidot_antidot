@@ -113,12 +113,33 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     {
         return $this->generate(Mage::getModel('Antidot/export_category'), self::GENERATE_FULL, $runContext);
     }
-    
+
+    /**
+     * Generate the articles file
+     */
+    public function articlesFullExport($runContext)
+    {
+        if (Mage::getStoreConfig('antidot/articles/index_cms', Mage_Core_Model_App::ADMIN_STORE_ID)) {
+            return $this->generate(Mage::getModel('Antidot/export_article'), self::GENERATE_FULL, $runContext);
+        } else {
+            return $this->sendExternalFile(Mage::getModel('Antidot/export_article'), $runContext);
+        }
+    }
+
+    /**
+     * Generate the stores file
+     */
+    public function storesFullExport($runContext)
+    {
+        return $this->sendExternalFile(Mage::getModel('Antidot/export_store'), $runContext);
+    }
+
     /**
      * Generate files
      * 
      * @param Antidot/Export_* $exportModel
      * @param string $type
+     * @param $runContext
      * @throws Exception
      */
     protected function generate($exportModel, $type, $runContext)
@@ -176,7 +197,12 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
             $log['reference'] = 'unknown';
             if(!empty($files)) {
                 $this->log('Compress files');
-                $filenameZip = $type === self::GENERATE_INC ? $exportModel::FILENAME_ZIP_INC : $exportModel::FILENAME_ZIP;
+                if ( $type === self::GENERATE_INC ) {
+                    $filenameZip = $exportModel::FILENAME_ZIP_INC;
+                    $exportModel->setIsIncremental(true);
+                } else {
+                    $filenameZip = $exportModel::FILENAME_ZIP;
+                }
                 $filenameZip = sprintf($filenameZip, date('YmdHis'), $ownerForFilename);
                 $filename = $this->compress($files, $filenameZip);
                 $log['reference'] = md5($filename);
@@ -210,6 +236,86 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         $this->log('end');
 
         Mage::helper('Antidot/logExport')->add($log['reference'], $type, $exportModel::TYPE, $log['begin'], $log['end'], $log['items'], $log['status'], implode(',', $log['error']));
+
+        if ( count($log['error']) ) {
+            //send error alert mail
+            Mage::helper('Antidot')->sendMail('Export failed', print_r($log['error'], true));
+            //throw Exception in order to dispay error message in UI
+            Mage::throwException(implode(',', $log['error']));
+        }
+
+        return $log['items'];
+    }
+
+    /**
+     * Generate files
+     *
+     * @param Antidot/Export_* $exportModel
+     * @throws Exception
+     */
+    protected function sendExternalFile($exportModel)
+    {
+
+        Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
+
+        $this->type = $exportModel::TYPE;
+        $this->log('start sendExternalFile');
+        $log['begin'] = time();
+        $log['items'] = 1;
+        $log['error'] = array();
+        $log['reference'] = '';
+
+        try
+        {
+            $filepath = Mage::getStoreConfig('antidot/'.$exportModel::FILE_PATH_CONF.'/file_path', Mage_Core_Model_App::ADMIN_STORE_ID);
+            if (strpos($filepath, '/') !==0) {
+                $filepath = Mage::getBaseDir() . DS . $filepath;
+            }
+
+            $owner = Mage::getStoreConfig('antidot/general/owner', Mage_Core_Model_App::ADMIN_STORE_ID);
+            $ownerForFilename = $this->getOwnerForFilename($owner);
+            $filenameZipPattern = sprintf($exportModel::FILENAME_ZIP, '*', $ownerForFilename);
+
+            $lastFileModif = 0;
+            $filenameZip = '';
+            foreach (glob($filepath . DS . $filenameZipPattern) as $filename) {
+                $filetime = filemtime ($filename);
+                if ($lastFileModif<$filetime) {
+                    $filenameZip = $filename;
+                    $lastFileModif = $filetime;
+                }
+            }
+
+            $log['reference'] = 'unknown';
+            if($filenameZip) {
+                $log['reference'] = md5($filenameZip);
+                $this->send($filenameZip, $exportModel);
+
+                $log['status'] = 'SUCCESS';
+            } else {
+                $log['items'] = 0;
+                $log['status'] = 'FAILED';
+                $log['error'][] = Mage::helper('Antidot')->__('There\'s no file corresponding to the pattern %s in %s', $filenameZipPattern, $filepath);
+            }
+
+            if(file_exists($filenameZip)) {
+                $this->log('Unlink file');
+                unlink($filenameZip);
+            }
+        }
+        catch(Exception $ex)
+        {
+            Mage::log($ex->__toString(), Zend_Log::ERR, 'antidot.log');
+            $log['error'][] = $ex->getMessage();
+            $log['status'] = 'FAILED';
+            $log['items'] = 0;
+        }
+
+        $log['end'] = time();
+        $this->log('send external file '.$exportModel::TYPE.' '.$exportModel->getOwner());
+        $this->log('end');
+
+        Mage::helper('Antidot/logExport')->add($log['reference'], self::GENERATE_FULL, $exportModel::TYPE, $log['begin'], $log['end'], $log['items'], $log['status'], implode(',', $log['error']));
 
         if ( count($log['error']) ) {
             //send error alert mail

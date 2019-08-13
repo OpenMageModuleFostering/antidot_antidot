@@ -3,6 +3,17 @@
 <layout version="0.1.0">
 
     <catalogsearch_result_index>
+
+        <reference name="head">
+            <action method="addCss"><stylesheet>css/antidot/catalogsearch.css</stylesheet></action>
+        </reference>
+
+        <reference name="root" >
+            <action method="setTemplate"><template>antidot/page/antidot_results.phtml</template></action>
+            <block type="Antidot/catalogsearch_articles" name="search_result_articles" as="search_result_articles" template="antidot/catalogsearch/result/articles.phtml" />
+            <block type="Antidot/catalogsearch_stores" name="search_result_stores" as="search_result_stores" template="antidot/catalogsearch/result/stores.phtml" />
+        </reference>
+
         <reference name="search.result">
             <action method="setTemplate"><template>antidot/catalogsearch/result.phtml</template></action>
             <block type="Antidot/catalogsearch_category" name="search_result_category" as="search_result_category" template="antidot/catalogsearch/result/category.phtml" />

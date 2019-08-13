@@ -498,8 +498,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             if(!empty($manufacturer)) {
                 $field = empty($this->fields['manufacturer']) ? 'manufacturer' : $this->fields['manufacturer'];
                 $brand = mb_substr($product->getAttributeText($field), 0, self::BRAND_MAX_LENGTH, 'UTF-8');
-                $brandUrl = Mage::helper('catalogsearch')->getResultUrl($brand, $product->getStoreId());
-                $brandUrl = parse_url($brandUrl, PHP_URL_PATH).'?'.parse_url($brandUrl, PHP_URL_QUERY);
+                $brandUrl = Mage::helper('catalogsearch')->getResultUrl($brand, $product->getStoreId(), false);
                 $brandUrl = $this->getExactUrl($brandUrl);
                 if(!empty($brand)) {
                     $this->xml->element('brand', $this->xml->encloseCData($brand), array('id' => $manufacturer, 'url' => $brandUrl));

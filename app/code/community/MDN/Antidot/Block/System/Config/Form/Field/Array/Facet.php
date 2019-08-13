@@ -55,13 +55,14 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_Facet extends Mage_Adminh
                 return $this->_getOrderRenderer()
                     ->setName($inputName)
                     ->setTitle($columnName)
-                    ->setWidth(50)
+                    ->setExtraParams('style="width:50px"')
                     ->setOptions(Mage::getModel("Antidot/System_Config_Number")->toOptionArray(10))
                     ->toHtml();
             case 'multiple':
                 return $this->_getMultipleRenderer()
                     ->setName($inputName)
                     ->setTitle($columnName)
+                    ->setExtraParams('style="width:100px"')
                     ->setOptions(Mage::getModel("Antidot/System_Config_DisableEnable")->toOptionArray())
                     ->toHtml();
         }

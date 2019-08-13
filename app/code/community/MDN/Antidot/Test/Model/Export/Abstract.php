@@ -56,6 +56,18 @@ class MDN_Antidot_Test_Model_Export_Abstract extends EcomDev_PHPUnit_Test_Case
         $url = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export, 'getExactUrl', array($url, false));
         $this->assertEquals("http://magento.jmale.local.amg-dev.fr/index.php/essai-1.html", $url);
 
+        $url = "http://magento.jmale.local.amg-dev.fr/catalogsearch/result/?q=TEST";
+        $url = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export, 'getExactUrl', array($url));
+        $this->assertEquals("/catalogsearch/result/?q=TEST", $url);
+
+        $url = "http://magento.jmale.local.amg-dev.fr/catalogsearch/result/?SID=c9kg93cu6721ahmt774e2sb7n0&q=TEST";
+        $url = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export, 'getExactUrl', array($url));
+        $this->assertEquals("/catalogsearch/result/?q=TEST", $url);
+
+        $url = "http://magento.jmale.local.amg-dev.fr/catalogsearch/result/?q=TEST&SID=c9kg93cu6721ahmt774e2sb7n0";
+        $url = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export, 'getExactUrl', array($url));
+        $this->assertEquals("/catalogsearch/result/?q=TEST", $url);
+
 
     }
 }

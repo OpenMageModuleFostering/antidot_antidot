@@ -1,0 +1,17 @@
+<?php if ($this->hasArticle()): ?>
+<ul>
+<?php foreach ($this->getArticles() as $article): ?>
+<li>
+<h2><a href="<?php if (strpos($article->getUrl(), 'http') !== 0) : echo $this->getUrl($article->getUrl()); else: echo $article->getUrl(); endif; ?>" ><?php echo  $article->getTitle(); ?></a></h2>
+<span><?php echo  $article->getSubtitle(); ?></span>
+<span><?php echo  $article->getPublishedAt(); ?></span>
+<p><?php echo $article->getAbstract(); ?></p>
+<?php if ($article->getUrlThumbnail()) : ?>
+    <img src="<?php echo $article->getUrlThumbnail(); ?>" />
+<?php endif; ?>
+</li>
+<?php endforeach; ?>
+</ul>
+<?php else: ?>
+<?php echo $this->__('No Article Found'); ?>
+<?php endif; ?>

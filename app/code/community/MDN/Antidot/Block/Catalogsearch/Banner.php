@@ -44,8 +44,11 @@ class MDN_Antidot_Block_Catalogsearch_Banner extends Mage_Core_Block_Template
      */
     protected function loadBanners()
     {
-
-        $this->_banners = $this->getLayer()->getProductCollection()->getBanners();
+        if ($this->getLayer()) {
+            $this->_banners = $this->getLayer()->getProductCollection()->getBanners();
+        } else {
+            $this->_banners = array();
+        }
 
     }
     
@@ -61,7 +64,7 @@ class MDN_Antidot_Block_Catalogsearch_Banner extends Mage_Core_Block_Template
             return Mage::getSingleton('Antidot/catalogsearch_layer');
         }
 
-        return parent::getLayer();
+        return null;
     }
     
 }

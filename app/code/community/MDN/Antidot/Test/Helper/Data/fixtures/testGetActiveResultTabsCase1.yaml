@@ -1,0 +1,2 @@
+config:
+  default/antidot/engine/result_tabs: a:3:{s:20:"_result_tab_products";a:3:{s:3:"tab";s:8:"products";s:6:"active";s:2:"on";s:13:"show_noresult";s:4:"true";}s:20:"_result_tab_articles";a:3:{s:3:"tab";s:8:"articles";s:6:"active";s:2:"on";s:13:"show_noresult";s:4:"true";}s:18:"_result_tab_stores";a:3:{s:3:"tab";s:6:"stores";s:6:"active";s:2:"on";s:13:"show_noresult";s:4:"true";}}

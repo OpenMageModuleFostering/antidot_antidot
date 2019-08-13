@@ -130,4 +130,34 @@ class MDN_Antidot_Test_Model_Observer extends EcomDev_PHPUnit_Test_Case
 
         unlink($filename);
     }
+
+
+    /**
+     * MCNX-81 : Add export for Magento Stores
+     */
+    function testStoresFullExport() {
+
+        /** @var $observer MDN_Antidot_Model_Observer */
+        $observer = Mage::getModel('Antidot/observer');
+
+        $filepath = Mage::getStoreConfig('antidot/'.MDN_Antidot_Model_Export_Store::FILE_PATH_CONF.'/file_path', Mage_Core_Model_App::ADMIN_STORE_ID);
+        if (strpos($filepath, '/') !==0) {
+            $filepath = Mage::getBaseDir() . DS . $filepath;
+        }
+        $filename = $filepath .DS . 'unittest_full_magento_stores.zip';
+        file_put_contents($filename, 'testStoresFullExport');
+
+        $mock = $this->getModelMock('Antidot/transport', array('send'));
+        $mock->expects($this->once())
+            ->method('send')
+            ->willReturn(true);
+
+        $this->replaceByMock('model', 'Antidot/transport', $mock);
+
+        $observer->storesFullExport('phpunit');
+
+        $this->assertTrue(!file_exists($filename));
+
+    }
+
 }

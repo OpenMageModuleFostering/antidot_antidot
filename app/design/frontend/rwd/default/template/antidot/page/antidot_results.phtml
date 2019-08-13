@@ -1,0 +1,129 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magento.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     rwd_default
+ * @copyright   Copyright (c) 2006-2015 X.commerce, Inc. (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+<?php
+/**
+ * Template for Mage_Page_Block_Html
+ */
+?>
+
+<!DOCTYPE html>
+
+<!--[if lt IE 7 ]> <html lang="<?php echo $this->getLang(); ?>" id="top" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="<?php echo $this->getLang(); ?>" id="top" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="<?php echo $this->getLang(); ?>" id="top" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="<?php echo $this->getLang(); ?>" id="top" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="<?php echo $this->getLang(); ?>" id="top" class="no-js"> <!--<![endif]-->
+
+<head>
+<?php echo $this->getChildHtml('head') ?>
+</head>
+<body<?php echo $this->getBodyClass()?' class="'.$this->getBodyClass().'"':'' ?>>
+<?php echo $this->getChildHtml('after_body_start') ?>
+<div class="wrapper">
+    <?php echo $this->getChildHtml('global_notices') ?>
+    <div class="page">
+        <?php echo $this->getChildHtml('header') ?>
+        <div class="main-container col3-layout">
+            <div class="main">
+                <?php echo $this->getChildHtml('breadcrumbs') ?>
+                <?php
+                //the layer bloc must be called first, in order to generate antidot WS call with facets
+                $_leftContent = $this->getChildHtml('left_first');
+
+                $helper = $this->helper('Antidot');
+
+                if ($helper->isActiveEngine() && $helper->hasResultTabs()) :
+                    $collection = Mage::getSingleton('Antidot/catalogsearch_layer')->getProductCollection();
+                    $tabs = $helper->getActiveResultTabs($collection);
+                    ?>
+                    <div class="antidot-tabs">
+                        <?php foreach($tabs as $tab): ?>
+                            <input type="radio" name="antidot_tabs" id="antidot-tab-<?php echo $tab['tab'] ?>" <?php if (isset($tab['selected'])) : ?>checked<?php endif; ?> >
+                            <label for="antidot-tab-<?php echo $tab['tab'] ?>">
+                                <i class="fa fa-html5"><span><?php echo $tab['name'] ?> (<?php echo $collection->getTotalResult($tab['tab']);?>)</span></i>
+                            </label>
+                        <?php endforeach; ?>
+                        <?php foreach($tabs as $tab): ?>
+                        <div id="antidot-tab-content-<?php echo $tab['tab'] ?>" class="antidot-tab-content">
+                            <?php switch ($tab['tab']) :
+                                case 'products': ?>
+                                    <div class="col-wrapper">
+                                        <?php // This left_first block will display above the main content on smaller viewports ?>
+                                        <?php if ($_leftContent): ?>
+                                            <div class="col-left sidebar col-left-first"><?php echo $_leftContent;   ?></div>
+                                        <?php endif; ?>
+                                        <div class="col-main">
+                                            <?php echo $this->getChildHtml('global_messages') ?>
+                                            <?php echo $this->getChildHtml('content') ?>
+                                        </div>
+                                        <div class="col-left sidebar"><?php echo $this->getChildHtml('left') ?></div>
+                                    </div>
+                                    <div class="col-right sidebar"><?php echo $this->getChildHtml('right') ?></div>
+                                    <?php break;
+                                case 'articles': ?>
+                                    <div class="col-wrapper">
+                                        <div class="col-main">
+                                            <?php echo $this->getChildHtml('search_result_articles') ?>
+                                        </div>
+                                    </div>
+                                    <?php break;
+                                case 'stores': ?>
+                                    <div class="col-wrapper">
+                                        <div class="col-main">
+                                            <?php echo $this->getChildHtml('search_result_stores') ?>
+                                        </div>
+                                    </div>
+                                    <?php break; ?>
+                            <?php endswitch; ?>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="col-wrapper">
+                        <?php // This left_first block will display above the main content on smaller viewports ?>
+                        <?php if ($_leftContent = $this->getChildHtml('left_first')): ?>
+                            <div class="col-left sidebar col-left-first"><?php echo $_leftContent;   ?></div>
+                        <?php endif; ?>
+                        <div class="col-main">
+                            <?php echo $this->getChildHtml('global_messages') ?>
+                            <?php echo $this->getChildHtml('content') ?>
+                        </div>
+                        <div class="col-left sidebar"><?php echo $this->getChildHtml('left') ?></div>
+                    </div>
+                    <div class="col-right sidebar"><?php echo $this->getChildHtml('right') ?></div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php echo $this->getChildHtml('footer_before') ?>
+        <?php echo $this->getChildHtml('footer') ?>
+        <?php echo $this->getChildHtml('global_cookie_notice') ?>
+        <?php echo $this->getChildHtml('before_body_end') ?>
+    </div>
+</div>
+<?php echo $this->getAbsoluteFooter() ?>
+</body>
+</html>

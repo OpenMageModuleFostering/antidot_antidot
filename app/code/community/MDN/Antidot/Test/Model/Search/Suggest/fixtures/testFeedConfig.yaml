@@ -1,0 +1,36 @@
+scope:
+  website: # Initialize websites
+    - website_id: 3
+      code: french_website
+      name: French Website
+      default_group_id: 3
+  group: # Initializes store groups
+    - group_id: 3
+      website_id: 3
+      name: French Store Group
+      default_store_id: 3
+      root_category_id: 2 # Default Category
+    - group_id: 5
+      website_id: 3
+      name: French Store Group Discount
+      default_store_id: 5
+      root_category_id: 2 # Default Category
+  store: # Initializes store views
+    - store_id: 3
+      website_id: 3
+      group_id: 3
+      code: france
+      name: France Store
+      is_active: 1
+    - store_id: 5
+      website_id: 3
+      group_id: 5
+      code: france_discount
+      name: France Store Discount
+      is_active: 1
+config:
+  default/general/locale/code: zz_ZZ
+  default/antidot/suggest/feeds: a:5:{s:15:"_feeds_products";a:3:{s:4:"feed";s:8:"products";s:6:"active";s:2:"on";s:14:"suggest_number";s:1:"5";}s:17:"_feeds_categories";a:3:{s:4:"feed";s:10:"categories";s:6:"active";s:2:"on";s:14:"suggest_number";s:1:"3";}s:13:"_feeds_brands";a:2:{s:4:"feed";s:6:"brands";s:14:"suggest_number";s:2:"10";}s:15:"_feeds_articles";a:3:{s:4:"feed";s:8:"articles";s:6:"active";s:2:"on";s:14:"suggest_number";s:1:"6";}s:13:"_feeds_stores";a:2:{s:4:"feed";s:6:"stores";s:14:"suggest_number";s:2:"10";}}
+  stores/france/general/locale/code: fr_FR
+  stores/france_discount/general/locale/code: fr_FR
+  stores/france_discount/antidot/suggest/feeds: a:5:{s:15:"_feeds_products";a:3:{s:4:"feed";s:8:"products";s:6:"active";s:2:"on";s:14:"suggest_number";s:1:"5";}s:17:"_feeds_categories";a:3:{s:4:"feed";s:10:"categories";s:6:"active";s:2:"on";s:14:"suggest_number";s:1:"3";}s:13:"_feeds_brands";a:2:{s:4:"feed";s:6:"brands";s:14:"suggest_number";s:2:"10";}s:15:"_feeds_articles";a:3:{s:4:"feed";s:8:"articles";s:6:"active";s:2:"on";s:14:"suggest_number";s:1:"6";}s:13:"_feeds_stores";a:2:{s:4:"feed";s:6:"stores";s:14:"suggest_number";s:2:"10";}}

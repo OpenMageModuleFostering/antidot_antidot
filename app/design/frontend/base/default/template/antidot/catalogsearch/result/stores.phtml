@@ -1,0 +1,22 @@
+<?php if ($this->hasStore()): ?>
+    <ul>
+        <?php foreach ($this->getStores() as $store): ?>
+            <li>
+                <h2><a href="<?php echo  $store->getUrl(); ?>" ><?php echo  $store->getName(); ?></a></h2>
+                <p><?php echo  $store->getAddress() ?><br/>
+                <?php echo $store->getZipcode().' '.$store->getCity().' '.$store->getCountry(); ?>
+                </p>
+                <?php if ($store->getDescriptions()):
+                foreach ($store->getDescriptions() as $desc) : ?>
+                <p><?php echo $desc ?></p>
+                <?php endforeach; ?>
+                <?php endif; ?>
+                <?php if ($store->getUrlThumbnail()) : ?>
+                    <img src="<?php echo $store->getUrlThumbnail(); ?>" />
+                <?php endif; ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+<?php else: ?>
+    <?php echo $this->__('No Store Found'); ?>
+<?php endif; ?>

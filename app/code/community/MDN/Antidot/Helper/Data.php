@@ -300,4 +300,51 @@ class MDN_Antidot_Helper_Data extends Mage_Core_Helper_Abstract
         }
         return $mageEdition;
     }
+
+    /**
+     * Return if there is at least one active tab
+     *
+     * @return boolean
+     */
+    public function hasResultTabs() {
+        return count($this->getActiveResultTabs())>0;
+    }
+
+    /**
+     * Return the active tabs array
+     *
+     * @param $collection MDN_Antidot_Model_Resource_Catalog_Product_Collection
+     * @return array
+     */
+    public function getActiveResultTabs($collection = null) {
+
+        $resultTypes = array(
+            'products' => Mage::helper('Antidot')->__('Products'),
+            'articles' => Mage::helper('Antidot')->__('Articles'),
+            'stores' => Mage::helper('Antidot')->__('Stores')
+        );
+
+        $activeTabs = array();
+        $tabs = unserialize(Mage::getStoreConfig('antidot/engine/result_tabs'));
+        $selectFirst = true;
+        if ($tabs) {
+            foreach($tabs as $tab) {
+                if (isset($tab['active'])) {  //if the tab is set active in BO
+                    if (!$collection || isset($tab['show_noresult']) //if the tab is set show if no result in BO
+                        || $collection->getTotalResult($tab['tab'])>0  // if there's result on this tab
+                        || ($collection->getTotalResult() == 0 && $tab['tab']=='products')) {  // if there's no result in any tab and the tab is products
+                        $tab['name'] = $resultTypes[$tab['tab']];
+                        //select the first tab with result (or product tab if no results at all)
+                        if ($selectFirst && $collection && ($collection->getTotalResult($tab['tab'])>0
+                                || ($collection->getTotalResult() == 0 && $tab['tab']=='products'))) {
+                            $tab['selected'] = $selectFirst;
+                            $selectFirst = false;
+                        }
+                        $activeTabs[] = $tab;
+                    }
+                }
+            }
+        }
+        return $activeTabs;
+    }
 }

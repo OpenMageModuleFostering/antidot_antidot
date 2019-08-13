@@ -1,0 +1,30 @@
+.treeView {
+    -moz-user-select: none;
+    position: relative;
+}
+.treeView ul {
+    margin: 0 0 0 -1.5em !important;
+    padding: 0 0 0 1.5em;
+}
+.treeView li.lastChild > ul {
+    background-image: none;
+}
+.treeView li {
+    cursor: auto;
+    list-style-image: url("../../images/antidot/button.png");
+    list-style-position: inside;
+    margin: 0;
+    padding: 0;
+    margin-left: 0px !important;
+}
+.treeView li.collapsibleListOpen {
+    cursor: pointer;
+    list-style-image: url("../../images/antidot/button-open.png");
+}
+.treeView li.collapsibleListClosed {
+    cursor: pointer;
+    list-style-image: url("../../images/antidot/button-closed.png");
+}
+.treeView li li {
+    padding-left: 1.5em;
+}

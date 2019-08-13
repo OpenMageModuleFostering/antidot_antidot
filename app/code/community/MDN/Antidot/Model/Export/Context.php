@@ -246,10 +246,13 @@ class MDN_Antidot_Model_Export_Context  extends Mage_Core_Model_Abstract
         return $this->categoryTrees;
     }
 
-    /* non utilisé pour l'instant
+    /**
+     * Get the list of websites
+     * @return array
+     */
     function getWebsites() {
-        $this->websites;
-    }*/
+        return $this->websites;
+    }
 
     /**
      *  Get the list of the pair website/store of the current context

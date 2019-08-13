@@ -68,12 +68,17 @@ class MDN_Antidot_Model_Transport_Http extends MDN_Antidot_Model_Transport_Abstr
 
         $service = new AfsService($this->afsService, $this->afsStatus);
 
-        $doc = new AfsDocument(file_get_contents($file));
+        $doc = new AfsDocument();
+        $doc->set_content_from_file($file);
 
         $connector = new AfsPafConnector($this->afsHost, $service, $exportModel->getPafName(), $auth, AFS_SCHEME_HTTPS, $curlConnector);
 
+        $pafMode=PaFMode::Full;
+        if ( $exportModel->getIsIncremental()) {
+            $pafMode=PaFMode::Incremental;
+        }
         /** @var AfsPafUploadReply $result */
-        $result = $connector->upload_doc($doc);
+        $result = $connector->upload_doc($doc, null, $pafMode);
 
         if ($result->in_error()) {
             throw new Exception("Can't send the file (".$result->get_error().")");

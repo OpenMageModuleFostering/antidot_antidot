@@ -230,22 +230,37 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
      */
     protected function prepareQueryResponse($response, $type = 'Catalog')
     {
-        if($type === 'Catalog') {
-            $this->_lastNumFound = (int)$response->get_meta()->get_total_replies();
-            $result = array();
-            foreach ($response->get_replies() as $reply) {
-                $result[] = $this->_objectToArray($this->getDataFromReply($reply));
+        $result = array();
+        if ($response) {
+            if ($type === 'Categories') {
+                foreach ($response->get_replies() as $reply) {
+                    $reply = $this->getDataFromReply($reply);
+                    $result[] = $reply['id'];
+                }
+
+                return $result;
             }
 
-            return $result;
+            if ($type === 'Catalog') {
+                $this->_lastNumFound = (int)$response->get_meta()->get_total_replies();
+                foreach ($response->get_replies() as $reply) {
+                    $result[] = $this->_objectToArray($this->getDataFromReply($reply));
+                }
+            }
+
+            if ($type === 'Articles' || $type === 'Stores') {
+                foreach ($response->get_replies() as $reply) {
+                    $data = $this->getDataFromReply($reply);
+                    $data['title'] = $reply->get_title();
+                    $data['abstract'] = $reply->get_abstract();
+                    $result[] = $data;
+                }
+            }
+
         }
-        
-        foreach ($response->get_replies() as $reply) {
-            $reply = $this->getDataFromReply($reply);
-            $result[] = $reply['id'];
-        }
-        
+
         return $result;
+
     }
     
     /**
@@ -269,7 +284,6 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
                 $data[$field->getName()] = (string)$field;
             }
         }
-        
         return $data;
     }
 
@@ -369,6 +383,15 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
         
         if(isset($resultAntidot->replysetCategories) && $resultAntidot->replysetCategories !== null) {
             $result['category_ids'] = $this->prepareQueryResponse($resultAntidot->replysetCategories, 'Categories');
+        }
+
+        if (isset($resultAntidot->additionalReplyset) && is_array($resultAntidot->additionalReplyset)) {
+            foreach ($resultAntidot->additionalReplyset as $additionalFeed => $additionalReplyset) {
+                $result[$additionalFeed] = $this->prepareQueryResponse(
+                    $additionalReplyset,
+                    $additionalFeed
+                );
+            }
         }
 
         if(isset($resultAntidot->promote) && $resultAntidot->promote && $replies = $resultAntidot->promote->get_replies()) {

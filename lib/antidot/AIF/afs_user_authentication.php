@@ -33,25 +33,27 @@ class AfsUserAuthentication implements AfsAuthentication
      *        version information.
      * @return array representing authentication.
      */
-    public function format_as_url_param()
+    public function format_as_url_param($version=null)
     {
-        return array();
-//    //        if ('7.6' == $version) {
-//                if (is_null($this->authority))
-//                    throw new InvalidArgumentException('In version ' . $version
-//                    . ' authority parameter is mandatory!');
-//                return array('afs:login' => sprintf('login://%s:%s@%s', $this->user, $this->password, $this->authority));
-//    //        } else {
-//    //            return array();
-//    //        }
+        if ('7.6' == $version) {
+            if (is_null($this->authority))
+                throw new InvalidArgumentException('In version ' . $version
+                . ' authority parameter is mandatory!');
+            return array('afs:login' => sprintf('login://%s:%s@%s', $this->user, $this->password, $this->authority));
+        } else {
+            return array();
+        }
     }
     /** @brief Formats authentication parameters.
      * @param $version [in] Format string representation according to provided
      *        version information.
      * @return array representing authentication.
      */
-    public function format_as_header_param()
+    public function format_as_header_param($version=null)
     {
-        return array('Authorization' => 'Basic ' . base64_encode($this->user . ':' . $this->password));
+        if ('7.6' == $version)
+            return array();
+        else
+            return array('Authorization' => 'Basic ' . base64_encode($this->user . ':' . $this->password));
     }
 }

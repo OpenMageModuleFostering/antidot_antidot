@@ -133,7 +133,6 @@
                             <sort_order>6</sort_order>
                             <show_in_default>1</show_in_default>
                             <comment>Local directory to use to generate xml files. If empty, /tmp will be used</comment>
-                            <depends><upload_type>ftp</upload_type></depends>
                         </working_directory>
                     </fields>
                 </ftp>
@@ -404,66 +403,16 @@
                             <show_in_store>1</show_in_store>
                             <comment>Select Magento or AFS@Store (recommended) autocomplete engine. Rollback to Magento only if you experience issues</comment>
                         </enable>
-                        <products translate="label">
-                            <label>Display products ?</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_enabledisable</source_model>
-                            <sort_order>20</sort_order>
+                        <feeds translate="label">
+                            <label>Feeds</label>
+                            <frontend_model>Antidot/system_config_form_field_array_acpFeeds</frontend_model>
+                            <backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
+                            <sort_order>2</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-                            <comment>Display products in auto complete results</comment>
-                        </products>
-                        <products_displayed translate="label">
-                            <label>Number of products displayed</label>
-                            <frontend_type>text</frontend_type>
-                            <validate>validate-digits</validate>
-                            <sort_order>21</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>Select the maximum number of products to display</comment>
-                        </products_displayed>
-                        <brands translate="label">
-                            <label>Display brands</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_enabledisable</source_model>
-                            <sort_order>30</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>Display brands in auto complete results</comment>
-                        </brands>
-                        <brands_displayed translate="label">
-                            <label>Number of brands displayed</label>
-                            <frontend_type>text</frontend_type>
-                            <validate>validate-digits</validate>
-                            <sort_order>31</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>Select the maximum number of brands to display</comment>
-                        </brands_displayed>
-                        <categories translate="label">
-                            <label>Categories</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_enabledisable</source_model>
-                            <sort_order>40</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>Display categories in auto complete results</comment>
-                        </categories>
-                        <categories_displayed translate="label">
-                            <label>Number of categories displayed</label>
-                            <frontend_type>text</frontend_type>
-                            <validate>validate-digits</validate>
-                            <sort_order>41</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>Select the maximum number of categories to display</comment>
-                        </categories_displayed>
+                            <comment>Définissez l'ordre des flux en les faisant glisser en drag'n drop, définissez pour chaque flux si ils doivent apparaitre, et le nombre de résultats à afficher</comment>
+                        </feeds>
                         <template translate="label">
                             <label>Template</label>
                             <frontend_type>textarea</frontend_type>
@@ -502,34 +451,6 @@
                             <show_in_store>0</show_in_store>
                             <comment>Restore the default XSLT template (usefull if you broke it !)</comment>
                         </restore_template>
-                        <order_1 translate="label">
-                            <label>Sort order</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>Antidot/System_Config_Suggest_Type</source_model>
-                            <sort_order>42</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>First collection to display in suggest</comment>
-                        </order_1>
-                        <order_2 translate="label">
-                            <frontend_type>select</frontend_type>
-                            <source_model>Antidot/System_Config_Suggest_Type</source_model>
-                            <sort_order>43</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>Second collection to display in suggest</comment>
-                        </order_2>
-                        <order_3 translate="label">
-                            <frontend_type>select</frontend_type>
-                            <source_model>Antidot/System_Config_Suggest_Type</source_model>
-                            <sort_order>44</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>Third collection to display in suggest</comment>
-                        </order_3>
                     </fields>
                 </suggest>
                 
@@ -552,6 +473,16 @@
                             <show_in_store>1</show_in_store>
                             <comment>Select Magento or AFS@Store (recommended) search engine. Rollback to Magento only if you experience issues</comment>
                         </engine>
+                        <result_tabs translate="label">
+                            <label>Result Tabs</label>
+                            <frontend_model>Antidot/system_config_form_field_array_tabs</frontend_model>
+                            <backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
+                            <sort_order>30</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Définissez l'ordre des onglets en les faisant glisser en drag'n drop, définissez pour chaque onglet si ils doivent apparaitre, et leur ordre de priorité</comment>
+                        </result_tabs>
                         <feed_categories translate="label">
                             <label>Display categories</label>
                             <frontend_type>select</frontend_type>
@@ -662,16 +593,66 @@
                         </redirect>
                     </fields>
                 </promote>
-                
-                <action>
-                    <label>On-demand Data Upload</label>
+
+                <articles>
+                    <label>Articles</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>9</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <index_cms translate="label">
+                            <label>Index magento CMS pages</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </index_cms>
+                        <file_path translate="label,comment">
+                            <label>Articles directory</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Local directory where the articles zip file is expected</comment>
+                            <depends><index_cms>0</index_cms></depends>
+                        </file_path>
+                    </fields>
+                </articles>
+
+                <stores>
+                    <label>Stores</label>
                     <frontend_type>text</frontend_type>
                     <sort_order>10</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>0</show_in_website>
                     <show_in_store>0</show_in_store>
                     <fields>
-                        <push_products>
+                        <file_path translate="label,comment">
+                            <label>Stores directory</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Local directory where the stores zip file is expected</comment>
+                        </file_path>
+                    </fields>
+                </stores>
+
+                <action>
+                    <label>On-demand Data Upload</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>11</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <push_products translate="label,comment">
                             <label>Push products</label>
                             <frontend_model>Antidot/System_Config_Button_PushProducts</frontend_model>
                             <sort_order>2</sort_order>
@@ -680,15 +661,33 @@
                             <show_in_store>0</show_in_store>
                             <comment>Manually push products index to AFS@Store (usefull when you change configuration above)</comment>
                         </push_products>
-                        <push_categories>
+                        <push_categories translate="label,comment">
                             <label>Push categories</label>
                             <frontend_model>Antidot/System_Config_Button_PushCategories</frontend_model>
                             <sort_order>1</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <comment>Manually push category index to AFS@Store (usefull when you change configuration above)</comment>
+                            <comment>Manually push categories index to AFS@Store</comment>
                         </push_categories>
+                        <push_articles translate="label,comment">
+                            <label>Push articles</label>
+                            <frontend_model>Antidot/System_Config_Button_PushArticles</frontend_model>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Manually push articles index to AFS@Store</comment>
+                        </push_articles>
+                        <push_stores translate="label,comment">
+                            <label>Push stores</label>
+                            <frontend_model>Antidot/System_Config_Button_PushStores</frontend_model>
+                            <sort_order>4</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Manually push stores index to AFS@Store</comment>
+                        </push_stores>
                     </fields>
                 </action>
 

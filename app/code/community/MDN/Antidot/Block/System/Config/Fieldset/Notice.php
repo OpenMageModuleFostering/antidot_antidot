@@ -50,6 +50,9 @@ class MDN_Antidot_Block_System_Config_Fieldset_Notice
         }
 
         $html .= '</ul>';
+        $html .= '<ul style="margin-bottom:10px;margin-top:10px;margin-left:5px;"><li>';
+        $html .= '<a target="_blank "href="http://doc-store.antidot.net/book#!book;uri=aa77b81f03d5e6f1e553b7e6c6fd0e0c;breadcrumb=a909fa5b2c554e4d940a115a476a5fd5">'.$helper->__("Documentation").'</a>';
+        $html .= '</ul></li>';
         $html .= '</div>';
         return $html;
     }

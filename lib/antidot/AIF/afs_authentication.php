@@ -24,14 +24,14 @@ interface AfsAuthentication
      *        version information.
      * @return string representing authentication.
      */
-    public function format_as_url_param();
+    public function format_as_url_param($version=null);
 
     /** @brief Formats authentication parameters.
      * @param $version [in] Format string representation according to provided
      *        version information.
      * @return array representing authentication.
      */
-    public function format_as_header_param();
+    public function format_as_header_param($version=null);
 }
 
 

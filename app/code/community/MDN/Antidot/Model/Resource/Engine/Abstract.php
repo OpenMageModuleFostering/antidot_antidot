@@ -98,6 +98,24 @@ abstract class MDN_Antidot_Model_Resource_Engine_Abstract
 	            }
 	        }
 
+           $articles=array();
+           if (isset($resultTmp['Articles'])) {
+               foreach ($resultTmp['Articles'] as $articleA) {
+                   $article = new Varien_Object();
+                   $article->setData($articleA);
+                   $articles[] = $article;
+               }
+           }
+
+           $stores=array();
+           if (isset($resultTmp['Stores'])) {
+               foreach ($resultTmp['Stores'] as $storeA) {
+                   $store = new Varien_Object();
+                   $store->setData($storeA);
+                   $stores[] = $store;
+               }
+           }
+
            $this->_idsByQuery[$paramsHash] = array(
 	            'ids' => $ids,
 	            'total_count' => (isset($resultTmp['total_count'])) ? $resultTmp['total_count'] : null,
@@ -105,7 +123,10 @@ abstract class MDN_Antidot_Model_Resource_Engine_Abstract
 	            'category_ids' => (isset($resultTmp['category_ids'])) ? $resultTmp['category_ids'] : array(),
                 'banners' => (isset($resultTmp['banners'])) ? $resultTmp['banners'] : array(),
                 'spellcheck' => (isset($resultTmp['spellcheck'])) ? $resultTmp['spellcheck'] : false,
+                'articles' => $articles,
+                'stores' => $stores,
 	        );
+
         }
         
         return $this->_idsByQuery[$paramsHash];

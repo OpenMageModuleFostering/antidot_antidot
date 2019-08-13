@@ -38,6 +38,11 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
     protected $facets;
 
     /**
+     * @var array additionalFeeds;
+     */
+    protected $additionalFeeds = array();
+
+    /**
      * {@inherit}
      */
     public function _construct()
@@ -48,11 +53,20 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         $this->lang = $lang;
 
         foreach (Mage::getStoreConfig('antidot/engine') as $field => $value) {
+            //If category search is enabled, add it to feeds
             if (substr($field, 0, 4) === 'feed' && $value === '1') {
                 $this->feeds[] = ucfirst(substr($field, 5));
             }
         }
-        $this->feeds = array_unique($this->feeds);
+
+        //Add Articles and Stores feeds if corresponding tabs are activated in BO
+        foreach (Mage::helper('Antidot')->getActiveResultTabs() as $tab) {
+            if ($tab['tab'] !== 'products') { //articles or stores
+                $this->additionalFeeds[] = ucfirst($tab['tab']);
+            }
+        }
+
+        $this->feeds = array_unique(array_merge($this->feeds, $this->additionalFeeds));
 
         if ($this->isConfigured) {
             $this->afsSearch = new AfsSearch($this->afsHost, $this->afsService, $this->afsStatus);
@@ -100,6 +114,11 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         $resultAntidot->promote            = $this->getPromoteFromResult($results);
         $resultAntidot->replyset           = $this->getReplySetFromResult($results);
         $resultAntidot->replysetCategories = $this->getReplySetFromResult($results, 'Categories');
+        $resultAntidot->additionalReplyset = array();
+        foreach ($this->additionalFeeds as $additionalFeed) {
+            $resultAntidot->additionalReplyset[$additionalFeed] = $this->getReplySetFromResult($results, $additionalFeed);
+        }
+
         $resultAntidot->isOrchestrated     = $this->getOrchestratedFromResult($results);
 
         //save translations
@@ -235,7 +254,10 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
             foreach ($params['filters'] as $filter) {
                 if (is_array($filter)) {
                     foreach ($filter as $key => $values) {
-                        $query = $query->add_filter($key, $values);
+                        $query = $query->add_filter_on_feed($key, $values, 'Catalog');
+                        if ($key == "website") {
+                            $query = $query->add_filter_on_feed($key, $values, 'Articles');
+                        }
                     }
                 } else {
                     //$query = $query->add_filter($key, $value);

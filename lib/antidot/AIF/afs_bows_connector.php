@@ -105,7 +105,7 @@ abstract class AfsBOWSConnector extends AfsConnectorBase
             throw new Exception("Code : " . $r->error->code . "\nMessage : " .$r->error->message . "\nDescription : " . $r->error->description);
         }
         $this->curlConnector->curl_close($request);
-        Mage::log($result, null, 'antidot.log');
+
         return $result;
     }
 

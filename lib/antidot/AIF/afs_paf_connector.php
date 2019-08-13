@@ -5,12 +5,22 @@ require_once 'AIF/afs_paf_upload_reply.php';
 require_once 'AIF/afs_bows_information_cache.php';
 require_once 'COMMON/afs_connector_base.php';
 
+
+abstract class PaFMode
+{
+    const Full = 'FULL';
+    const Incremental = 'INCREMENTAL';
+}
+
+
+
 /** @brief AFS PaF connector.
  */
 class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterface
 {
     private $paf_name;
     private $authentication;
+    private $paf_mode = PaFMode::Incremental;
 
     /** @brief Construct new PaF connector.
      *
@@ -40,11 +50,11 @@ class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterf
      *
      * @exception see @a upload_docs method.
      */
-    public function upload_doc(AfsDocument $doc, $comment=null)
+    public function upload_doc(AfsDocument $doc, $comment=null, $paf_mode=PaFMode::Incremental)
     {
         $mgr = new AfsDocumentManager();
         $mgr->add_document($doc);
-        return $this->upload_docs($mgr, $comment);
+        return $this->upload_docs($mgr, $comment, $paf_mode);
     }
 
     /** @brief Upload one or more documents through document manager.
@@ -57,13 +67,14 @@ class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterf
      * @exception Exception when error occured while initializing or executing
      *            request.
      */
-    public function upload_docs(AfsDocumentManager $mgr, $comment=null)
+    public function upload_docs(AfsDocumentManager $mgr, $comment=null, $paf_mode=PaFMode::Incremental)
     {
+        $this->paf_mode = $paf_mode;
         if (! $mgr->has_document())
             throw new InvalidArgumentException('No document to be sent');
 
-//        $version = $this->get_bo_version();
-        $context = new AfsPafConnectorContext($mgr, $comment);
+        $version = $this->get_bo_version();
+        $context = new AfsPafConnectorContext($version, $mgr, $comment, $paf_mode);
         return new AfsPafUploadReply(json_decode($this->query($context)));
     }
 
@@ -76,13 +87,14 @@ class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterf
     {
         $url = parent::get_base_url('service');
 
-//        $params = $this->authentication->format_as_url_param($context->version);
+        $params = $this->authentication->format_as_url_param($context->version);
+        $params['afs:type'] = $this->paf_mode;
         if (! is_null($context->comment))
             $params['comment'] = $context->comment;
 
         return sprintf($url . '/%d/instance/%s/paf/%s/upload?%s',
             $this->service->id, $this->service->status, $this->paf_name,
-            $this->format_parameters(array()));
+            $this->format_parameters($params));
     }
 
     /** @brief Retrieves authentication as HTTP header for new authentication policy (>=v7.7)
@@ -91,7 +103,7 @@ class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterf
      */
     public function get_http_headers($context=null)
     {
-        return $this->authentication->format_as_header_param();
+        return $this->authentication->format_as_header_param($context->version);
     }
 
     public function set_post_content(&$request, $context)
@@ -100,11 +112,26 @@ class AfsPafConnector extends AfsBOWSConnector implements AfsBOWSConnectorInterf
         $doc_no = 1;
         $documents = array();
         foreach ($mgr->get_documents() as $doc) {
-            $documents['file' . $doc_no] = '@' . $doc->get_filename() . ';type='
-                . $doc->get_mime_type() . ';filename=' . basename($doc->get_filename());
+
+            // PHP 5.5 introduced a CurlFile object that deprecates the old @filename syntax
+            // See: https://wiki.php.net/rfc/curl-file-upload
+            if (function_exists('curl_file_create')) {
+                $documents['file'.$doc_no] = curl_file_create(
+                    $doc->get_filename(),
+                    $doc->get_mime_type(),
+                    basename($doc->get_filename())
+                );
+            } else {
+                $documents['file'.$doc_no] = '@'.$doc->get_filename().';type='
+                    .$doc->get_mime_type().';filename='.basename($doc->get_filename());
+            }
+
             $doc_no++;
         }
-        if ($this->curlConnector->curl_setopt($request, CURLOPT_POSTFIELDS, $documents) === false) {
+        $opts = array(CURLOPT_POSTFIELDS => $documents);
+        $this->post_add_opts($opts);
+
+        if ($this->curlConnector->curl_setopt_array($request, $opts) === false) {
             throw new Exception('Cannot set documents to be sent');
         }
     }
@@ -140,9 +167,9 @@ class AfsPafConnectorContext
      *        sent to Back Office.
      * @param $comment [in] Optional comment for uploaded files.
      */
-    public function __construct(AfsDocumentManager $doc_mgr, $comment)
+    public function __construct($version, AfsDocumentManager $doc_mgr, $comment)
     {
-//        $this->version = $version;
+        $this->version = $version;
         $this->doc_mgr = $doc_mgr;
         $this->comment = $comment;
     }

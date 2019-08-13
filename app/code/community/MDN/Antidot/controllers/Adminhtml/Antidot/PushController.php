@@ -73,4 +73,54 @@ class MDN_Antidot_Adminhtml_Antidot_PushController extends Mage_Adminhtml_Contro
         }
         $this->_redirectReferer();
     }
+
+    /**
+     * Generate the articles file, call from back office
+     */
+    public function articleAction()
+    {
+        try {
+            if (Mage::getModel('Antidot/observer')->articlesFullExport('UI')) {
+                Mage::getSingleton('adminhtml/session')->addSuccess(
+                    Mage::helper('Antidot')->__('Articles exported')
+                );
+            } else {
+                Mage::getSingleton('adminhtml/session')->addWarning(
+                    Mage::helper('Antidot')->__('No Article to export')
+                );
+            }
+        }
+        catch(Exception $ex) {
+            Mage::getSingleton('adminhtml/session')->addError(
+                Mage::helper('Antidot')->__('An error occured : %s', $ex->getMessage())
+            );
+        }
+        $this->_redirectReferer();
+    }
+
+
+    /**
+     * Generate the stores file, call from back office
+     */
+    public function storeAction()
+    {
+        try {
+            if (Mage::getModel('Antidot/observer')->storesFullExport('UI')) {
+                Mage::getSingleton('adminhtml/session')->addSuccess(
+                    Mage::helper('Antidot')->__('Stores exported')
+                );
+            } else {
+                Mage::getSingleton('adminhtml/session')->addWarning(
+                    Mage::helper('Antidot')->__('No store to export')
+                );
+            }
+        }
+        catch(Exception $ex) {
+            Mage::getSingleton('adminhtml/session')->addError(
+                Mage::helper('Antidot')->__('An error occured : %s', $ex->getMessage())
+            );
+        }
+        $this->_redirectReferer();
+    }
+
 }
