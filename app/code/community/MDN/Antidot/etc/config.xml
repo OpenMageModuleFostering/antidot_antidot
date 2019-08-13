@@ -18,7 +18,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.0.18</version>
+            <version>1.0.19</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -193,7 +193,8 @@
     <xsl:variable name="brands-title">Brands</xsl:variable>
     <!-- Thumbnail settings -->
     <xsl:variable name="thumbnail_width">35</xsl:variable>
-    <!-- Currency settings -->
+    <!-- Price settings -->
+    <xsl:variable name="display_price" select="true()"/>
     <xsl:variable name="decimal-separator">,</xsl:variable>
     <xsl:variable name="currency-side">left</xsl:variable>
     <!-- Display parent category along with category? -->
@@ -244,7 +245,14 @@
                 <xsl:otherwise>
                     <xsl:call-template name="upperCaseFirstLetter">
                         <xsl:with-param name="str">
-                            <xsl:value-of select="substring-before(@name,'_')"/>
+                            <xsl:choose>
+                                <xsl:when test="contains(@name,'_')">
+                                    <xsl:value-of select="substring-before(@name,'_')"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="@name"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
                         </xsl:with-param>
                     </xsl:call-template>
                 </xsl:otherwise>
@@ -387,24 +395,26 @@
 
     <!-- Product rich template: uses custom metadata like price -->
     <xsl:template match="afs:reply" mode="product">
-        <xsl:variable name="price_display">
-            <xsl:apply-templates select="afs:option[@key='price']" mode="price_display"/>
-        </xsl:variable>
         <div class="name">
             <xsl:value-of select="@label"/>
-            <span style="padding-left: 5px;">
-                <xsl:choose>
-                    <xsl:when test="afs:option[@key='price_cut']">
-                        <s>
-                            <xsl:apply-templates select="afs:option[@key='price_cut']"
-                                mode="price_display"/>
-                        </s>&#160; <xsl:value-of select="$price_display"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:value-of select="$price_display"/>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </span>
+            <xsl:if test="$display_price=true()">
+                <xsl:variable name="price_display">
+                    <xsl:apply-templates select="afs:option[@key='price']" mode="price_display"/>
+                </xsl:variable>
+                <span style="padding-left: 5px;">
+                    <xsl:choose>
+                        <xsl:when test="afs:option[@key='price_cut']">
+                            <s>
+                                <xsl:apply-templates select="afs:option[@key='price_cut']"
+                                    mode="price_display"/>
+                            </s>&#160; <xsl:value-of select="$price_display"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$price_display"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </span>
+            </xsl:if>
         </div>
     </xsl:template>
 

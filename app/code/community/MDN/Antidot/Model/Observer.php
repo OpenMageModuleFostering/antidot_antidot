@@ -174,6 +174,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         }
         catch(Exception $ex)
         {
+            Mage::log($ex->__toString(), Zend_Log::ERR, 'antidot.log');
             $log['error'][] = $ex->getMessage();
             $log['status'] = 'FAILED';
         }

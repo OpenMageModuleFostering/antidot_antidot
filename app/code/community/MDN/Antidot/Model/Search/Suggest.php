@@ -16,7 +16,7 @@
 class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract 
 {
 
-    const URI    = 'http://%s/acp?afs:service=%s&afs:status=%s&afs:feed=%s&afs:replies=%s&afs:query=%s&afs:sessionId=%s';
+    const URI    = 'http://%s/acp?afs:service=%s&afs:status=%s&afs:output=xml&afs:feed=%s&afs:feedOrder=%s&afs:replies=%s&afs:query=%s&afs:sessionId=%s';
 
     const DEFAULT_REPLIES_NUMBER = 10;
     /**
@@ -26,36 +26,31 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
      */
     private $feed = array(
         'products' => array(
-            'prefix' => 'featured_products_',
             'tpl'    => 'featured_products_%d_%s',
             'number' => self::DEFAULT_REPLIES_NUMBER,
+            'order'  => 1,    
         ),
         'categories' => array(
-            'prefix' => 'categories_',
             'tpl'    => 'categories_%d_%s',
             'number' => self::DEFAULT_REPLIES_NUMBER,
+            'order'  => 2,
         ),
         'brands' => array(
-            'prefix' => 'brands_',
             'tpl'    => 'brands_%d_%s',
             'number' => self::DEFAULT_REPLIES_NUMBER,
+            'order'  => 3,
         ),
         'articles' => array(
-            'prefix' => 'articles_',
             'tpl'    => 'articles_%d_%s',
             'number' => self::DEFAULT_REPLIES_NUMBER,
+            'order'  => 4,
         ),
         'stores' => array(
-            'prefix' => 'stores_',
             'tpl'    => 'stores_%d_%s',
             'number' => self::DEFAULT_REPLIES_NUMBER,
+            'order'  => 5,
         ),
     );
-    
-    /**
-     * @var array Types sorted
-     */
-    protected $typeOrder = array();
     
     /**
      * Xslt Template
@@ -83,13 +78,27 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
                 }
             } elseif(preg_match('/order_([0-4])/', $field, $matches)) {
                 $order = $matches[1];
-                $this->typeOrder[$value] = $order;
+                if(isset($this->feed[$value])) {
+                    $this->feed[$value]['order'] = $order;
+                }
             }
         }
+        
         $this->loadFacetAutocomplete();
+        $this->loadAdditionalFeeds();
+        
+        list($lang) = explode('_', Mage::getStoreConfig('general/locale/code', Mage::app()->getStore()->getId()));
+        foreach($this->feed as $key => $feed) {
+        	//take the storeId for product feed, website for others
+        	$id = ($key == 'products') ? Mage::app()->getStore()->getWebsiteId() : Mage::app()->getStore()->getId();
+        	$this->feed[$key]['name'] = sprintf($feed['tpl'], $id, $lang);
+        }
+        
     }
 
     /**
+     * Add the facets configured in the back-office as used in autocomplete
+     * 
      * @return array
      */
     protected function loadFacetAutocomplete()
@@ -98,13 +107,31 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
         foreach($facets as $facet) {
             if($facet['autocomplete'] === '1') {
                 $this->feed['property_'.$facet['value']] = array(
-                    'prefix' => 'property_'.$facet['value'].'_',
                     'tpl'    => 'property_'.$facet['value'].'_%d_%s',
                     'number' => self::DEFAULT_REPLIES_NUMBER,
+                    'order' => (count($this->feed)+1),
                 );
             }
         }
     }
+
+    /**
+     * Add the additional feeds configured in the BO
+     * @return array
+     */
+    protected function loadAdditionalFeeds()
+    {
+    	$additionalFeeds = @unserialize(Mage::getStoreConfig('antidot/suggest/additionnal_feed'));
+    	foreach($additionalFeeds as $feed) {
+    		$addFeed = $feed['value'];
+    	    $this->feed[$addFeed] = array(
+   					'tpl'    => $addFeed,
+   					'number' => self::DEFAULT_REPLIES_NUMBER,
+    	            'order'  => (count($this->feed)+1),
+   			);
+    	}
+    }
+    
     
     /**
      * Get the suggest list
@@ -116,29 +143,64 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
     {
         $url = $this->buildUrl($query);
         Mage::log($url, null, 'antidot.log');
-        if(!$content = file_get_contents($url)) {
-            $response = array();
-        } elseif(!$response = json_decode($content, true)) {
-            $response = array();
-        }
 
-        $xml = $this->getXmlSuggest($response, $query);
+        libxml_use_internal_errors(true);
+        $xml = simplexml_load_file($url);
+        if ($xml === false) {
+			 Mage::log("Erreur lecture flux xml ". $url, null, 'antidot.log');           
+        	 Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');         
+			 return "";
+        }
+        
+		$xml = $this->postProcessXml($xml);
+        
         if($format === 'xml') {
-            $this->displayXml($xml);
+            return $this->displayXml($xml);
         }
         
         return $this->transformToXml($xml);
     }
 
     /**
+     * Post Process xml : limit the number of result in
+     * each feed according to backend configuration
+     *
+     * @param SimpleXmlElement $xml
+     * @return SimpleXmlElement 
+     */
+    private function postProcessXml(&$xml)
+    {
+        
+    	$ns = $xml->getNamespaces(true);
+    	foreach ($xml->children($ns['afs'])->replySet as $replySet) {
+
+    		$type = (string)$replySet->attributes()->name;
+    		$feed = $this->getFeed($type);
+
+    		$nbLimit = $feed['number'];
+    		$nbItems = (int)$replySet->meta->attributes()->totalItems;
+    		if ($nbLimit<$nbItems) {
+	    		$replySet->meta->attributes()->totalItems = $nbLimit;
+	    		for ($i=($nbItems-1);  $i >=  ($nbLimit); $i--) {
+	    			unset($replySet->reply[$i]);
+	    		}
+    		}
+		}
+        
+     	return $xml;
+
+     }
+    
+    
+    /**
      * Display xml
      *
-     * @param string $xml
+     * @param SimpleXmlElement $xml
      */
     private function displayXml($xml)
     {
         header ("Content-Type:text/xml");
-        echo $xml;
+        echo $xml->asXML();
         exit(0);
     }
     
@@ -156,108 +218,12 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
                 $this->afsService, 
                 $this->afsStatus, 
                 $this->getFeeds(),
-                $this->getReplies(),
+                $this->getFeedOrder(),
+            	$this->getReplies(),
                 urlencode($query),
                 $this->getSession());
         return $url;
     }
-    
-    /**
-     * Extract the items from response
-     * 
-     * @param array $response
-     * @return array
-     */
-    protected function getXmlSuggest($response, $query)
-    {
-        $xml = Mage::helper('Antidot/XmlWriter');
-        $xml->init();
-
-        $ns = array(
-            'xmlns:afs' => 'http://ref.antidot.net/v7/afs#',
-            'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-            'xsi:schemaLocation' => 'http://ref.antidot.net/v7/afs# http://ref.antidot.net/v7.7/acp-reply.xsd'
-        );
-        $xml->push('afs:replies', $ns);
-
-            $xml->push('afs:header');
-                $xml->emptyElement('afs:query', array('textQuery' => ($query)));    //AFM98 : do NOT htmlentities query
-            $xml->pop();
-
-            if(!is_numeric(key($response))) {
-                $response = $this->setOrders($response);
-                foreach($response as &$responseOrder) {
-                    $type = key($responseOrder);
-                    $data = current($responseOrder);
-                    $feed = $this->getFeed($type);
-
-                    $currentItems = 0;
-                    $xml->push('afs:replySet', array('name' => $type));
-                    $xml->emptyElement('afs:meta', array('uri' => $type, 'producer' => 'acp', 'totalItems' => count($data[2])));
-                    foreach($data[2] as $key => &$item) {
-                        $xml->push('afs:reply', array('label' => $data[1][$key]));
-                        $this->writeOptions($xml, $item);
-                        $xml->pop();
-                        if(++$currentItems >= $feed['number']) {
-                            break;
-                        }
-                    }
-                    $xml->pop();
-                }
-            }
-        $xml->pop();
-        
-        return $xml->getXml();
-    }
-    
-    /**
-     * Write suggest options
-     * 
-     * @param XmlWriter $xml
-     * @param array $items
-     */
-    protected function writeOptions($xml, $item)
-    {
-        foreach($item as $field => $value) {
-            if(is_array($value)) {
-                $this->writeOptions($xml, $value);
-                continue;
-            }
-
-            $attributes = array(
-                'key'   => $field,
-                'value' => html_entity_decode($value),
-            );
-            $xml->emptyelement('afs:option', $attributes);
-        }
-    }
-    
-    /**
-     * Set response order
-     * 
-     * @param array $response
-     * @return array
-     */
-    protected function setOrders($response)
-    {
-        // set orders
-        $types = array();
-        foreach($response as $type => $data) {
-            $feed = $this->getFeedKey($type);
-            if(array_key_exists($feed, $this->typeOrder)) {
-                $types[$this->typeOrder[$feed]][$type] = $data;
-                unset($response[$type]);
-            }
-        }
-        
-        foreach($response as $type => $data) {
-            $types[][$type] = $data;
-        }
-        
-        ksort($types);
-        return $types;
-    }
-    
     
     /**
      * Build the feed param
@@ -266,24 +232,32 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
      */
     protected function getFeeds() 
     {
-        list($lang) = explode('_', Mage::getStoreConfig('general/locale/code', Mage::app()->getStore()->getId()));
-        
         $feeds = '';
         foreach($this->feed as $feed) {
-            $id = substr($feed['prefix'], 0, 18) !== 'featured_products_' ? Mage::app()->getStore()->getWebsiteId() : Mage::app()->getStore()->getId();
             $feeds.= empty($feeds) ? '' : '&afs:feed=';     //for AFS engine v7.7
-            $feeds.= sprintf($feed['tpl'], $id, $lang);
-        }
-
-        /* Add additionnal feeds configured in the additionnal_feed field in the ACP section in BO */
-        $additionalFeeds = @unserialize(Mage::getStoreConfig('antidot/suggest/additionnal_feed'));
-        foreach($additionalFeeds as $feed) {
-            $feeds.= '&afs:feed='.urlencode($feed['value']);
+            $feeds.= $feed['name'];
         }
 
         return $feeds;
     }
 
+    /**
+     * Build the feedOrder param
+     *
+     * @return string
+     */
+    protected function getFeedOrder()
+    {
+    
+    	$feedOrder = array();
+    	foreach($this->feed as $feed) {
+    		$feedOrder[$feed['order']]=$feed['name'];
+    	}
+    	ksort($feedOrder);
+    	$feedOrderParam = implode(',',$feedOrder);
+    	return $feedOrderParam;
+    }
+    
     /**
      * Build the replies param
      *
@@ -294,7 +268,6 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
      */
     protected function getReplies()
     {
-        $feeds = '';
         $maxReplies = 0;
         foreach($this->feed as $feed) {
             $maxReplies = ($feed['number']>$maxReplies)?$feed['number']:$maxReplies;
@@ -311,43 +284,25 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
     protected function getFeed($type) 
     {
         foreach($this->feed as $feed) {
-            if(strpos($type, $feed['prefix']) !== false) {
+            if($type == $feed['name']) {
                 return $feed;
             }
         }
     }
-    
-    /**
-     * Get the key feed
-     * 
-     * @param string $type
-     * @return string
-     */
-    protected function getFeedKey($type) 
-    {
-        foreach($this->feed as $key => $feed) {
-            if(strpos($type, $feed['prefix']) !== false) {
-                return $key;
-            }
-        }
-    }
-    
+
     /**
      * Format the response to html format
      * 
-     * @param string $suggestXml Response from AFS formated
+     * @param SimpleXmlElement $xml Response from AFS formated
      * @return string
      */
-    protected function transformToXml($suggestXml) 
+    protected function transformToXml($xml) 
     {
-
+    	if (!$xml) {
+    		return '';
+    	}
+    	
         libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($suggestXml);
-        if ($xml === false) {
-        	Mage::log('Error loading xml (suggest) : ', null, 'antidot.log');
-        	Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');
-        	return '';
-        }
         $xsl = simplexml_load_string($this->template);
         if ($xsl === false) {
         	Mage::log('Error loading xsl template (suggest) : ', null, 'antidot.log');

@@ -65,6 +65,11 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     public function writeXml($context, $filename, $type) 
     {
+
+        if (count($context['store_id']) == 0) {
+            return 0;
+        }
+
         Mage::log('Starting product XML export, filename = '.$filename, null, 'antidot.log');
 
         $db = Mage::getSingleton('core/resource')->getConnection('core_read');
@@ -76,7 +81,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $productsInStock = $this->onlyProductsWithStock ? ' AND is_in_stock = 1' : '';
         $collection = Mage::getModel('catalog/product')
             ->getCollection()
-            ->setStoreId($context['store_id'])
+            ->setStoreId($context['store_id'][0]) //take the first store
             ->addWebsiteFilter($context['website_ids'])
             ->addAttributeToFilter('visibility', $this->productVisible)
             ->addAttributeToFilter('status', 1)
@@ -425,7 +430,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 
             if(!empty($identifiers)) {
                 foreach($identifiers as $identifier => $value) {
-                    $this->xml->element('identifier', $value, array('type' => $identifier));
+                    $this->xml->element('identifier', $this->xml->encloseCData($value), array('type' => $identifier));
                 }
             }
 
@@ -517,7 +522,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 
         $categoryUrl = $this->getUri($category->getUrl());
         $categoryUrl = str_replace('antidotExport.php', 'index.php', $categoryUrl);
-        $attributes = array('id' => $category->getId(), 'label' => $category->getName(), 'url' => $categoryUrl);
+        $attributes = array('id' => $category->getId(), 'label' =>  substr($category->getName(), 0, self::FACET_MAX_LENGTH), 'url' => $categoryUrl);
         if ($category->getImage()) {
             $attributes['img'] = $category->getImage();
         }
@@ -1019,12 +1024,12 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         if ($this->file === null) {
             $this->file = fopen($filename, 'a+');
             if (!$this->file)
-                throw new Exception('Unable to open file for writing : '.$filename);
+                Mage::throwException('Unable to open file for writing : '.$filename);
         }
         
         $res = fwrite($this->file, $xml);
         if ($res === false)
-            throw new Exception('Can not write in : '.$filename);
+            Mage::throwException('Can not write in : '.$filename);
 
         if ($close) {
             fclose($this->file);
@@ -1040,7 +1045,12 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
     protected function setFilename($filename) 
     {
         if(file_exists($filename)) {
-            unlink($filename);
+            if (!unlink($filename)) {
+                /* the file can't be deleted, try to empty it */
+            	if (!file_put_contents($filename, "")) {
+	                Mage::throwException('Can not delete or write in : '.$filename);
+            	}
+            }
         }
         $this->filename = $filename;
     }

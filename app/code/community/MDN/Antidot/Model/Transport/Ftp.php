@@ -36,9 +36,14 @@ class MDN_Antidot_Model_Transport_Ftp extends MDN_Antidot_Model_Transport_Abstra
             throw new Exception("Can't read file ".$file);
         }
         
+        $ftpHost = 'upload.antidot.net';
+        if (isset($ftpConfig['host'])) {
+        	$ftpHost = $ftpConfig['host'];
+        }
+        
         $url = 'sftp://'
                 .$ftpConfig['login'].':'.$ftpConfig['password']
-                .'@upload.antidot.net/'.$ftpConfig['directory'].'/'.basename($file);
+                .'@'.$ftpHost.'/'.$ftpConfig['directory'].'/'.basename($file);
         Mage::log('Ftp connect with : '.$url, null, 'antidot.log');
         
         $curl = curl_init();
