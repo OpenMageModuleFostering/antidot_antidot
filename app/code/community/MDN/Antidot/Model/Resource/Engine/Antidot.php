@@ -367,9 +367,14 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
         if(isset($resultAntidot->promote) && $resultAntidot->promote && $replies = $resultAntidot->promote->get_replies()) {
             if((Mage::getStoreConfig('antidot/promote/redirect') === 'no_result' && $result['total_count'] == 0) || Mage::getStoreConfig('antidot/promote/redirect') === 'always') {
                 $promote = current($replies);
-                if($promote->uri !== 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']) {
-                    header('Location: '.$promote->uri);
-                    exit(0);
+                $redirectUrl = '';
+                if ($promote->get_type() == 'redirect') {
+                    $redirectUrl = $promote->get_url();
+                } elseif ($promote->get_type() == 'default') {
+                    $redirectUrl = $promote->get_uri();
+                }
+                if($redirectUrl !== Mage::helper('core/url')->getCurrentUrl()) {
+                    $result['redirect'] = $redirectUrl;
                 }
             }
         }

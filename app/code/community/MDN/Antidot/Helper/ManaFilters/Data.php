@@ -26,10 +26,9 @@ class MDN_Antidot_Helper_ManaFilters_Data extends Mana_Filters_Helper_Data {
     					: 'catalog/layer'
     							);
     		case 'search':
-    			return Mage::getSingleton($this->useSolrForSearch()
-    			? 'enterprise_search/search_layer'
-    					: $this->useAntidotForSearch() ? 'Antidot/catalogsearch_layer'
-    							: 'catalogsearch/layer'
+    			return Mage::getSingleton($this->useAntidotForSearch()
+                ? 'Antidot/catalogsearch_layer' : ($this->useSolrForSearch()
+    			? 'enterprise_search/search_layer' : 'catalogsearch/layer')
     									);
     		default:
     			throw new Exception('Not implemented');

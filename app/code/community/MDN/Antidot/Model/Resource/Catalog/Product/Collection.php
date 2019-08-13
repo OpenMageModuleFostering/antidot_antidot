@@ -13,7 +13,11 @@
  * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog_Model_Resource_Product_Collection
+/**
+ * For compatibility with magento < 1.6, extends Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Collection instead of
+ * Mage_Catalog_Model_Resource_Product_Collection
+ * class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog_Model_Resource_Product_Collection */
+class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog_Model_Resource_Eav_Mysql4_Product_Collection
 {
     /**
      * @var MDN_Antidot_Model_Resource_Engine_Abstract Search engine.

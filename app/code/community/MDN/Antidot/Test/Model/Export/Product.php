@@ -277,12 +277,14 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         
         /*
          * first test : we load the product without the properties attributes authors anf editor
-         * expected empty result in the xml writer
+         * expected single result in the xml writer, with the propertie Product Type
          */
         MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeProperties', array($product));
 
-        $expected = '';
-        $this->assertEquals($expected, $xmlWriter->getXml());
+        $xml = new SimpleXMLElement($xmlWriter->getXml());
+        $this->assertEquals("magento_type", $xml->property[0]['name']);
+        $this->assertEquals("simple", $xml->property[0]['label']);
+        $this->assertEquals("true", $xml->property[0]['autocomplete_meta']);
 
         /*
          * second test : we add attribute value editor
@@ -291,9 +293,13 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         $xmlWriter->flush(); //empty the xmlwriter
         $product->setEditor($this->getEditorOptionId('Scholastic'));
         MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeProperties', array($product));
-        
-        $expected = '<property name="editor" display_name="Editor" label="Scholastic" autocomplete="off" />';
-        $this->assertContains($expected, $xmlWriter->getXml());
+
+        $xml = new SimpleXMLElement($xmlWriter->getXml());
+        $property = $xml->property[0];
+        $this->assertEquals("editor", $property['name']);
+        $this->assertEquals("Editor", $property['display_name']);
+        $this->assertEquals("Scholastic", $property['label']);
+        $this->assertEquals("off", $property['autocomplete']);
 
         /*
          * third test : we add attribute values authors (multiselect)
@@ -302,12 +308,25 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         $xmlWriter->flush(); //empty the xmlwriter
         $product->setAuthors($this->getAuthorOptionId('JK Rowling').','.$this->getAuthorOptionId('Stephen King'));
         MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeProperties', array($product));
-        
-        $expected = '<property name="authors" display_name="Authors" label="JK Rowling" autocomplete="off" />';
-        $expected .= '<property name="authors" display_name="Authors" label="Stephen King" autocomplete="off" />';
-        $expected .= '<property name="editor" display_name="Editor" label="Scholastic" autocomplete="off" />';
-        $this->assertContains($expected, $xmlWriter->getXml());
-        
+
+        $xml = new SimpleXMLElement($xmlWriter->getXml());
+        $property = $xml->property[0];
+        $this->assertEquals("authors", $property['name']);
+        $this->assertEquals("Authors", $property['display_name']);
+        $this->assertEquals("JK Rowling", $property['label']);
+        $this->assertEquals("off",$property['autocomplete']);
+        $property = $xml->property[1];
+        $this->assertEquals("authors", $property['name']);
+        $this->assertEquals("Authors", $property['display_name']);
+        $this->assertEquals("Stephen King", $property['label']);
+        $this->assertEquals("off", $property['autocomplete']);
+        $property = $xml->property[2];
+        $this->assertEquals("editor", $property['name']);
+        $this->assertEquals("Editor", $property['display_name']);
+        $this->assertEquals("Scholastic", $property['label']);
+        $this->assertEquals("off", $property['autocomplete']);
+
+
     }
 
     /**
@@ -402,6 +421,51 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
     }
 
     /**
+     * MCNX-242 : test variant product without variant in stock is not exported
+     * @test
+     * @loadFixture
+     */
+    public function testWriteProductNoVariantInStock() {
+
+        /* @var $export \MDN_Antidot_Model_Export_Product */
+        $export = Mage::getModel('Antidot/export_product');
+
+        //Load a grouped product on store french
+        $storeId = 3;
+        Mage::app()->setCurrentStore($storeId);
+        $product = $this->loadProduct(1, $storeId);
+
+        //init the xml writer and flush it
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'initXml', array('product'));
+        /* @var $export \MDN_Antidot_Helper_Xml_Writer */
+        $xmlWriter = MDN_Antidot_Test_PHPUnitUtil::getPrivateProperty($export, 'xml');
+        $xmlWriter->flush();
+
+        /*
+         * Create a mock singleton to return the associated product collection (it cannot be done by fixtures)
+         */
+        $mockModel = $this->getModelMock('catalog/product_type_grouped', array('getAssociatedProducts'));
+        $mockModel->expects($this->any())
+            ->method('getAssociatedProducts')
+            ->will($this->returnValue(
+                Mage::getResourceModel('catalog/product_collection')
+                ->addAttributeToSelect(array('status'))
+                ->setFlag('require_stock_items')
+                ->addAttributeToFilter('entity_id', array(2, 3)))
+            );
+        $this->replaceByMock('singleton', 'catalog/product_type_grouped', $mockModel);
+
+        /*
+         * The writeProduct method is called with the "empty" grouped product
+         */
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeProduct', array($product, array(Mage::app()->getStore())));
+
+        $this->assertEquals('', $xmlWriter->getXml());
+
+
+    }
+
+    /**
      * MCNX-222 : test Write prices  : Fixed tax prices
      * @test
      * @loadFixture
@@ -435,10 +499,13 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
          * The writePrices is called witout fixed tax price activated
          * expected data also in dataProvider
          */
-        $mockHelper = $this->getHelperMock('weee', array('isEnabled', 'getAmount'));
+        $mockHelper = $this->getHelperMock('weee', array('isEnabled', 'getAmount', 'getPriceDisplayType'));
         $mockHelper->expects($this->any())
             ->method('isEnabled')
             ->will($this->returnValue(true)); //activate fixed tax in the mock helper
+        $mockHelper->expects($this->any())
+            ->method('getPriceDisplayType')
+            ->will($this->returnValue(1)); //activate display included fixed tax in the mock helper
         $mockHelper->expects($this->any())
             ->method('getAmount')
             ->will($this->returnValue(3));  //Set a fixed tax price of 3 EUR  in the mock helper
@@ -451,6 +518,25 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $context, $store));
 
         $expected='<prices><price currency="EUR" type="PRICE_FINAL" vat_included="true" country="FR">15.99</price></prices>';
+        $this->assertEquals($expected, $xmlWriter->getXml());
+        $xmlWriter->flush();
+
+        $mockHelper = $this->getHelperMock('weee', array('isEnabled', 'getAmount', 'getPriceDisplayType'));
+        $mockHelper->expects($this->any())
+            ->method('isEnabled')
+            ->will($this->returnValue(true)); //activate fixed tax in the mock helper
+        $mockHelper->expects($this->any())
+            ->method('getPriceDisplayType')
+            ->will($this->returnValue(3)); //activate display included fixed tax in the mock helper
+        $mockHelper->expects($this->any())
+            ->method('getAmount')
+            ->will($this->returnValue(3));  //Set a fixed tax price of 3 EUR  in the mock helper
+        $this->replaceByMock('helper', 'weee', $mockHelper);
+
+
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writePrices', array($product, $product, $context, $store));
+
+        $expected='<prices><price currency="EUR" type="PRICE_FINAL" vat_included="true" country="FR">12.99</price></prices>';
         $this->assertEquals($expected, $xmlWriter->getXml());
 
     }
@@ -466,8 +552,8 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         $export = Mage::getModel('Antidot/export_product');
 
         /**
-         * create mock product to simulate getCategoryCollection returning list of the to category of the product
-         * beacause fixture doesn't simulate it...
+         * create mock product to simulate getCategoryCollection returning list of the two categories of the product
+         * because fixture doesn't simulate it...
          */
         $mockModel = $this->getModelMock('catalog/product', array('getCategoryCollection', 'getStoreId'));
         $mockModel->expects($this->any())
@@ -487,6 +573,40 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         $this->assertEquals(1, count($categories));
 
     }
+
+    /**
+     * MCNX-243 : test categories with inactive parent category is not exported
+     * @loadFixture
+     */
+    public function testInactiveParentCategory()
+    {
+
+        /* @var $export \MDN_Antidot_Model_Export_Product */
+        $export = Mage::getModel('Antidot/export_product');
+
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'initXml', array('product'));
+        /* @var $export \MDN_Antidot_Helper_Xml_Writer */
+        $xmlWriter = MDN_Antidot_Test_PHPUnitUtil::getPrivateProperty($export, 'xml');
+        $xmlWriter->flush();
+
+        /**
+         * create mock product to simulate getCategoryCollection returning the category of the product
+         * because fixture doesn't simulate it... :
+         * product is linked to category id=11 active, parent_id=10 is inactive
+         */
+        $mockModel = $this->getModelMock('catalog/product', array('getCategoryCollection'));
+        $mockModel->expects($this->any())
+            ->method('getCategoryCollection')
+            ->will($this->returnValue(Mage::getResourceModel('catalog/category_collection')->addAttributeToFilter('entity_id', array(11))));
+
+        MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'writeClassification', array($mockModel, array(2)));
+
+        $this->assertEquals("", $xmlWriter->getXml());
+
+
+    }
+
+
 
     /**
      *

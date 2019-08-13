@@ -7,6 +7,11 @@
             <action method="setTemplate"><template>antidot/catalogsearch/result.phtml</template></action>
             <block type="Antidot/Catalogsearch_Category" name="search_result_category" as="search_result_category" template="antidot/catalogsearch/result/category.phtml" />
         </reference>
+
+        <!--  MCNX-230 ManaDev module manadev compatibility : don't show positioning right or above_product-->
+        <remove name="catalogsearch.above_products" />
+        <remove name="mana.catalogsearch.rightnav" />
+
     </catalogsearch_result_index>
 
 </layout>

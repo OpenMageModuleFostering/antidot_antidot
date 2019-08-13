@@ -105,4 +105,23 @@ class MDN_Antidot_Block_Catalogsearch_Layer extends Enterprise_Search_Block_Cata
 
         return parent::getLayer();
     }
+
+    /**
+     * MCNX-230 ManaDev compatibility
+     *
+     * Set path to template used for generating block's output.
+     *
+     *  OVERRIDE : for compatibility with module manadev : don't let manadev change the template
+     *
+     * @param string $template
+     * @return Mage_Core_Block_Template
+     */
+    public function setTemplate($template)
+    {
+        if ($this->_template == null || strpos($template, 'mana') === false ) {
+            $this->_template = $template;
+        }
+        return $this;
+    }
+
 }

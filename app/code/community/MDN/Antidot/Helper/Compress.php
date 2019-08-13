@@ -43,8 +43,8 @@ class MDN_Antidot_Helper_Compress extends Mage_Core_Helper_Abstract {
             }
             else
             {
-                throw new Exception('Zip archive is not installed on your server');
                 Mage::log('ZipArchive DOES NOT exist', null, 'antidot.log');
+                throw new Exception('Zip archive is not installed on your server');
             }
         } catch (Exception $e) {
             Mage::log('Zip exception : '.$e->getMessage(), null, 'antidot.log');

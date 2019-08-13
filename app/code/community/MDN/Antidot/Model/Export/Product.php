@@ -257,6 +257,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         if ($product->getTypeID() == Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE
             || $product->getTypeID() == Mage_Catalog_Model_Product_Type::TYPE_GROUPED) {
 
+            Mage::app()->setCurrentStore($product->getStoreId()); //Set store id in order to exclude not in stock products
+
             switch ($product->getTypeID()) {
                 case Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE:
                     $variantProductsColl = $product->getTypeInstance(true)->getUsedProducts(null, $product);
@@ -268,7 +270,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 
             foreach ($variantProductsColl as $variantProduct) {
                 //Do not include product if status is not enabled
-                if ($variantProduct->getStatus() == 1) {
+                if ($variantProduct->getStatus() == Mage_Catalog_Model_Product_Status::STATUS_ENABLED && $variantProduct->isSalable() ) {
                     $variantProducts[] = $variantProduct;
                 }
             }
@@ -582,11 +584,28 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
     {
         Varien_Profiler::start("export_product_writeClassification");
         $categories = $this->getProductCategories($product, $rootCategoriesIds);
-        if(count($categories) > 0) {
-            $this->xml->push('classification');
-            foreach($categories as $category) {
-                    $this->writeCategory($category);
+        $exportCategory = false;
+        foreach($categories as $category) {
+            $exportCategory = true;
+            $path = array($category);
+            while ($category = $this->getCategoryParent($category, $rootCategoriesIds)) {
+                $path[] = $category;
             }
+            //if one of the ancestor of the category is inactive, rise flag to not export the category
+            foreach ($path as $cat) {
+                if (!$cat->getName() || !$cat->getIsActive()) {
+                    $exportCategory = false;
+                }
+            }
+        }
+        if ($exportCategory) {
+            $this->xml->push('classification');
+                foreach (array_reverse($path) as $cat) {
+                    $this->writeCategory($cat);
+                }
+                foreach ($path as $cat) {
+                    $this->xml->pop();
+                }
             $this->xml->pop();
         }
         Varien_Profiler::stop("export_product_writeClassification");
@@ -594,27 +613,31 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
     }
 
     /**
-     * Write category node with their parents
+     * get parent category node
      *
      * @param      $category
-     * @param bool $first
-     * @param int  $level
+     * @param array  $rootCategoriesIds
      */
-    protected function writeCategory($category, $first = true, &$level = 0)
+    protected function getCategoryParent($category, $rootCategoriesIds)
     {
-        if (!$category->getName())
-            return false;
 
-        if($category->getParentId() == 1 || $category->getParentId() == 0)
+        //if the parent is the root node, don't export it
+        if ($category->getParentId() == 1 || $category->getParentId() == 0 || in_array($category->getParentId(), $rootCategoriesIds)) {
             return false;
-        
-        if($category->getParentId() !== 1 && $category->getParentId() !== 0) {
-            $level++;
-            if(!$this->writeCategory($this->getCategoryById($category->getStoreId(), $category->getParentId()), false, $level)) {
-                $level--;
-            }
         }
 
+        return $this->getCategoryById($category->getStoreId(), $category->getParentId());
+
+    }
+
+
+    /**
+     * Write category node
+     *
+     * @param      $category
+     */
+    protected function writeCategory($category)
+    {
 
         $categoryUrl = $this->getUri($category->getUrl());
         $categoryUrl = str_replace('antidotExport.php', 'index.php', $categoryUrl);
@@ -624,14 +647,6 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         }
         $this->xml->push('category', $attributes);
 
-        if($first) {
-            // close  xml elements
-            for($i = 0; $i <= $level; $i++) {
-                $this->xml->pop();
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -791,8 +806,9 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      * Write the product properties
      * 
      * @param Product $product
+     * @param boolean $fakeVariant
      */
-    protected function writeProperties($product)
+    protected function writeProperties($product, $fakeVariant = true)
     {
         Varien_Profiler::start("export_product_writeProperties");
         $properties = array();
@@ -855,7 +871,16 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                 }
             }
         }
-        
+
+        if ($fakeVariant) {
+            /** MCNX-209 : add the product type in the properties : it will be available in acp */
+            $properties[] = array(
+                'name' => 'magento_type',
+                'label' => $product->getTypeID(),
+                'autocomplete_meta' => 'true'
+            );
+        }
+
         if(!empty($properties)) {
             $this->xml->push('properties');
             foreach($properties as $property) {
@@ -878,14 +903,19 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 
         /**
          * MCNX-222 : Add Fixed Taxs to prices
+         * MCNX-240 : add fixed tax on condition in config.xml and on condition of display type
          */
-        $weeHelper = Mage::helper('weee');
         $weeeAmount = 0;
-        if ($weeHelper->isEnabled($store)) {
-            $address = Mage::getModel('customer/address');
-            $address->setCountryId(Mage::helper('core')->getDefaultCountry($store));
-            $address->setQuote(Mage::getSingleton('sales/quote'));
-            $weeeAmount = $weeHelper->getAmount($product, $address, $address, $store->getWebsiteId(), false);
+        if (Mage::getStoreConfig('antidot/export/include_fixed_tax')) {
+            $weeHelper = Mage::helper('weee');
+            if ($weeHelper->isEnabled($store)) { /* System > Configuration > Tax > FPT > Enable FPT */
+                if ($weeHelper->getPriceDisplayType($store) != Mage_Weee_Model_Tax::DISPLAY_EXCL) { /* System > Configuration > Tax > FPT >  Display Prices On Product View Page != Excluding FPT */
+                    $address = Mage::getModel('customer/address');
+                    $address->setCountryId(Mage::helper('core')->getDefaultCountry($store));
+                    $address->setQuote(Mage::getSingleton('sales/quote'));
+                    $weeeAmount = $weeHelper->getAmount($product, $address, $address, $store->getWebsiteId(), false);
+                }
+            }
         }
 
         $prices = ($this->getPrices($parentProduct->getId(), $store->getWebsiteId()));
@@ -1141,7 +1171,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $this->writeDescriptions($variantProduct);
         $this->writeStore($product, $stores, $variantProduct);
         $this->writeIdentifiers($variantProduct);
-        $this->writeProperties($variantProduct);
+        $this->writeProperties($variantProduct, ($variantProduct->getId()==$product->getId()));
         $this->writeMaterials($variantProduct);
         $this->writeColors($variantProduct);
         $this->writeModels($variantProduct);

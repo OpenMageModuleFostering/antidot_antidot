@@ -188,6 +188,12 @@ abstract class MDN_Antidot_Model_Resource_Engine_Abstract
             $result = $this->_search($query, $params);
             Varien_Profiler::stop('Antidot');
 
+            /** Promote redirect */
+            if (isset($result['redirect']) && $result['redirect']) {
+                header('Location: '.$result['redirect']);
+                exit(0);
+            }
+
         } catch (Exception $e) {
             Mage::log($e->getMessage(), null, 'antidot.log');
         }

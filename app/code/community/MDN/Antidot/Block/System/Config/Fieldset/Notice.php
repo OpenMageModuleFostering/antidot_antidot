@@ -35,9 +35,10 @@ class MDN_Antidot_Block_System_Config_Fieldset_Notice
         if (!class_exists('XSLTProcessor')) {
             $html .= "<li><strong>" . $helper->__("XSLTProcessor class doesn't exist, you must install php xsl extension, otherwise the autocomplete will not run correctly") . "</strong></li>";
         }
-        if (!class_exists('ZipArchive')) {
+        /* MCNX-245 : don't check ZipArchive, it's not blocking for using module, because there's a workaround with shell_exec zip, and the error is logged correctly
+         * if (!class_exists('ZipArchive')) {
             $html .= "<li><strong>" . $helper->__("ZipArchive class doesn't exist, you must install php zip extension, otherwise the zip operation during export may not run correctly") . "</strong></li>";
-        }
+        }*/
         $extensions = get_loaded_extensions();
         if (!in_array('curl', $extensions)) {
             $html .= "<li><strong>" . $helper->__("The curl php extension is not installed, it's required to upload export files") . "</strong></li>";
