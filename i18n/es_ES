@@ -1,0 +1,134 @@
+Enviar
+Restaurar la plantilla predeterminada
+Fijar en XML
+Atributo
+Agregar un campo
+Ordenar
+Sentido
+Faceta
+Ordenar
+Selecciones múltiples
+Auto compleción
+Fecha
+Referencia
+Tipo
+Elemento
+Productos
+Estado
+Tienda
+Palabra clave
+Quiere decir { spellcheck } ?
+Desde { min } �?� a { max } �?�
+Antidot Back Office ( Analytics, sinónimos, promover )
+Versión de la extensión AFS@Store
+Si es necesario, comunique esta versión al equipo del soporte 
+Nombre de la organización
+�?til para el equipo del soporte
+Correo electrónico
+Utilizado para enviar una alerta cuando ocurre un error
+Parámetros de carga de datos
+Servidor
+Servidor para conectarse a Antidot y enviar los dados
+Subir Directorio
+Directorio para subir archivos
+Contraseña
+Su contraseña FTP Antidot
+Contraseña
+Su Antidot FTP Contraseña
+Servicios web
+Servidor de servicios Web para comunicarse con Antidot
+ID de servicio
+Antidot ID de servicio
+Estado
+Estado del servicio Web. Pasar a producción únicamente con el estatuto « estable »
+Mapa de campos de productos
+Esta sección permite configurar el exporte del catalogo indexado por Afs@store. Los atributos del modelo estándar de Magento como urls , categorías, precios, cantidades y las promociones son utilizadas automáticamente para el exporte. Utilice este formulario para asignar los campos específicos de su modelo de datos
+Incluir los productos sin stock
+Cambie esta configuración si desea incluir los productos sin stock
+Designación
+Designación corta
+Marca
+Descripción
+Palabras clave
+Es nuevo
+Este atributo se puede usar como un criterio de searchandizing para gestionar la búsqueda de productos y la auto compleción de los productos
+Es el tope de las ventas
+Es un producto para destacar
+Material
+Color
+Modelo
+Tamaño
+Género
+Código EAN
+Otros códigos productos
+Configurar identificadores adicionales aquí ( su referencia , referencia del fabricante , referencia , proveedor OEM ... )
+Facetas adicionales
+Atributos adicionales para filtrar los resultados y, opcionalmente, aparecerán sugerencias de auto auto-compleción
+Auto-compleción
+Motor de auto-compleción
+Seleccione Magento o AFS@Store (recomendado) motor de búsqueda auto-completado . Volver a Magento sólo si tiene problemas
+Enseñar los productos ?
+Enseñar los productos en las sugestiones
+Número de productos para ensebar
+Seleccione el número máximo de marcas para enseñar
+Marcas de pantalla
+Mostrar marcas en los resultados auto-completados
+Numero de marcas que se ensenan
+Seleccione el número máximo de marcas para mostrar
+Categorías
+Mostrar categorías en los resultados auto-completados
+Número de categorías mostradas
+Seleccione el número máximo de categorías para enseñar
+Plantilla
+Configure aquí la plantilla XSLT para mostrar los resultados de ACP. Precaución: si puse en la plantilla su propio criterio de ordenación de columnas y en seguida tecla  « Sort order » por encima de la configuración jamás funcionará 
+Ejemplo
+Mostrar una ventana emergente con una muestra de código XML que se transforma con la hoja de estilo XSLT.
+Restaurar la plantilla XSLT predeterminado ( muy útil si lo rompió !)
+Ordenar la clasificación
+Primera columna para enseñar en la auto-compleción
+Segunda columna para enseñar en la auto-compleción
+Tercera columna para enseñar en la auto-compleción
+Motor de búsqueda
+Seleccione Magento o AFS @ Store (recomendado) motor de búsqueda. Volver a Magento sólo si tiene problemas
+Mostrar categorías
+Mostrar categorías que coincidan con la consulta de la búsqueda (requiere personalización de las plantillas )
+Frase de spellcheck
+Texto que se mostrará cuando una sugerencia de corrección ortográfica está disponible. Utilice { } spellcheck palabra clave para Incluir la sugerencia AFS@tienda en su texto
+Facetas
+Seleccione las facetas (y el orden) en que desea habilitar en la página de búsqueda
+Número máximo de valores de faceta
+Número máximo de opciones para mostrar una faceta ( resultados adicionales serán ocultados )
+Etiqueta de precio faceta
+Selección del texto que se muestra para cada intervalo de precio : utilizar { min } y {max} códigos para incluir valores en el texto
+Criterios de ordenación
+Seleccione el menú opciones de clasificación disponible en Sort Drop Down
+Clasificación predeterminada
+Clasificación predeterminada para aplicar
+Comercialización
+Promover la función « Promote »
+Te permite elegir cómo se utilizan « Promover campañas » creadas en Antidot Back-Office para re-dirigir la búsqueda hacia urls internos
+Envié de la dados según la demanda 
+Envié el catalogo 
+Envié manualmente productos de AFS@store para la indexación (útil cuando se cambia la configuración anterior)
+Informe de envió de datos
+Historial de los últimos envíos de dados
+Precio
+Categorías
+Productos
+Marcas
+Ascendente
+Descendiente
+NO
+Si
+Siempre
+Sólo cuando no hay ningún resultado
+Siempre
+Pertinencia
+Posición
+Nombre
+Precio
+Promociones
+Productos nuevos
+Top de las ventas
+Destacar
+Campos aditionales para indexacion en texto pleno

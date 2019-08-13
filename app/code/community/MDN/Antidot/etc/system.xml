@@ -1,0 +1,643 @@
+<?xml version="1.0"?>
+<config>
+    <sections>
+        <antidot translate="label" module="Antidot">
+            <label>AFS@Store</label>
+            <tab>catalog</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>500</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+            <groups>
+                <general>
+                    <label>General</label>
+                    <comment><![CDATA[<a href="https://bo-store.afs-antidot.net/" target="_blank" style="font-size:16px">Antidot Back office (Analytics, Synonyms, Promote)</a>]]></comment>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>1</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <version translate="label">
+                            <label>AFS@Store Extension Version</label>
+                            <frontend_model>Antidot/System_Config_Html_Version</frontend_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Communicate this version to the support team if you need help</comment>
+                        </version>
+                        <owner translate="label">
+                            <label>Organization name</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Useful for support team</comment>
+                        </owner>
+                        <email translate="label">
+                            <label>E-mail</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>12</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Used to send alert when an error occured</comment>
+                        </email>
+                    </fields>
+
+                </general>
+
+                <ftp>
+                    <label>Data upload parameters</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>2</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <host translate="label">
+                            <label>Host</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment>Host to connect to Antidot to push files</comment>
+                        </host>
+                        <directory translate="label">
+                            <label>Upload Directory</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment>Directory to upload files</comment>
+                        </directory>
+                        <login translate="label">
+                            <label>Login</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment>Your Antidot FTP Login</comment>
+                        </login>
+                        <password translate="label">
+                            <label>Password</label>
+                            <frontend_type>password</frontend_type>
+                            <sort_order>4</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment>Your Antidot FTP Password</comment>
+                        </password>
+                        <working_directory translate="label">
+                            <label>Working directory</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>5</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment>Local directory to use to generate xml files. If empty, /tmp will be used</comment>
+                        </working_directory>
+                    </fields>
+                </ftp>
+                
+                <web_service>
+                    <label>Web services</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>3</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <host translate="label">
+                            <label>Host</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment>Web service host to communicate with Antidot</comment>
+                        </host>
+                        <service translate="label">
+                            <label>Service ID</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment>Antidot service ID</comment>
+                        </service>
+                        <status translate="label">
+                            <label>Status</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_WSStatus</source_model>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment>Web service status. Go live only with 'stable' status on your production site</comment>
+                        </status>
+                    </fields>
+                </web_service>
+
+                <fields_product>
+                    <label>Products fields mapping</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>4</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment>These settings are related to the product file generation, used for AFS@Store indexing. You can match to existing attributes in Magento and add your own properties. Standard Magento attributes such as urls, categories, prices, quantities, promotions are automatically inherited by this mapping. Use this form to map specific fields from your data model</comment>
+                    <fields>
+                        <in_stock_only translate="label">
+                            <label>Include out of stock products</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>5</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Change this setting if you want to include out of stock products</comment>
+                        </in_stock_only>
+                        <name translate="label">
+                            <label>Name</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </name>
+                        <short_name translate="label">
+                            <label>Short name</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>11</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </short_name>
+                        <manufacturer translate="label">
+                            <label>Brand</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>13</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </manufacturer>
+                        <description translate="label">
+                            <label>Description</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_Array_ProductIdentifier</frontend_model>
+                            <backend_model>Adminhtml/System_Config_Backend_Serialized_Array</backend_model>
+                            <sort_order>20</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Additional fields for plain text indexation</comment>
+                        </description>
+                        <keywords translate="label">
+                            <label>Keywords</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>30</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </keywords>
+                        <is_new translate="label">
+                            <label>Is new</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>50</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>This attribute may be used as searchandizing criterium to manage Product search/autocomplete order</comment>
+                        </is_new>
+                        <is_best_sale translate="label">
+                            <label>Is top sale</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>60</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>This attribute may be used as searchandizing criterium to manage Product search/autocomplete order</comment>
+                        </is_best_sale>
+                        <is_featured translate="label">
+                            <label>Is featured</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>70</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>This attribute may be used as searchandizing criterium to manage Product search/autocomplete order</comment>
+                        </is_featured>
+                        <materials translate="label">
+                            <label>Material</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>90</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </materials>
+                        <colors translate="label">
+                            <label>Color</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </colors>
+                        <models translate="label">
+                            <label>Model</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>110</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </models>
+                        <sizes translate="label">
+                            <label>Size</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>120</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </sizes>
+                        <gender translate="label">
+                            <label>Gender</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>125</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </gender>
+                        <gtin translate="label">
+                            <label>GTIN / EAN</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_ProductAttribute</frontend_model>
+                            <sort_order>125</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </gtin>
+                        <identifier translate="label">
+                            <label>Identifier</label>
+                            <frontend_model>Antidot/System_Config_Form_Field_Array_ProductIdentifier</frontend_model>
+                            <backend_model>Adminhtml/System_Config_Backend_Serialized_Array</backend_model>
+                            <sort_order>160</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Configure additional identifiers here (your reference, manufacturer reference, supplier reference, OEM ...)</comment>
+                        </identifier>
+                        <properties translate="label">
+                            <label>Additional facets</label>
+                            <frontend_model>Antidot/System_Config_Form_Field_Array_ProductAdditionalFacet</frontend_model>
+                            <backend_model>Adminhtml/System_Config_Backend_Serialized_Array</backend_model>
+                            <sort_order>180</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Additional attributes to filter results and optionally appear as autocomplete suggestions</comment>
+                        </properties>
+                    </fields>
+                </fields_product>
+
+                <!--<fields_category>
+                    <label>Categories fields mapping</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>5</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment>These settings are related to the category file generation, used for AFS@Store indexing :</comment>
+                    <fields>
+                        <name translate="label">
+                            <label>Name</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_CategoryAttribute</frontend_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Category attribute to use as category name</comment>
+                        </name>
+                        <description translate="label">
+                            <label>Description</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_CategoryAttribute</frontend_model>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Category attribute to use as category description</comment>
+                        </description>
+                        <keywords translate="label">
+                            <label>Keywords</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_CategoryAttribute</frontend_model>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Category attribute to use as category keywords</comment>
+                        </keywords>
+                    </fields>
+                </fields_category>-->
+                
+                <suggest>
+                    <label>Autocomplete</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>6</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <enable translate="label">
+                            <label>Enable</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_Engine</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Select Magento or AFS@Store (recommended) autocomplete engine. Rollback to Magento only if you experience issues</comment>
+                        </enable>
+                        <products translate="label">
+                            <label>Display products ?</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_enabledisable</source_model>
+                            <sort_order>20</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Display products in auto complete results</comment>
+                        </products>
+                        <products_displayed translate="label">
+                            <label>Number of products displayed</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_Number</source_model>
+                            <sort_order>21</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Select the maximum number of products to display</comment>
+                        </products_displayed>
+                        <brands translate="label">
+                            <label>Display brands</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_enabledisable</source_model>
+                            <sort_order>30</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Display brands in auto complete results</comment>
+                        </brands>
+                        <brands_displayed translate="label">
+                            <label>Number of brands displayed</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_Number</source_model>
+                            <sort_order>31</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Select the maximum number of brands to display</comment>
+                        </brands_displayed>
+                        <categories translate="label">
+                            <label>Categories</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_enabledisable</source_model>
+                            <sort_order>40</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Display categories in auto complete results</comment>
+                        </categories>
+                        <categories_displayed translate="label">
+                            <label>Number of categories displayed</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_Number</source_model>
+                            <sort_order>41</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Select the maximum number of categories to display</comment>
+                        </categories_displayed>
+                        <template translate="label">
+                            <label>Template</label>
+                            <frontend_type>textarea</frontend_type>
+                            <sort_order>51</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Configure here the XSLT template to display ACP results. Caution: if your template set his own sort order for columns, then 'Sort order'  above settings will not work anymore</comment>
+                        </template>
+                        <show_xml>
+                            <label>Example</label>
+                            <frontend_model>Antidot/System_Config_Html_ShowXml</frontend_model>
+                            <sort_order>50</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Display a popup with a sample of XML code that will be transformed with the XSLT stylesheet.</comment>
+                        </show_xml>
+                        <restore_template>
+                            <label></label>
+                            <frontend_model>Antidot/System_Config_Button_RestoreTemplate</frontend_model>
+                            <sort_order>52</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Restore the default XSLT template (usefull if you broke it !)</comment>
+                        </restore_template>
+                        <order_1 translate="label">
+                            <label>Sort order</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_Suggest_Type</source_model>
+                            <sort_order>42</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>First collection to display in suggest</comment>
+                        </order_1>
+                        <order_2 translate="label">
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_Suggest_Type</source_model>
+                            <sort_order>43</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Second collection to display in suggest</comment>
+                        </order_2>
+                        <order_3 translate="label">
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_Suggest_Type</source_model>
+                            <sort_order>44</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Third collection to display in suggest</comment>
+                        </order_3>
+                    </fields>
+                </suggest>
+                
+                <engine>
+                    <label>Search engine</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>7</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <engine translate="label">
+                            <label>Search Engine</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_Engine</source_model>
+                            <backend_model>Antidot/System_Config_backend_engine</backend_model>
+                            <sort_order>19</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Select Magento or AFS@Store (recommended) search engine. Rollback to Magento only if you experience issues</comment>
+                        </engine>
+                        <feed_categories translate="label">
+                            <label>Display categories</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_enabledisable</source_model>
+                            <sort_order>40</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Display categories matching to search query (require template customization)</comment>
+                        </feed_categories>
+                        <spellcheck translate="label">
+                            <label>Spellcheck sentence</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>45</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Text to display when a spellcheck suggestion is available. Use {spellcheck} keyword to include AFS@Store suggestion in your text</comment>
+                        </spellcheck>
+                        <facets translate="label">
+                            <label>Facets</label>
+                            <frontend_model>Antidot/System_Config_Form_Field_Array_Facet</frontend_model>
+                            <backend_model>Adminhtml/System_Config_Backend_Serialized_Array</backend_model>
+                            <sort_order>50</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Select the facets (and the order) you want to enable on the search page</comment>
+                        </facets>
+                        <facet_options translate="label">
+                            <label>Max number of facet values</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>60</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Max number of options to display for a facet (additional results will be hidden)</comment>
+                        </facet_options>
+                        <price_facet translate="label">
+                            <label>Price facet label</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>62</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Text to display for each price ranges : use {min} and {max} codes to include values in your text</comment>
+                        </price_facet>
+                        <sortable translate="label">
+                            <label>Sort options</label>
+                            <frontend_model>Antidot/System_Config_Form_Field_Array_Sort</frontend_model>
+                            <backend_model>Adminhtml/System_Config_Backend_Serialized_Array</backend_model>
+                            <sort_order>180</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Select sort options available in sort drop down menu</comment>
+                        </sortable>
+                        <default_sort translate="label">
+                            <label>Default sort</label>
+                            <frontend_model>Antidot/System_Config_Form_Field_Array_DefaultSort</frontend_model>
+                            <backend_model>Adminhtml/System_Config_Backend_Serialized_Array</backend_model>
+                            <sort_order>190</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Default sort to apply</comment>
+                        </default_sort>
+                    </fields>
+                </engine>
+
+                <promote>
+                    <label>Merchandising</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>8</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <redirect translate="label">
+                            <label>Promote redirect</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Antidot/System_Config_PromoteRedirect</source_model>
+                            <sort_order>19</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Allows you to choose how Promote campaigns created in Antidot Back-Office are used to redirect search towards internal urls</comment>
+                        </redirect>
+                    </fields>
+                </promote>
+                
+                <action>
+                    <label>On-demand Data Upload</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>10</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <push_products>
+                            <label>Push products</label>
+                            <frontend_model>Antidot/System_Config_Button_PushProducts</frontend_model>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Manually push products index to AFS@Store (usefull when you change configuration above)</comment>
+                        </push_products>
+                        <push_categories>
+                            <label>Push categories</label>
+                            <frontend_model>Antidot/System_Config_Button_PushCategories</frontend_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <comment>Manually push category index to AFS@Store (usefull when you change configuration above)</comment>
+                        </push_categories>
+                    </fields>
+                </action>
+
+                <generation>
+                    <label>Data upload report</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>15</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <comment>Last index push history logs</comment>
+                    <fields>
+                        <log>
+                            <frontend_model>Antidot/System_Config_Html_Export</frontend_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </log>
+                    </fields>
+                </generation>
+            </groups>
+        </antidot>
+    </sections>
+</config>

@@ -1,0 +1,134 @@
+Push,Senden
+"Restore the default template","Standardschablone wiederherstellen"
+"Display XML","XML zeigen"
+Attribute,Attribut
+"Add a field","Ein Feld hinzufügen"
+Sortable,Sortierbar
+Direction,Richtung
+Facet,Facette
+Sort,Sortierung
+"Multiple selections",Mehrfachauswahl
+"Auto Complete",Autovervollständigung
+Date,Datum
+Reference,Referenz
+Type,Typ
+Element,Element
+Products,Produkte
+Status,Status
+Store,Laden
+Term,Term
+"Did you mean {spellcheck} ?","Meinten Sie {spellcheck} ?"
+"From {min}€ to {max}€","Ab {min}�?� bis {max}�?�"
+"Antidot Back office (Analytics, Synonyms, Promote)","Antidot Back office (Analytics, Synonyme, Promote)"
+"AFS@Store Extension Version","AFS@Store Erweiterungsversion"
+"Communicate this version to the support team if you need help","Bei Bedarf teilen Sie diese Version dem Support-Team mit"
+"Organization name",Unternehmensname
+"Useful for support team","Nützlich für das Support-Team"
+E-mail,E-mail
+"Used to send alert when an error occured","Im Fehlerfall verwendet, um eine Benachrichtigung zu senden"
+"Data upload parameters","Einstellungen für Datenpload"
+Host,Server
+"Host to connect to Antidot to push files","Antidots Server mit dem Sie verbinden um die Daten zu übertragen"
+"Upload Directory","Upload Verzeichnis"
+"Directory to upload files","Verzeichnis für Datenupload"
+Login,Login
+"Your Antidot FTP Login","Ihr Antidot FTP Login"
+Password,Passwort
+"Your Antidot FTP Password","Ihr Antidot FTP Passwort"
+"Web services","Web Services"
+"Web service host to communicate with Antidot","Adresse der Web Services AFS@Store"
+"Service ID","Service ID"
+"Antidot service ID","Antidot service ID"
+Status,Status
+"Web service status. Go live only with 'stable' status on your production site","Web Service status. Inbetriebnahme auf Ihrer Webseite nur mit 'stable' status"
+"Products fields mapping","Mapping der Produktfelder"
+"These settings are related to the product file generation, used for AFS@Store indexing. You can match to existing attributes in Magento and add your own properties. Standard Magento attributes such as urls, categories, prices, quantities, promotions are automatically inherited by this mapping. Use this form to map specific fields from your data model","Diese Einstellungen sind im Zusammenhang mit der Erzeugung des Produktkatalogs durch AFS@Store Indexierung. Sie können vorhanden Magento Attribute benutzen und Ihre eigene Eigenschaften hinzufügen. Standard Magento Attribute wie Urls, Kategorien, Preise, Mengen, Förderungen sind automatisch in diesem Mapping ererbt. Benutzen Sie dieser Formulär um die spezifische Felder von Ihrem Datenmodell hinzufügen."
+"Include out of stock products","Ausverkaufte Produkte umfassen"
+"Change this setting if you want to include out of stock products","Veränderen Sie diese Einstellung wenn Sie ausverkäufte Produkte umfassen wollen"
+Name,Name
+"Short name",Kurzname
+Brand,Marke
+Description,Beschreibung
+Keywords,Stichworte
+"Is new",Neuigkeit
+"This attribute may be used as searchandizing criterium to manage Product search/autocomplete order","Dieses Attribut kann als searchandising Kriterium zur Verwaltung der Produkt Suche/Autovervollständigung benutzt werden."
+"Is top sale",Spitzenverkauf
+"Is featured",Hervorgehoben
+Material,Werkstoff
+Color,Farbe
+Model,Modell
+Size,Grö�?e
+Gender,Geschlecht
+"GTIN / EAN","GTIN / EAN"
+Identifier,"Andere Produktkennzeichnungen"
+"Configure additional identifiers here (your reference, manufacturer reference, supplier reference, OEM ...)","Konfigurieren Sie hier zusätzliche Produktkennzeichnungen (Ihre Referenz,  Herstellersreferenz, Lieferantsreferenz, OEM ...)"
+"Additional facets","Zusätzliche Facetten"
+"Additional attributes to filter results and optionally appear as autocomplete suggestions","Zusätzliche Attribute, um die Ergebnisse zu filtern und als Autovervollständigung Vorschläge zu erscheinen"
+Autocomplete,Autovervollständigung
+Enable,Ermöglichen
+"Select Magento or AFS@Store (recommended) autocomplete engine. Rollback to Magento only if you experience issues","Wählen Sie Magento oder AFS@Store (empfohlen) Autovervollständigung. Magento wiederherstellen nur wenn Sie Probleme auftretten."
+"Display products ?","Produkte zeigen ?"
+"Display products in auto complete results","Produkte in Autovervollständigung Ergebnisse zeigen"
+"Number of products displayed","Anzahl der angezeigten Produkten"
+"Select the maximum number of products to display","Wählen Sie die maximale Anzahl der angezeigten Produkten"
+"Display brands","Marke zeigen"
+"Display brands in auto complete results","Marke in Autovervollständigungsergebnisse zeigen"
+"Number of brands displayed","Anzahl der angezeigten Marken"
+"Select the maximum number of brands to display","Wählen Sie die maximale Anzahl der angezeigten Marken"
+Categories,Kategorien
+"Display categories in auto complete results","Kategorien in Autovervollständigungsergebnisse zeigen"
+"Number of categories displayed","Anzahl der angezeigten Kategorien"
+"Select the maximum number of categories to display","Wählen Sie die maximale Anzahl der angezeigten Kategorien"
+Template,Schablone
+"Configure here the XSLT template to display ACP results. Caution: if your template set his own sort order for columns, then 'Sort order'  above settings will not work anymore","Hier können Sie eine XSLT Schablone für ACP Ergebnisse Anzeige erstellen. Achtung: wenn Ihre Schablone seine eigene Sortierreihenfolge einstellt, gilt die obige Einstellung 'Sortierreihenfolge' nie mehr."
+Example,Beispiel
+"Display a popup with a sample of XML code that will be transformed with the XSLT stylesheet.","Zeigt ein Pop-up mit einer Stichprobe vom XML Code der mit der XSLT Schablone transformiert wird."
+"Restore the default XSLT template (usefull if you broke it !)","Standard XSLT Schablone wiederherstellen (nützlich wenn die Schablone nie mehr funktioniert!)"
+"Sort order",Sortierreihenfolge
+"First collection to display in suggest","Erste angezeigte Spalte in Autovervollständigung"
+"Second collection to display in suggest","Zweite angezeigte Spalte in Autovervollständigung"
+"Third collection to display in suggest","Dritte angezeigte Spalte in Autovervollständigung"
+"Search engine",Suchmachine
+"Select Magento or AFS@Store (recommended) search engine. Rollback to Magento only if you experience issues","Wählen Sie Magento oder AFS@Store (empfohlen) Suchmachine. Magento wiederherstellen nur wenn Sie Probleme auftretten."
+"Display categories","Kategorien zeigen"
+"Display categories matching to search query (require template customization)","Suchkriterien entsprechende Kategorien anzeigen (benötige Schablonen Anpassung)"
+"Spellcheck sentence","Rechtschreibprüfung Ausdruck"
+"Text to display when a spellcheck suggestion is available. Use {spellcheck} keyword to include AFS@Store suggestion in your text","Angezeigter Text wenn ein Rechtschreibprüfung Vorschlag verfügbar ist. Benutzen Sie {spellcheck} Stichwort um AFS@Store Vorschlag in Ihrem Text umzufassen."
+Facets,Facetten
+"Select the facets (and the order) you want to enable on the search page","Wählen Sie die Facetten (und ihre Reihenfolge) die Sie auf Ihrer Webseite ermöglichen wollen."
+"Max number of facet values","Maximale Anzahl der Werten der Facette"
+"Max number of options to display for a facet (additional results will be hidden)","Maximale Anzahl von der angezeigten Optionen für eine Facette (zusätzliche Ergebnisse werden versteckt)"
+"Price facet label","Etikett von Preisfacette"
+"Text to display for each price ranges : use {min} and {max} codes to include values in your text","Angezeigter Text für jede Preissklasse: benutzen Sie {min} und {max} Codes um die Werte in Ihrem Text umzufassen"
+"Sort options","Sortierung Optionen"
+"Select sort options available in sort drop down menu","Wählen Sie Sortierung Optionen verfügbar in der Dropdown-Liste"
+"Default sort","Standard Sortierung"
+"Default sort to apply","Standard Sortierung zu verwenden"
+Merchandising,Merchandising
+"Promote redirect","Promote Umleitung"
+"Allows you to choose how Promote campaigns created in Antidot Back-Office are used to redirect search towards internal urls","Hiermit können Sie wählen wie die im Antidot Back-Office erstellten Promote Kampagnen verwandet sind, um den Besucher zu den Zielseiten Ihrer Website umzuleiten."
+"On-demand Data Upload","Datenupload auf Anfrage"
+"Push products","Katalog senden"
+"Manually push products index to AFS@Store (usefull when you change configuration above)","Den Katalog manuell für die Indexierung AFS@Store senden (nützlich bei Konfigurationsänderungen)"
+"Data upload report","Datenupload Bericht"
+"Last index push history logs","Journal der letzten Datenübertragungen"
+Price,Preis
+categories,kategorien
+products,produkte
+brands,marke
+Ascending,Aufsteigend
+Descending,Absteigend
+Disable,Deaktivieren
+Enable,Ermöglichen
+All,Alle
+"Only when no result","Nur wenn keine Ergebnisse"
+Always,Immer
+Relevance,Relevanz
+Position,Position
+Name,Name
+Price,Preis
+"Is promotional",Förgerung
+"Is new",Neuigkeiten
+"Is top sale",Spitzenverkaufs
+"Is featured",Hervorgehoben
+"Additional fields for plain text indexation","Zusätzliche Felder für Volltextindexierung"

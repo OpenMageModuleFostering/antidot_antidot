@@ -1,0 +1,135 @@
+Push
+Restore the default template
+Display XML
+Attribute
+Add a field
+Sortable
+Direction
+Facet
+Sort
+Multiple selections
+Auto Complete
+Date
+Reference
+Type
+Element
+Products
+Status
+Store
+Term
+Did you mean {spellcheck} ?
+From {min}€ to {max}€
+Antidot Back office (Analytics, Synonyms, Promote)
+AFS@Store Extension Version
+Communicate this version to the support team if you need help
+Organization name
+Useful for support team
+E-mail
+Used to send alert when an error occured
+Data upload parameters
+Host
+Host to connect to Antidot to push files
+Upload Directory
+Directory to upload files
+Login
+Your Antidot FTP Login
+Password
+Your Antidot FTP Password
+Web services
+Web service host to communicate with Antidot
+Service ID
+Antidot service ID
+Status
+Web service status. Go live only with 'stable' status on your production site
+Products fields mapping
+These settings are related to the product file generation, used for AFS@Store indexing. You can match to existing attributes in Magento and add your own properties. Standard Magento attributes such as urls, categories, prices, quantities, promotions are automatically inherited by this mapping. Use this form to map specific fields from your data model
+Include out of stock products
+Change this setting if you want to include out of stock products
+Name
+Short name
+Brand
+Description
+Keywords
+Is new
+This attribute may be used as searchandizing criterium to manage Product search/autocomplete order
+Is top sale
+Is featured
+Material
+Color
+Model
+Size
+Gender
+GTIN / EAN
+Identifier
+Configure additional identifiers here (your reference, manufacturer reference, supplier reference, OEM ...)
+Additional facets
+Additional attributes to filter results and optionally appear as autocomplete suggestions
+Autocomplete
+Enable
+Select Magento or AFS@Store (recommended) autocomplete engine. Rollback to Magento only if you experience issues
+Display products ?
+Display products in auto complete results
+Number of products displayed
+Select the maximum number of products to display
+Display brands
+Display brands in auto complete results
+Number of brands displayed
+Select the maximum number of brands to display
+Categories
+Display categories in auto complete results
+Number of categories displayed
+Select the maximum number of categories to display
+Template
+Configure here the XSLT template to display ACP results. Caution: if your template set his own sort order for columns, then 'Sort order'  above settings will not work anymore
+Example
+Display a popup with a sample of XML code that will be transformed with the XSLT stylesheet.
+Restore the default XSLT template (usefull if you broke it !)
+Sort order
+First collection to display in suggest
+Second collection to display in suggest
+Third collection to display in suggest
+Search engine
+Select Magento or AFS@Store (recommended) search engine. Rollback to Magento only if you experience issues
+Display categories
+Display categories matching to search query (require template customization)
+Spellcheck sentence
+Text to display when a spellcheck suggestion is available. Use {spellcheck} keyword to include AFS@Store suggestion in your text
+Facets
+Select the facets (and the order) you want to enable on the search page
+Max number of facet values
+Max number of options to display for a facet (additional results will be hidden)
+Price facet label
+Text to display for each price ranges : use {min} and {max} codes to include values in your text
+Sort options
+Select sort options available in sort drop down menu
+Default sort
+Default sort to apply
+Merchandising
+Promote redirect
+Allows you to choose how Promote campaigns created in Antidot Back-Office are used to redirect search towards internal urls
+On-demand Data Upload
+Push products
+Manually push products index to AFS@Store (usefull when you change configuration above)
+Data upload report
+Last index push history logs
+Price
+categories
+products
+brands
+Ascending
+Descending
+Disable
+Enable
+All
+Only when no result
+Always
+Relevance
+Position
+Name
+Price
+Is promotional
+Is new
+Is top sale
+Is featured
+Additional fields for plain text indexation
+<a href="https://bo.afs-antidot.net/" target="_blank" style="font-size:16px">Antidot Back office (Analytics, Synonyms, Promote)</a>

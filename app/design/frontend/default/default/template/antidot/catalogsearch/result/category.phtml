@@ -1,0 +1,10 @@
+<?php if ($this->getCategories()->getSize() > 0): ?>
+
+    <h2><?php echo $this->__('Categories matching to your search :'); ?></h2>
+
+    <ul>
+    <?php foreach($this->getCategories() as $cat): ?>
+        <li><a href="<?php echo $this->getCategoryUrl($cat); ?>"><?php echo $cat->getName(); ?></a></li>
+    <?php endforeach; ?>
+    </ul>
+<?php endif; ?>

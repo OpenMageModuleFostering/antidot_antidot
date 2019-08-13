@@ -1,0 +1,134 @@
+Envoyer
+Restaurer le modèle par défaut
+Voir le XML
+Attribut
+Ajouter un champ
+Critère
+Sens
+Facette
+Rang
+Sélection multiple
+Auto Complétion
+Date
+Clé
+Type
+Flux
+Elements
+Status
+Magasin
+Mot-clé
+Vouliez vous dire {spellcheck} ?
+De {min}€ à {max}€
+Back office Antidot (Analytics, Synonymes, Promote)
+Version de l'extension AFS@Store
+Au besoin, communiquez cette version à l'équipe support
+Nom de la société
+Utile à l'équipe support
+Adresse mèl
+Utilisée pour envoyer une alerte en cas d'erreur
+Paramètres d'envoi des données
+Serveur
+Serveur Antidot auquel se connecter pour envoyer les données
+Dossier de dépôt
+Dossier de dépôt des fichiers
+Identifiant
+Votre identifiant FTP Antidot
+Mot de passe
+Votre mot de passe FTP Antidot
+Services Web
+Adresse du service web AFS@Store
+ID du service
+ID du service chez Antidot
+Statut
+Statut du service Web. Ne mettre en production qu'avec le statut 'stable'
+Mapping des champs produits
+Cette section permet de paramétrer l'export du catalogue indexé par AFS@Store. Les attributs standards de Magento comme les urls, les catégories, les prix, les quantités et les promotions sont automatiquement découverts. Utilisez ce formulaire pour faire correspondre les champs spécifiques de votre modèle de donnée
+Inclure les produits hors stock
+Changez ce paramètre si vous souhaitez inclure les produits hors stock
+Libellé
+Libellé court
+Marque
+Description
+Mots-clés
+Est une nouveauté
+Cet attribut pourra être utilisé comme critère de searchandizing par la recherche et l'autocomplétion des produits
+Est un top des vente
+Est un produit mis en avant
+Matière
+Couleur
+Modèle
+Taille
+Genre
+Code EAN
+Autres codes produits
+Configurez des codes additionnels ici (votre référence, celle du fabricant, du fournisseur...)
+Facettes additionnelles
+Attributs additionnels pour filtrer les résultats (également utilisables en autocomplétion)
+Autocomplétion
+Moteur d'autocomplétion
+Choisissez le moteur d'autocomplétion de Magento ou d'AFS@Store (recommandé). Ne revenir à celui de Magento qu'en cas de problème
+Afficher les produits ?
+Affiche les produits dans les suggestions
+Nombre de produits à afficher
+Choisissez le nombre maximal de produits à afficher
+Afficher les marques ?
+Affiche les marques dans les suggestions
+Nombre de marques à afficher
+Choisissez le nombre maximal de marques à afficher
+Afficher les catégories ?
+Affiche les catégories dans les suggestions
+Nombre de catégories à afficher
+Choisissez le nombre maximal de catégories à afficher
+Modèle
+Configurez ici votre modèle de transformation XSLT pour afficher les résultats de l'ACP. Attention: si votre modèle fixe son propre ordre d'affichage des colonnes, alors le paramètre 'Ordre' ci-dessus sera sans effet
+Exemple
+Affiche une popup avec un exemple de code XML qui sera transformé par la feuille de style XSLT.
+Restaure le modèle XSLT par défaut (utile si vous l'avez cassé !)
+Ordre
+Première colonne à afficher dans l'autocomplétion
+Seconde colonne à afficher dans l'autocomplétion
+Troisième colonne à afficher dans l'autocomplétion
+Moteur de recherche
+Choisissez le moteur de recherche de Magento ou d'AFS@Store (recommandé). Ne revenir à celui de Magento qu'en cas de problème
+Afficher les rayons
+Affiche des liens directs vers les pages de catégories correspondant à la recherche (requiert de la personnalisation de modèle Magento, voir documentation de l'extension)
+Phrase de suggestion orthographique
+Texte à afficher quand une suggestion orthographique est disponible. Utilisez {spellcheck} pour inclure la suggestion dans votre texte
+Facettes
+Choisissez les facettes (et leur ordre d'affichage) que vous souhaitez dans la page de résultats de recherche
+Nombre max de valeurs de facettes affichées
+Nombre max de valeurs affichées pour une facette (les autres valeurs seront cachées)
+Libellé pour la facette prix
+Texte à afficher pour chaque intervalle de prix : utilisez {min} et {max} pour inclure les bornes dans votre texte
+Critères de tri
+Choisissez les critères de tri disponibles dans la liste déroulante de la page résultat
+Tri par défaut
+Tri par défaut à appliquer aux résultats
+Merchandising
+Redirection Promote
+Vous permet de choisir la façon dont les campagnes Promote, créées dans le Back-Office Antidot, sont utilisés pour rediriger les visiteurs vers des pages d'atterrissage de votre site
+Envoi de données à la demande
+Envoyez le catalogue
+Envoi manuel des produits pour l'indexation AFS@Store (utile après une modification de paramétrage dans le mapping)
+Rapport d'envoi des données
+Journal des derniers envois de données
+Prix
+Catégories
+Produits
+Marques
+Ascendant
+Descendant
+Non
+Oui
+Toujours
+Seulement si aucun résultat
+Toujours
+Pertinence
+Position
+Désignation
+Prix
+Promotions
+Nouveautés
+Top des ventes
+Mis en avant
+Champs textuels supplémentaires pour l'indexation

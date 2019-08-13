@@ -1,0 +1,478 @@
+<?xml version="1.0"?>
+<config>
+    <crontab>
+        <jobs>
+            <antidot_catalog_full_export>
+                <schedule><cron_expr>00 2 * * *</cron_expr></schedule>
+                <run><model>Antidot/Observer::catalogFullExport</model></run>
+            </antidot_catalog_full_export>
+            <antidot_catalog_inc_export>
+                <schedule><cron_expr>45 7-20 * * *</cron_expr></schedule>
+                <run><model>Antidot/Observer::catalogIncExport</model></run>
+            </antidot_catalog_inc_export>
+            <antidot_categories_full_export>
+                <schedule><cron_expr>00 21 * * *</cron_expr></schedule>
+                <run><model>Antidot/Observer::categoriesFullExport</model></run>
+            </antidot_categories_full_export>
+        </jobs>
+    </crontab>
+    <modules>
+        <MDN_Antidot>
+            <version>1.0.15</version>
+        </MDN_Antidot>
+    </modules>
+    <global>
+        <helpers>
+            <Antidot>
+                <class>MDN_Antidot_Helper</class>
+            </Antidot>
+            <catalogsearch>
+                <rewrite>
+                    <data>MDN_Antidot_Helper_CatalogSearch_Data</data>
+                </rewrite>
+            </catalogsearch>
+            <enterprise_search>
+                <rewrite>
+                    <data>MDN_Antidot_Helper_Enterprise_Search_Data</data>
+                </rewrite>
+            </enterprise_search>
+            <mana_filters>
+                <rewrite>
+                    <data>MDN_Antidot_Helper_ManaFilters_Data</data>
+                </rewrite>
+            </mana_filters> 
+        </helpers>
+        <blocks>
+            <Antidot>
+                <class>MDN_Antidot_Block</class>
+            </Antidot>
+            <catalogsearch>
+                <rewrite>
+                    <layer>MDN_Antidot_Block_Catalogsearch_Layer</layer>
+                    <result>MDN_Antidot_Block_Catalogsearch_Result</result>
+                </rewrite>
+            </catalogsearch>
+        </blocks>
+        <models>
+   	   		            
+            <Antidot>
+                <class>MDN_Antidot_Model</class>
+                <resourceModel>Antidot_engine</resourceModel>
+            </Antidot>
+            
+            <Antidot_engine>
+                <class>MDN_Antidot_Model_Resource</class>
+                <entities></entities>
+            </Antidot_engine>
+          
+        </models>
+        <resources>
+            <Antidot_setup>
+                <setup>
+                    <module>MDN_Antidot</module>
+                    <class>Mage_Eav_Model_Entity_Setup</class>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </Antidot_setup>
+            <Antidot_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </Antidot_write>
+            <Antidot_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </Antidot_read>
+        </resources>	
+      
+    </global>
+    <adminhtml>
+        <translate>
+            <modules>
+                <MDN_Antidot>
+                    <files>
+                        <default>MDN_Antidot.csv</default>
+                    </files>
+                </MDN_Antidot>
+            </modules>
+        </translate>
+
+        <layout>
+            <updates>
+                <Antidot>
+                    <file>antidot.xml</file>
+                </Antidot>
+            </updates>
+        </layout>
+        <acl>
+            <resources>
+                <admin>
+                    <children>
+                        <system>
+                            <children>
+                                <config>
+                                    <children>
+                                        <antidot module="Antidot">
+                                            <title>Antidot</title>
+                                        </antidot>
+                                    </children>
+                                </config>
+                            </children>
+                        </system>
+                    </children>
+                </admin>
+            </resources>
+        </acl>
+    </adminhtml>
+    
+    <frontend>
+        <routers>
+            <Antidot>
+                <use>standard</use>
+                <args>
+                    <module>MDN_Antidot</module>
+                    <frontName>Antidot</frontName>
+                </args>
+            </Antidot>
+        </routers>
+        <layout>
+            <updates>
+                <Antidot>
+                    <file>antidot.xml</file>
+                </Antidot>
+            </updates>
+        </layout>
+    </frontend>
+       
+    <admin>
+        <routers>
+            <Antidot>
+                <use>admin</use>
+                <args>
+                    <module>MDN_Antidot</module>
+                    <frontName>Antidot</frontName>
+                </args>
+            </Antidot>
+        </routers>
+    </admin>
+    
+    <default>
+        <antidot>
+            <web_service>
+                <status>rc</status>
+            </web_service>
+            <engine>
+                <spellcheck>Did you mean {spellcheck} ?</spellcheck>
+                <price_facet>From {min}€ to {max}€</price_facet>
+                <feed_catalog>1</feed_catalog>
+                <facet_multiple>0</facet_multiple>
+                <facet_options>100</facet_options>
+                <default_sort>a:1:{s:18:"_1395736930373_373";a:2:{s:5:"field";s:23:"afs:relevance|Relevance";s:3:"dir";s:4:"desc";}}</default_sort>
+            </engine>
+            <suggest>
+                <enable>1</enable>
+                <products>1</products>
+                <brands>1</brands>
+                <categories>1</categories>
+                <products_displayed>10</products_displayed>
+                <brands_displayed>10</brands_displayed>
+                <categories_displayed>10</categories_displayed>
+                <template>
+<![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet xmlns:afs="http://ref.antidot.net/v7/afs#"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+    <!-- Titles to translate in localized storeviews  -->
+    <xsl:variable name="results-title">Our suggestions...</xsl:variable>
+    <xsl:variable name="no-result-title">No suggestions.</xsl:variable>
+    <xsl:variable name="see-more-products">See more products</xsl:variable>
+    <!-- Column titles -->
+    <xsl:variable name="products-title">Products</xsl:variable>
+    <xsl:variable name="categories-title">Categories</xsl:variable>
+    <xsl:variable name="brands-title">Brands</xsl:variable>
+
+    <!-- Default search url: customize if needed -->
+    <xsl:variable name="searchUrl">/index.php/catalogsearch/result/?q=</xsl:variable>
+
+    <!-- Main HTML template -->
+    <xsl:template match="afs:replies">
+        <ul class="ajax-search">
+            <li class="search-container-top"/>
+            <xsl:choose>
+                <xsl:when test="afs:replySet">
+                    <li class="header-text">
+                        <xsl:value-of select="$results-title"/>
+                    </li>
+                    <xsl:apply-templates select="afs:replySet"/>
+                    <a>
+                        <xsl:attribute name="href"><xsl:value-of select="$searchUrl"/><xsl:value-of
+                                select="afs:header/afs:query/@textQuery"/>*</xsl:attribute>
+                        <xsl:value-of select="$see-more-products"/>
+                    </a>
+                </xsl:when>
+                <xsl:otherwise>
+                    <li class="header-text">
+                        <xsl:value-of select="$no-result-title"/>
+                    </li>
+                </xsl:otherwise>
+            </xsl:choose>
+        </ul>
+    </xsl:template>
+
+    <!-- Suggestions column main template -->
+    <xsl:template match="afs:replySet">
+        <xsl:variable name="title">
+            <!-- Use of 'starts-with/substring-before' is needed to be compliant with multiple storeviews/languages which give suffixes to replySet name -->
+            <xsl:choose>
+                <xsl:when test="starts-with(@name,'categories')">
+                    <xsl:value-of select="$categories-title"/>
+                </xsl:when>
+                <xsl:when test="starts-with(@name,'featured_products')">
+                    <xsl:value-of select="$products-title"/>
+                </xsl:when>
+                <xsl:when test="starts-with(@name,'brands')">
+                    <xsl:value-of select="$brands-title"/>
+                </xsl:when>
+                <xsl:when test="starts-with(@name,'property_')">
+                    <xsl:call-template name="upperCaseFirstLetter">
+                        <xsl:with-param name="str">
+                            <xsl:value-of
+                                select="translate(substring(substring-after(@name,'property_'),1,string-length(@name)-14),'_',' ')"
+                            />
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:call-template name="upperCaseFirstLetter">
+                        <xsl:with-param name="str">
+                            <xsl:value-of select="substring-before(@name,'_')"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        <li class="title">
+            <span>
+                <xsl:value-of select="$title"/> (<xsl:value-of select="afs:meta/@totalItems"/>) :
+            </span>
+        </li>
+        <xsl:apply-templates select="afs:reply"/>
+    </xsl:template>
+
+    <!-- Template common to basic and products replies -->
+    <xsl:template match="afs:reply">
+        <li>
+            <!-- Show thumbnail if any  -->
+            <xsl:apply-templates select="afs:option[@key='url_thumbnail']" mode="url_thumbnail"/>
+            <a>
+                <!-- Direct link if available, else search link (with filter if available) -->
+                <xsl:choose>
+                    <!-- Direct link to target page -->
+                    <xsl:when test="afs:option[@key='url']">
+                        <xsl:apply-templates select="afs:option[@key='url']" mode="href"/>
+                    </xsl:when>
+                    <!-- Query with filter (avoid noisy results) -->
+                    <xsl:when test="afs:option[@key='id'] or parent::afs:replySet[starts-with(@name,'property_')]">
+                        <xsl:variable name="filterName">
+                            <xsl:choose>
+                                <xsl:when
+                                    test="parent::afs:replySet[starts-with(@name,'property_')]">
+                                    <xsl:value-of
+                                        select="substring(substring-after(parent::afs:replySet/@name,'property_'),1,string-length(parent::afs:replySet/@name)-14)"
+                                    />
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of
+                                        select="substring(parent::afs:replySet/@name,1,string-length(parent::afs:replySet/@name)-5)"
+                                    />
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:variable>
+                        <xsl:attribute name="href">
+                            <xsl:value-of select="$searchUrl"/>
+                            <!-- We set plain text query because empty query is not allowed -->
+                            <xsl:value-of select="@label"/>
+                            <xsl:text>&amp;</xsl:text>
+                            <xsl:value-of select="$filterName"/>
+                            <xsl:text>=%22</xsl:text>
+                            <xsl:choose>
+                                <xsl:when
+                                    test="afs:option[@key='id' and normalize-space(@value)!='']">
+                                    <xsl:value-of select="afs:option[@key='id']/@value"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="@label"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                            <xsl:text>%22</xsl:text>
+                        </xsl:attribute>
+                    </xsl:when>
+                    <!-- Basic text query -->
+                    <xsl:otherwise>
+                        <xsl:attribute name="href">
+                            <xsl:value-of select="$searchUrl"/>
+                            <xsl:value-of select="@label"/>
+                        </xsl:attribute>
+                    </xsl:otherwise>
+                </xsl:choose>
+                <xsl:attribute name="title">
+                    <xsl:value-of select="@label"/>
+                </xsl:attribute>
+                <!-- Choose which template to apply for displaying suggestion:
+                     basic (label only) or product (with thumbnbail, price, etc.) -->
+                <xsl:apply-templates select="self::node()[not(afs:option[@key='price'])]"
+                    mode="basic"/>
+                <xsl:apply-templates select="self::node()[afs:option[@key='price']]" mode="product"
+                />
+            </a>
+        </li>
+    </xsl:template>
+
+    <!-- Thumbnail display -->
+    <xsl:template match="afs:option" mode="url_thumbnail">
+        <div class="image" style="float: left; margin-right:5px;">
+            <img width="35">
+                <xsl:attribute name="src">
+                    <xsl:value-of select="@value"/>
+                </xsl:attribute>
+            </img>
+        </div>
+    </xsl:template>
+
+    <!-- Creates href link -->
+    <xsl:template match="afs:option" mode="href">
+        <xsl:attribute name="href">
+            <xsl:value-of select="@value"/>
+        </xsl:attribute>
+    </xsl:template>
+
+    <!-- Basic suggestion template -->
+    <xsl:template match="afs:reply" mode="basic">
+        <div class="name">
+            <xsl:value-of select="@label"/>
+            <span style="padding-left: 5px;"/>
+        </div>
+    </xsl:template>
+
+    <!-- Product rich template: uses custom metadata like price -->
+    <xsl:template match="afs:reply" mode="product">
+        <xsl:variable name="currency">
+            <xsl:value-of select="afs:option[@key='currency_sign']/@value"/>
+        </xsl:variable>
+        <xsl:variable name="price_display">
+            <xsl:value-of select="afs:option[@key='price']/@value"/>
+            <xsl:value-of select="$currency"/>
+        </xsl:variable>
+        <div class="name">
+            <xsl:value-of select="@label"/>
+            <span style="padding-left: 5px;">
+                <xsl:choose>
+                    <xsl:when test="afs:option[@key='price_cut']">
+                        <s>
+                            <xsl:value-of select="afs:option[@key='price_cut']/@value"/>
+                            <xsl:value-of select="$currency"/>
+                        </s>&#160; <xsl:value-of select="$price_display"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$price_display"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </span>
+        </div>
+    </xsl:template>
+
+    <!-- Translate first letter of a string into a upper case if it was lower -->
+    <xsl:template name="upperCaseFirstLetter">
+        <xsl:param name="str"/>
+        <xsl:variable name="vUpper" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"/>
+        <xsl:variable name="vLower" select="'abcdefghijklmnopqrstuvwxyz'"/>
+        <xsl:value-of
+            select="concat(translate(substring($str,1,1),$vLower,$vUpper),substring($str,2))"/>
+    </xsl:template>
+
+</xsl:stylesheet>
+
+]]>
+                </template>
+                <suggest_xml>
+<![CDATA[
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;<br />
+&lt;feeds&gt;<br />
+    &lt;feed name=&quot;catalog_fr&quot;&gt;<br />
+        &lt;AFS&gt;<br />
+            &lt;Suggestions&gt;<br />
+                &lt;Suggestion label=&quot;T-Shirt manches courtes&quot;&gt;<br />
+                    &lt;Option key=&quot;category&quot; value=&quot;T-shirt&quot;/&gt;<br />
+                    &lt;Option key=&quot;category&quot; value=&quot;T-shirts b&eacute;b&eacute;&quot;/&gt;<br />
+                    &lt;Option key=&quot;category&quot; value=&quot;Quechua&quot;/&gt;<br />
+                    &lt;Option key=&quot;category&quot; value=&quot;Randonn&eacute;e&quot;/&gt;<br />
+                &lt;/Suggestion&gt;<br />
+            &lt;/Suggestions&gt;<br />
+        &lt;/AFS&gt;<br />
+    &lt;/feed&gt;<br />
+    &lt;feed name=&quot;brands_fr&quot;&gt;<br />
+        &lt;AFS&gt;<br />
+            &lt;Suggestions&gt;<br />
+                &lt;Suggestion label=&quot;QUECHUA&quot;/&gt;<br />
+            &lt;/Suggestions&gt;<br />
+        &lt;/AFS&gt;<br />
+    &lt;/feed&gt;<br />
+    &lt;feed name=&quot;categories_fr&quot;&gt;<br />
+        &lt;AFS&gt;<br />
+            &lt;Suggestions&gt;<br />
+                &lt;Suggestion label=&quot;T-shirt&quot;&gt;<br />
+                    &lt;Option key=&quot;id&quot; value=&quot;50657&quot;/&gt;<br />
+                    &lt;Option key=&quot;url&quot; value=&quot;%2fF-50657-t_shirt&quot;/&gt;<br />
+                    &lt;Option key=&quot;level&quot; value=&quot;1&quot;/&gt;<br />
+                &lt;/Suggestion&gt;<br />
+                &lt;Suggestion label=&quot;T-shirts b&eacute;b&eacute;&quot;&gt;<br />
+                    &lt;Option key=&quot;id&quot; value=&quot;308392&quot;/&gt;<br />
+                    &lt;Option key=&quot;url&quot; value=&quot;%2fC-308392-t_shirts&quot;/&gt;<br />
+                    &lt;Option key=&quot;level&quot; value=&quot;1&quot;/&gt;<br />
+                &lt;/Suggestion&gt;<br />
+                &lt;Suggestion label=&quot;Quechua&quot;&gt;<br />
+                    &lt;Option key=&quot;id&quot; value=&quot;309970&quot;/&gt;<br />
+                    &lt;Option key=&quot;url&quot; value=&quot;%2fC-309970-quechua&quot;/&gt;<br />
+                    &lt;Option key=&quot;level&quot; value=&quot;1&quot;/&gt;<br />
+                &lt;/Suggestion&gt;<br />
+                &lt;Suggestion label=&quot;Randonn&eacute;e&quot;&gt;<br />
+                    &lt;Option key=&quot;id&quot; value=&quot;313441&quot;/&gt;<br />
+                    &lt;Option key=&quot;url&quot; value=&quot;%2fC-313441-randonnee&quot;/&gt;<br />
+                    &lt;Option key=&quot;level&quot; value=&quot;1&quot;/&gt;<br />
+                &lt;/Suggestion&gt;<br />
+            &lt;/Suggestions&gt;<br />
+        &lt;/AFS&gt;<br />
+    &lt;/feed&gt;<br />
+&lt;/feeds&gt;
+]]>
+                </suggest_xml>
+                <order_1>categories</order_1>
+                <order_2>products</order_2>
+                <order_3>brands</order_3>
+            </suggest>
+            <fields_category>
+                <name>name</name>
+                <keywords>meta_keywords</keywords>
+                <description>description</description>
+            </fields_category>
+            <fields_product>
+                <in_stock_only>0</in_stock_only>
+                <name>name</name>
+                <short_name>short_name</short_name>
+                <colors>color</colors>
+                <models>model</models>
+                <manufacturer>manufacturer</manufacturer>
+                <gender>gender</gender>
+                <description>a:1:{s:18:"_1390211203389_389";a:1:{s:5:"value";s:17:"short_description";}}</description>
+                <keywords>meta_keyword</keywords>
+                <identifier>a:1:{s:18:"_1389092688608_608";a:1:{s:5:"value";s:3:"sku";}}</identifier>
+            </fields_product>
+            <promote>
+                <redirect>no_result</redirect>
+            </promote>
+        </antidot>
+    </default>
+</config>

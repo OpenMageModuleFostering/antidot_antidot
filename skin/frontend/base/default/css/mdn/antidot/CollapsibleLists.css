@@ -1,0 +1,44 @@
+.treeView {
+    -moz-user-select: none;
+    position: relative;
+}
+.treeView ul {
+    margin: 0 0 0 -1.5em !important;
+    padding: 0 0 0 1.5em;
+}
+.treeView ul ul {
+    /*background: url("../../../images/mdn/antidot/list-item-contents.png") repeat-y scroll left center rgba(0, 0, 0, 0);*/
+}
+.treeView li.lastChild > ul {
+    background-image: none;
+}
+.treeView li {
+    /*background: url("../../../images/mdn/antidot/list-item-root.png") no-repeat scroll left top rgba(0, 0, 0, 0);*/
+    cursor: auto;
+    list-style-image: url("../../../images/mdn/antidot/button.png");
+    list-style-position: inside;
+    margin: 0;
+    padding: 0;
+    margin-left: 0px !important;
+}
+.treeView li.collapsibleListOpen {
+    cursor: pointer;
+    list-style-image: url("../../../images/mdn/antidot/button-open.png");
+}
+.treeView li.collapsibleListClosed {
+    cursor: pointer;
+    list-style-image: url("../../../images/mdn/antidot/button-closed.png");
+}
+.treeView li li {
+    /*background-image: url("../../../images/mdn/antidot/list-item.png");*/
+    padding-left: 1.5em;
+}
+.treeView li.lastChild {
+    /*background-image: url("../../../images/mdn/antidot/list-item-last.png");*/
+}
+.treeView li.collapsibleListOpen {
+    /*background-image: url("../../../images/mdn/antidot/list-item-open.png");*/
+}
+.treeView li.collapsibleListOpen.lastChild {
+    /*background-image: url("../../../images/mdn/antidot/list-item-last-open.png");*/
+}}

@@ -1,0 +1,134 @@
+Senden
+Standardschablone wiederherstellen
+XML zeigen
+Attribut
+Ein Feld hinzufügen
+Sortierbar
+Richtung
+Facette
+Sortierung
+Mehrfachauswahl
+Autovervollständigung
+Datum
+Referenz
+Typ
+Element
+Produkte
+Status
+Laden
+Term
+Meinten Sie {spellcheck} ?
+Ab {min}�?� bis {max}�?�
+Antidot Back office (Analytics, Synonyme, Promote)
+AFS@Store Erweiterungsversion
+Bei Bedarf teilen Sie diese Version dem Support-Team mit
+Unternehmensname
+Nützlich für das Support-Team
+E-mail
+Im Fehlerfall verwendet, um eine Benachrichtigung zu senden
+Einstellungen für Datenpload
+Server
+Antidots Server mit dem Sie verbinden um die Daten zu übertragen
+Upload Verzeichnis
+Verzeichnis für Datenupload
+Login
+Ihr Antidot FTP Login
+Passwort
+Ihr Antidot FTP Passwort
+Web Services
+Adresse der Web Services AFS@Store
+Service ID
+Antidot service ID
+Status
+Web Service status. Inbetriebnahme auf Ihrer Webseite nur mit 'stable' status 
+Mapping der Produktfelder
+Diese Einstellungen sind im Zusammenhang mit der Erzeugung des Produktkatalogs durch AFS@Store Indexierung. Sie können vorhanden Magento Attribute benutzen und Ihre eigene Eigenschaften hinzufügen. Standard Magento Attribute wie Urls, Kategorien, Preise, Mengen, Förderungen sind automatisch in diesem Mapping ererbt. Benutzen Sie dieser Formulär um die spezifische Felder von Ihrem Datenmodell hinzufügen. 
+Ausverkaufte Produkte umfassen
+Veränderen Sie diese Einstellung wenn Sie ausverkäufte Produkte umfassen wollen
+Name
+Kurzname
+Marke
+Beschreibung
+Stichworte
+Neuigkeit
+Dieses Attribut kann als searchandising Kriterium zur Verwaltung der Produkt Suche/Autovervollständigung benutzt werden.
+Spitzenverkauf
+Hervorgehoben
+Werkstoff
+Farbe
+Modell
+Grö�?e
+Geschlecht
+GTIN / EAN
+Andere Produktkennzeichnungen
+Konfigurieren Sie hier zusätzliche Produktkennzeichnungen (Ihre Referenz,  Herstellersreferenz, Lieferantsreferenz, OEM ...)
+Zusätzliche Facetten
+Zusätzliche Attribute, um die Ergebnisse zu filtern und als Autovervollständigung Vorschläge zu erscheinen
+Autovervollständigung
+Ermöglichen
+Wählen Sie Magento oder AFS@Store (empfohlen) Autovervollständigung. Magento wiederherstellen nur wenn Sie Probleme auftretten.
+Produkte zeigen ?
+Produkte in Autovervollständigung Ergebnisse zeigen
+Anzahl der angezeigten Produkten
+Wählen Sie die maximale Anzahl der angezeigten Produkten
+Marke zeigen
+Marke in Autovervollständigungsergebnisse zeigen
+Anzahl der angezeigten Marken
+Wählen Sie die maximale Anzahl der angezeigten Marken
+Kategorien
+Kategorien in Autovervollständigungsergebnisse zeigen
+Anzahl der angezeigten Kategorien
+Wählen Sie die maximale Anzahl der angezeigten Kategorien
+Schablone
+Hier können Sie eine XSLT Schablone für ACP Ergebnisse Anzeige erstellen. Achtung: wenn Ihre Schablone seine eigene Sortierreihenfolge einstellt, gilt die obige Einstellung 'Sortierreihenfolge' nie mehr.
+Beispiel
+Zeigt ein Pop-up mit einer Stichprobe vom XML Code der mit der XSLT Schablone transformiert wird.
+Standard XSLT Schablone wiederherstellen (nützlich wenn die Schablone nie mehr funktioniert!)
+Sortierreihenfolge
+Erste angezeigte Spalte in Autovervollständigung 
+Zweite angezeigte Spalte in Autovervollständigung 
+Dritte angezeigte Spalte in Autovervollständigung 
+Suchmachine
+Wählen Sie Magento oder AFS@Store (empfohlen) Suchmachine. Magento wiederherstellen nur wenn Sie Probleme auftretten.
+Kategorien zeigen
+Suchkriterien entsprechende Kategorien anzeigen (benötige Schablonen Anpassung)
+Rechtschreibprüfung Ausdruck
+Angezeigter Text wenn ein Rechtschreibprüfung Vorschlag verfügbar ist. Benutzen Sie {spellcheck} Stichwort um AFS@Store Vorschlag in Ihrem Text umzufassen.
+Facetten
+Wählen Sie die Facetten (und ihre Reihenfolge) die Sie auf Ihrer Webseite ermöglichen wollen.  
+Maximale Anzahl der Werten der Facette
+Maximale Anzahl von der angezeigten Optionen für eine Facette (zusätzliche Ergebnisse werden versteckt) 
+Etikett von Preisfacette
+Angezeigter Text für jede Preissklasse: benutzen Sie {min} und {max} Codes um die Werte in Ihrem Text umzufassen
+Sortierung Optionen
+Wählen Sie Sortierung Optionen verfügbar in der Dropdown-Liste 
+Standard Sortierung
+Standard Sortierung zu verwenden
+Merchandising
+Promote Umleitung
+Hiermit können Sie wählen wie die im Antidot Back-Office erstellten Promote Kampagnen verwandet sind, um den Besucher zu den Zielseiten Ihrer Website umzuleiten.  
+Datenupload auf Anfrage
+Katalog senden
+Den Katalog manuell für die Indexierung AFS@Store senden (nützlich bei Konfigurationsänderungen)
+Datenupload Bericht
+Journal der letzten Datenübertragungen
+Preis
+kategorien
+produkte
+marke
+Aufsteigend
+Absteigend
+Deaktivieren
+Ermöglichen
+Alle
+Nur wenn keine Ergebnisse
+Immer
+Relevanz
+Position
+Name
+Preis
+Förgerung
+Neuigkeiten
+Spitzenverkaufs
+Hervorgehoben
+Zusätzliche Felder für Volltextindexierung
