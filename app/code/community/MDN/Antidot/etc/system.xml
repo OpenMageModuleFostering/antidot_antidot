@@ -425,16 +425,27 @@
                         <template translate="label">
                             <label>Template</label>
                             <frontend_type>textarea</frontend_type>
-                            <sort_order>51</sort_order>
+                            <sort_order>52</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <comment>Configure here the XSLT template to display ACP results. Caution: if your template set his own sort order for columns, then 'Sort order'  above settings will not work anymore</comment>
                         </template>
+                        <additionnal_feed translate="label">
+                            <label>Additionnal feed</label>
+                            <frontend_type>text</frontend_type>
+                            <frontend_model>Antidot/System_Config_Form_Field_Array_AdditionalFeed</frontend_model>
+                            <backend_model>Adminhtml/System_Config_Backend_Serialized_Array</backend_model>
+                            <sort_order>50</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Add an additional feed to the ACP response, typicaly an hit-parade or any other feed configured in AFSStore Back-office.</comment>
+                        </additionnal_feed>
                         <show_xml>
                             <label>Example</label>
                             <frontend_model>Antidot/System_Config_Html_ShowXml</frontend_model>
-                            <sort_order>50</sort_order>
+                            <sort_order>51</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -443,7 +454,7 @@
                         <restore_template>
                             <label></label>
                             <frontend_model>Antidot/System_Config_Button_RestoreTemplate</frontend_model>
-                            <sort_order>52</sort_order>
+                            <sort_order>53</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>

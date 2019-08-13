@@ -18,7 +18,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.0.17</version>
+            <version>1.0.18</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -186,40 +186,36 @@
 <xsl:stylesheet xmlns:afs="http://ref.antidot.net/v7/afs#"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
     <!-- Titles to translate in localized storeviews  -->
-    <xsl:variable name="results-title">Our suggestions...</xsl:variable>
-    <xsl:variable name="no-result-title">No suggestions.</xsl:variable>
     <xsl:variable name="see-more-products">See more products</xsl:variable>
     <!-- Column titles -->
     <xsl:variable name="products-title">Products</xsl:variable>
     <xsl:variable name="categories-title">Categories</xsl:variable>
     <xsl:variable name="brands-title">Brands</xsl:variable>
-
+    <!-- Thumbnail settings -->
+    <xsl:variable name="thumbnail_width">35</xsl:variable>
+    <!-- Currency settings -->
+    <xsl:variable name="decimal-separator">,</xsl:variable>
+    <xsl:variable name="currency-side">left</xsl:variable>
+    <!-- Display parent category along with category? -->
+    <xsl:variable name="display_parent_category" select="true()"/>
+    <!-- Word used to introduce parent category. Translate it for your locale. -->
+    <xsl:variable name="IN">in</xsl:variable>
     <!-- Default search url: customize if needed -->
     <xsl:variable name="searchUrl">/index.php/catalogsearch/result/?q=</xsl:variable>
 
     <!-- Main HTML template -->
     <xsl:template match="afs:replies">
-        <ul class="ajax-search">
-            <li class="search-container-top"/>
-            <xsl:choose>
-                <xsl:when test="afs:replySet">
-                    <li class="header-text">
-                        <xsl:value-of select="$results-title"/>
-                    </li>
-                    <xsl:apply-templates select="afs:replySet"/>
-                    <a>
-                        <xsl:attribute name="href"><xsl:value-of select="$searchUrl"/><xsl:value-of
-                                select="afs:header/afs:query/@textQuery"/>*</xsl:attribute>
-                        <xsl:value-of select="$see-more-products"/>
-                    </a>
-                </xsl:when>
-                <xsl:otherwise>
-                    <li class="header-text">
-                        <xsl:value-of select="$no-result-title"/>
-                    </li>
-                </xsl:otherwise>
-            </xsl:choose>
-        </ul>
+        <xsl:if test="afs:replySet">
+            <ul class="ajax-search">
+                <li class="search-container-top"/>
+                <xsl:apply-templates select="afs:replySet"/>
+                <a style="float:right;">
+                    <xsl:attribute name="href"><xsl:value-of select="$searchUrl"/><xsl:value-of
+                            select="afs:header/afs:query/@textQuery"/>*</xsl:attribute>
+                    <xsl:value-of select="$see-more-products"/>
+                </a>
+            </ul>
+        </xsl:if>
     </xsl:template>
 
     <!-- Suggestions column main template -->
@@ -256,7 +252,7 @@
         </xsl:variable>
         <li class="title">
             <span>
-                <xsl:value-of select="$title"/> (<xsl:value-of select="afs:meta/@totalItems"/>) :
+                <xsl:value-of select="$title"/>
             </span>
         </li>
         <xsl:apply-templates select="afs:reply"/>
@@ -275,7 +271,8 @@
                         <xsl:apply-templates select="afs:option[@key='url']" mode="href"/>
                     </xsl:when>
                     <!-- Query with filter (avoid noisy results) -->
-                    <xsl:when test="afs:option[@key='id'] or parent::afs:replySet[starts-with(@name,'property_')]">
+                    <xsl:when
+                        test="afs:option[@key='id'] or parent::afs:replySet[starts-with(@name,'property_')]">
                         <xsl:variable name="filterName">
                             <xsl:choose>
                                 <xsl:when
@@ -328,15 +325,20 @@
                 <xsl:apply-templates select="self::node()[afs:option[@key='price']]" mode="product"
                 />
             </a>
+            <!-- Needed to avoir cascaded results -->
+            <div style="clear:both;"/>
         </li>
     </xsl:template>
 
     <!-- Thumbnail display -->
     <xsl:template match="afs:option" mode="url_thumbnail">
         <div class="image" style="float: left; margin-right:5px;">
-            <img width="35">
+            <img>
+                <xsl:attribute name="width">
+                    <xsl:value-of select="$thumbnail_width"/>
+                </xsl:attribute>
                 <xsl:attribute name="src">
-                    <xsl:value-of select="@value"/>
+                    <xsl:apply-templates select="@value" mode="baseUri"/>
                 </xsl:attribute>
             </img>
         </div>
@@ -345,26 +347,48 @@
     <!-- Creates href link -->
     <xsl:template match="afs:option" mode="href">
         <xsl:attribute name="href">
-            <xsl:value-of select="@value"/>
+            <xsl:apply-templates select="@value" mode="baseUri"/>
         </xsl:attribute>
     </xsl:template>
 
-    <!-- Basic suggestion template -->
+    <!-- Transform absolute url into a relative one -->
+    <xsl:template match="@value" mode="baseUri">
+        <xsl:choose>
+            <xsl:when test="contains(.,'http')">
+                <xsl:value-of select="concat('/',substring-after(substring-after(.,'http://'),'/'))"
+                />
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="."/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- Basic suggestion template with a custom rendering for categories -->
     <xsl:template match="afs:reply" mode="basic">
         <div class="name">
             <xsl:value-of select="@label"/>
             <span style="padding-left: 5px;"/>
+            <xsl:if
+                test="$display_parent_category=true() and starts-with(ancestor::afs:replySet/@name,'categories')">
+                <xsl:apply-templates select="afs:option[@key='parent']" mode="parent"/>
+            </xsl:if>
         </div>
+    </xsl:template>
+
+    <!-- Display parent category -->
+    <xsl:template match="afs:option" mode="parent">
+        <xsl:text>(</xsl:text>
+        <xsl:value-of select="$IN"/>
+        <xsl:text> </xsl:text>
+        <xsl:value-of select="@value"/>
+        <xsl:text>)</xsl:text>
     </xsl:template>
 
     <!-- Product rich template: uses custom metadata like price -->
     <xsl:template match="afs:reply" mode="product">
-        <xsl:variable name="currency">
-            <xsl:value-of select="afs:option[@key='currency_sign']/@value"/>
-        </xsl:variable>
         <xsl:variable name="price_display">
-            <xsl:value-of select="afs:option[@key='price']/@value"/>
-            <xsl:value-of select="$currency"/>
+            <xsl:apply-templates select="afs:option[@key='price']" mode="price_display"/>
         </xsl:variable>
         <div class="name">
             <xsl:value-of select="@label"/>
@@ -372,8 +396,8 @@
                 <xsl:choose>
                     <xsl:when test="afs:option[@key='price_cut']">
                         <s>
-                            <xsl:value-of select="afs:option[@key='price_cut']/@value"/>
-                            <xsl:value-of select="$currency"/>
+                            <xsl:apply-templates select="afs:option[@key='price_cut']"
+                                mode="price_display"/>
                         </s>&#160; <xsl:value-of select="$price_display"/>
                     </xsl:when>
                     <xsl:otherwise>
@@ -382,6 +406,39 @@
                 </xsl:choose>
             </span>
         </div>
+    </xsl:template>
+
+    <!-- Display price using regional settings -->
+    <xsl:template match="afs:option" mode="price_display">
+        <xsl:variable name="currency">
+            <xsl:choose>
+                <xsl:when test="../afs:option[@key='currency_sign']">
+                    <xsl:value-of select="../afs:option[@key='currency_sign']/@value"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="$currency-side='left'">
+                            <xsl:value-of select="../afs:option[@key='currency']/@value"/>
+                            <xsl:text> </xsl:text>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:text> </xsl:text>
+                            <xsl:value-of select="../afs:option[@key='currency']/@value"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        <xsl:choose>
+            <xsl:when test="$currency-side='left'">
+                <xsl:value-of select="$currency"/>
+                <xsl:value-of select="translate(@value,'.',$decimal-separator)"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="translate(@value,'.',$decimal-separator)"/>
+                <xsl:value-of select="$currency"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <!-- Translate first letter of a string into a upper case if it was lower -->
@@ -394,7 +451,6 @@
     </xsl:template>
 
 </xsl:stylesheet>
-
 ]]>
                 </template>
                 <suggest_xml>
@@ -470,6 +526,8 @@
                 <keywords>meta_keyword</keywords>
                 <identifier>a:1:{s:18:"_1389092688608_608";a:1:{s:5:"value";s:3:"sku";}}</identifier>
             </fields_product>
+            <engine><sortable>a:1:{s:17:"_1426771479065_65";a:1:{s:4:"sort";s:23:"afs:relevance|Relevance";}}</sortable></engine>
+            <engine><default_sort>a:1:{s:18:"_1426771516777_777";a:2:{s:5:"field";s:23:"afs:relevance|Relevance";s:3:"dir";s:4:"desc";}}</default_sort></engine>
             <promote>
                 <redirect>no_result</redirect>
             </promote>

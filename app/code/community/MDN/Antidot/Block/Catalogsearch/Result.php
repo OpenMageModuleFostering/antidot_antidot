@@ -22,12 +22,40 @@ class MDN_Antidot_Block_CatalogSearch_Result extends Mage_CatalogSearch_Block_Re
      */
     public function setListOrders()
     {
+
+        $availableOrders = $this->getAvailableOrders();
+
         $config = Mage::getStoreConfig('antidot/engine/default_sort');
-        $defaultSort = current(unserialize($config));
-        list($field) = explode('|', $defaultSort['field']);
+        $defaultSorts  = unserialize($config);
+
+        /* default sorting on relevance desc */
+        $field = 'afs:relevance';
+        $dir = 'desc';
+        /*
+         * take the first sort of the default sort config existing
+         * amoung available sort
+         */
+        foreach ($defaultSorts as $defaultSort) {
+            list($dfield) = explode('|', $defaultSort['field']);
+            if (isset($availableOrders[$dfield])) {
+                $field = $dfield;
+                $dir = $defaultSort['dir'];
+                continue;
+            }
+        }
+        /*
+         * if there's none, take the first of the available sort
+         */
+        if (!isset($availableOrders[$field])) {
+            if (count($availableOrders)>0) {
+                $keys = array_keys($availableOrders);
+                $field = $keys[0];
+            }
+        }
+
         $this->getListBlock()
-            ->setAvailableOrders($this->getAvailableOrders())
-            ->setDefaultDirection($defaultSort['dir'])
+            ->setAvailableOrders($availableOrders)
+            ->setDefaultDirection($dir)
             ->setSortBy($field);
         
         return $this;

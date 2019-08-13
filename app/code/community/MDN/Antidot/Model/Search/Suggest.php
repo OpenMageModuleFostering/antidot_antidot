@@ -16,8 +16,9 @@
 class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract 
 {
 
-    const URI    = 'http://%s/acp?afs:service=%s&afs:status=%s&afs:feed=%s&afs:query=%s&afs:sessionId=%s';
-    
+    const URI    = 'http://%s/acp?afs:service=%s&afs:status=%s&afs:feed=%s&afs:replies=%s&afs:query=%s&afs:sessionId=%s';
+
+    const DEFAULT_REPLIES_NUMBER = 10;
     /**
      * List feeds to use for the query sprintf($feed, website_id, lang)
      * 
@@ -27,17 +28,27 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
         'products' => array(
             'prefix' => 'featured_products_',
             'tpl'    => 'featured_products_%d_%s',
-            'number' => 5,
+            'number' => self::DEFAULT_REPLIES_NUMBER,
         ),
         'categories' => array(
             'prefix' => 'categories_',
             'tpl'    => 'categories_%d_%s',
-            'number' => 5,
+            'number' => self::DEFAULT_REPLIES_NUMBER,
         ),
         'brands' => array(
             'prefix' => 'brands_',
             'tpl'    => 'brands_%d_%s',
-            'number' => 5,
+            'number' => self::DEFAULT_REPLIES_NUMBER,
+        ),
+        'articles' => array(
+            'prefix' => 'articles_',
+            'tpl'    => 'articles_%d_%s',
+            'number' => self::DEFAULT_REPLIES_NUMBER,
+        ),
+        'stores' => array(
+            'prefix' => 'stores_',
+            'tpl'    => 'stores_%d_%s',
+            'number' => self::DEFAULT_REPLIES_NUMBER,
         ),
     );
     
@@ -89,7 +100,7 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
                 $this->feed['property_'.$facet['value']] = array(
                     'prefix' => 'property_'.$facet['value'].'_',
                     'tpl'    => 'property_'.$facet['value'].'_%d_%s',
-                    'number' => 5,
+                    'number' => self::DEFAULT_REPLIES_NUMBER,
                 );
             }
         }
@@ -144,7 +155,8 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
                 $this->afsHost, 
                 $this->afsService, 
                 $this->afsStatus, 
-                $this->getFeeds(), 
+                $this->getFeeds(),
+                $this->getReplies(),
                 urlencode($query),
                 $this->getSession());
         return $url;
@@ -262,10 +274,34 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
             $feeds.= empty($feeds) ? '' : '&afs:feed=';     //for AFS engine v7.7
             $feeds.= sprintf($feed['tpl'], $id, $lang);
         }
-        
+
+        /* Add additionnal feeds configured in the additionnal_feed field in the ACP section in BO */
+        $additionalFeeds = @unserialize(Mage::getStoreConfig('antidot/suggest/additionnal_feed'));
+        foreach($additionalFeeds as $feed) {
+            $feeds.= '&afs:feed='.urlencode($feed['value']);
+        }
+
         return $feeds;
     }
-    
+
+    /**
+     * Build the replies param
+     *
+     * Specify the max number of replies to AFSStore (is not specified, AFStore take 10),
+     * this parameter is common to all feed then with take the higher specified
+     *
+     * @return string
+     */
+    protected function getReplies()
+    {
+        $feeds = '';
+        $maxReplies = 0;
+        foreach($this->feed as $feed) {
+            $maxReplies = ($feed['number']>$maxReplies)?$feed['number']:$maxReplies;
+        }
+        return $maxReplies;
+    }
+
     /**
      * Get feed by type
      * 

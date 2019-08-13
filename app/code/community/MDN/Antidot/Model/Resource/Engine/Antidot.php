@@ -290,7 +290,8 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
             $_params['params'] = array($_params['params']);
         }
 
-        if(!empty($_params['sort_by'])) {
+        /* we applied the tuned defaut sorting if the relevance sorting is asked in the request */
+        if(!empty($_params['sort_by']) && $_params['sort_by']!='afs:relevance') {
             $searchParams['sort'] = $this->prepareSortFields($_params['sort_by']);
         } elseif($configSort = Mage::getStoreConfig('antidot/engine/default_sort')) {
             $listDefaultSort = unserialize($configSort);

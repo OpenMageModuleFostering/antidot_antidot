@@ -18,7 +18,7 @@ Status,Status
 Store,Laden
 Term,Term
 "Did you mean {spellcheck} ?","Meinten Sie {spellcheck} ?"
-"From {min}€ to {max}€","Ab {min}�?� bis {max}�?�"
+"From {min}€ to {max}€","Ab {min}�?� bis {max}�?�"
 "Antidot Back office (Analytics, Synonyms, Promote)","Antidot Back office (Analytics, Synonyme, Promote)"
 "AFS@Store Extension Version","AFS@Store Erweiterungsversion"
 "Communicate this version to the support team if you need help","Bei Bedarf teilen Sie diese Version dem Support-Team mit"
@@ -57,7 +57,7 @@ Keywords,Stichworte
 Material,Werkstoff
 Color,Farbe
 Model,Modell
-Size,Grö�?e
+Size,Grö�?e
 Gender,Geschlecht
 "GTIN / EAN","GTIN / EAN"
 Identifier,"Andere Produktkennzeichnungen"
@@ -132,3 +132,10 @@ Price,Preis
 "Is top sale",Spitzenverkaufs
 "Is featured",Hervorgehoben
 "Additional fields for plain text indexation","Zusätzliche Felder für Volltextindexierung"
+"Working directory","Arbeitsverzeichnis"
+"Local directory to use to generate xml files. If empty, /tmp will be used","Lokale Verzeichnis verwenden, um XML-Dateien zu generieren. Wenn leer , / tmp verwendet"
+"Push categories","Drücken Kategorien"
+"Feed ID","Futter ID"
+"Add a feed","fügen Sie ein Futter"
+"Additionnal feed","Additionnal Futter"
+"Add an additional feed to the ACP response, typicaly an hit-parade or any other feed configured in AFSStore Back-office.","Fügen Sie eine zusätzliche Einspeisung in den AKP- Reaktion , typicaly einer Hitparade oder andere Futtermittel in AFSStore Back-Office konfiguriert ist."

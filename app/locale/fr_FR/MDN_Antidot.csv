@@ -136,3 +136,7 @@ Price,Prix
 "Working directory","Dossier de travail"
 "Local directory to use to generate xml files. If empty, /tmp will be used","Répertoire local à utiliser pour générer les fichiers xml. Si vide, le dossier /tmp sera utilisé"
 "Push categories","Envoyez les catégories"
+"Feed ID","Identifiant du flux"
+"Add a feed","Ajouter un flux"
+"Additionnal feed","Flux additionnel"
+"Add an additional feed to the ACP response, typicaly an hit-parade or any other feed configured in AFSStore Back-office.","Ajoute un flux additionnel à la réponse de l'ACP, typiquement un hit-parade ou bien tout autre flux configuré dans le Back-Office AFSStore."
