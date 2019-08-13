@@ -18,7 +18,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.1.2</version>
+            <version>1.1.3</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -605,6 +605,29 @@
             <promote>
                 <redirect>no_result</redirect>
             </promote>
+            <!-- Export Parameters :-->
+            <!-- For developpers : these parameters are set with default values which fit most of systems, but they can be tweak here : -->
+            <!-- (Flush magento config cache after modifiying them) -->
+            <export>
+                <!-- Memory Limit  : this value is set as memory_limit if default one is below, you can increase it if you run into out of memory error -->
+                <memory_limit>2048M</memory_limit>
+                <!-- If you run into out of memory error, but can't increase memory limit, you can set gc_enabled to 1, -->
+                <!-- it will trigger some gc_collect_cycles to free some memory, however it will slow down process -->
+                <gc_enabled>0</gc_enabled>
+                <!-- if garbage collection is enabled, the gc_collect_cycles will be trigger when memory used exceeds gc_percentage_limit of memory_limit -->
+                <gc_percentage_limit>80</gc_percentage_limit>
+                <!-- number of product processed before flush xml in file -->
+                <chunk_size>500</chunk_size>
+                <!-- disable xsd validation -->
+                <xsd_validation_disable>0</xsd_validation_disable>
+                <!-- enable profiler and debug mode -->
+                <!-- it collect mysql queries, methods timers and limit to 1 chunk the process -->
+                <profiler_enable>0</profiler_enable>
+                <!-- number of slowest mysql queries logged -->
+                <profiler_nb_lowest_queries>10</profiler_nb_lowest_queries>
+                <!-- varien_profiler items time consuming quota of total time logged -->
+                <profiler_varien_quota>0.001</profiler_varien_quota>
+            </export>
         </antidot>
     </default>
     <phpunit>

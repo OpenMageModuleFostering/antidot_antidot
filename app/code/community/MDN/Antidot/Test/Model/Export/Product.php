@@ -453,8 +453,41 @@ class MDN_Antidot_Test_Model_Export_Product extends EcomDev_PHPUnit_Test_Case
         $expected='<prices><price currency="EUR" type="PRICE_FINAL" vat_included="true" country="FR">15.99</price></prices>';
         $this->assertEquals($expected, $xmlWriter->getXml());
 
+    }
+
+    /**
+     * MCNX-236 : test getProductCategories
+     * @loadFixture
+     */
+    public function testGetProductCategories()
+    {
+
+        /* @var $export \MDN_Antidot_Model_Export_Product */
+        $export = Mage::getModel('Antidot/export_product');
+
+        /**
+         * create mock product to simulate getCategoryCollection returning list of the to category of the product
+         * beacause fixture doesn't simulate it...
+         */
+        $mockModel = $this->getModelMock('catalog/product', array('getCategoryCollection', 'getStoreId'));
+        $mockModel->expects($this->any())
+            ->method('getCategoryCollection')
+            ->will($this->returnValue(Mage::getResourceModel('catalog/category_collection')->addAttributeToFilter('entity_id', array(10,11))));
+        $mockModel->expects($this->any())
+            ->method('getStoreId')
+            ->will($this->returnValue(3));
+
+        /**
+         * Categories 10 and 11 are affected to the product in fixtures
+         * Category 11 is not active.
+         * We expect one category associated to the product
+         */
+        $categories = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($export,'getProductCategories', array($mockModel, array(2)));
+
+        $this->assertEquals(1, count($categories));
 
     }
+
     /**
      *
      * @param $productId

@@ -27,7 +27,7 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
      */
     public function __construct()
     {
-        $this->client = Mage::getModel('Antidot/Search_Search');
+        $this->client = Mage::getModel('Antidot/search_search');
     }
 
     /**
@@ -37,7 +37,7 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
      */
     protected function _getHelper()
     {
-        return Mage::helper('Antidot/Antidot');
+        return Mage::helper('Antidot/antidot');
     }
 
     /**
@@ -291,7 +291,6 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
      *
      * @param string $query
      * @param array $params
-     * @param string $type
      * @return array
      */
     protected function _search($query, $params = array())

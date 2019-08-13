@@ -58,7 +58,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_ProductAdditionalFacet ex
     {
         if (!$this->_autocompleteRenderer) {
             $this->_autocompleteRenderer = $this->getLayout()
-                   ->createBlock('Antidot/Html_Select')
+                   ->createBlock('Antidot/html_select')
                    ->setIsRenderToJsTemplate(true);
         }
         return $this->_autocompleteRenderer;

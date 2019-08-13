@@ -82,7 +82,7 @@ class MDN_Antidot_Helper_XmlWriter extends Mage_Core_Helper_Abstract
             }
         }
         
-        $content = Mage::helper('Antidot/Url')->isUtf8($content) === false ? mb_convert_encoding($content, "UTF-8") : $content;
+        $content = Mage::helper('Antidot/url')->isUtf8($content) === false ? mb_convert_encoding($content, "UTF-8") : $content;
         $this->xml.= '>' . ($content) . '</' . $element . '>' . $this->cr;
     }
 

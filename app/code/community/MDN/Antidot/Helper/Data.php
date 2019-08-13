@@ -212,11 +212,12 @@ class MDN_Antidot_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function translateFacetName($facetcode, $defaultValue)
     {
-        $model = Mage::getModel('Antidot/Search_Search');
+        $model = Mage::getModel('Antidot/search_search');
 
         $label = $defaultValue;
-        if (isset($model::$lastSearchTranslations[$facetcode]))
-            $label = $model::$lastSearchTranslations[$facetcode];
+        $translations = $model->getLastSearchTranslations();
+        if (isset($translations[$facetcode]))
+            $label = $translations[$facetcode];
         return $label;
     }
 
@@ -245,6 +246,43 @@ class MDN_Antidot_Helper_Data extends Mage_Core_Helper_Abstract
         $number = str_replace(',', '.', $number);
         $number = str_replace(' ', '', $number);
         return $number;
+    }
+
+    /**
+     * Gives the value in bytes
+     * used for ini_get('memory_limit')
+     */
+    public function returnBytes ($val)
+    {
+        if(empty($val))return 0;
+
+        $val = trim($val);
+
+        preg_match('#([0-9]+)[\s]*([a-z]+)#i', $val, $matches);
+
+        $last = '';
+        if(isset($matches[2])){
+            $last = $matches[2];
+        }
+
+        if(isset($matches[1])){
+            $val = (int) $matches[1];
+        }
+
+        switch (strtolower($last))
+        {
+            case 'g':
+            case 'gb':
+                $val *= 1024;
+            case 'm':
+            case 'mb':
+                $val *= 1024;
+            case 'k':
+            case 'kb':
+                $val *= 1024;
+        }
+
+        return (int) $val;
     }
 
 }

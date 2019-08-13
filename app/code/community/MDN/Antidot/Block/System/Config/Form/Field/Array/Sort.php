@@ -57,7 +57,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_Sort extends Mage_Adminht
     {
         if (!$this->_sortRenderer) {
             $this->_sortRenderer = $this->getLayout()
-                   ->createBlock('Antidot/Html_Select')
+                   ->createBlock('Antidot/html_select')
                    ->setIsRenderToJsTemplate(true);
         }
         return $this->_sortRenderer;

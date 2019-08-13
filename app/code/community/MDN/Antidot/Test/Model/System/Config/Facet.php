@@ -28,11 +28,11 @@ class MDN_Antidot_Test_Model_System_Config_Facet extends EcomDev_PHPUnit_Test_Ca
             ->method('get_labels')
             ->will($this->returnValue(array('de'=>'Verfügbarkeit', 'fr' => 'Disponibilité', 'en' => 'Availability')));
 
-        $mockSearch = $this->getModelMock('Antidot/Search_Search', array('getFacets'));
+        $mockSearch = $this->getModelMock('Antidot/search_search', array('getFacets'));
         $mockSearch->expects($this->any())
             ->method('getFacets')
             ->will($this->returnValue(array('is_available'=> $mockAFSHelper )));
-        $this->replaceByMock('model', 'Antidot/Search_Search', $mockSearch);
+        $this->replaceByMock('model', 'Antidot/search_search', $mockSearch);
 
 
         Mage::app()->setCurrentStore(0);
@@ -71,6 +71,49 @@ class MDN_Antidot_Test_Model_System_Config_Facet extends EcomDev_PHPUnit_Test_Ca
         $this->assertEquals(
             'Verfügbarkeit',
             $value
+        );
+
+
+    }
+
+    /**
+     * Test toOptionArray method
+     *
+     * MCNX-235 : escape single quote in label
+     */
+    public function testToOptionArrayEscapeQuote()
+    {
+
+        /*
+         *
+         */
+        $mockAFSHelper = $this->getMock('MDN_Antidot_Test_Model_System_Config_Facet_MockAFSHelper');
+        $mockAFSHelper->expects($this->any())
+            ->method('get_type')
+            ->will($this->returnValue('boolean'));
+        $mockAFSHelper->expects($this->any())
+            ->method('get_label')
+            ->will($this->returnValue("Type d'accessoire"));
+        $mockAFSHelper->expects($this->any())
+            ->method('get_labels')
+            ->will($this->returnValue(array("fr"=>"Type d'accessoire")));
+
+        $mockSearch = $this->getModelMock('Antidot/search_search', array('getFacets'));
+        $mockSearch->expects($this->any())
+            ->method('getFacets')
+            ->will($this->returnValue(array('type_accessoire'=> $mockAFSHelper )));
+        $this->replaceByMock('model', 'Antidot/search_search', $mockSearch);
+
+
+        Mage::app()->setCurrentStore(0);
+        /** @var $configSort MDN_Antidot_Model_System_Config_Facet */
+        $configFacet = Mage::getModel('Antidot/system_config_facet');
+
+        $values = $configFacet->toOptionArray('STRING');
+
+        $this->assertEquals(
+            array(array("value"=>"type_accessoire|Type d\'accessoire", 'label' => 'type_accessoire (boolean)')),
+            $values
         );
 
 

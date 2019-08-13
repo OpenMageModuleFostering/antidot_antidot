@@ -13,9 +13,11 @@
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-require_once 'abstract.php';
+//with modman we use symlinks and we need realpath
+$basepath = dirname($_SERVER['SCRIPT_FILENAME']).DIRECTORY_SEPARATOR;
+require_once $basepath.'abstract.php';
 
-class MDN_Shell_AntidotExport extends Mage_Shell_Abstract
+class MDN_Shell_AntidotExportProduct extends Mage_Shell_Abstract
 {
 
     /**
@@ -34,5 +36,5 @@ class MDN_Shell_AntidotExport extends Mage_Shell_Abstract
     }
 }
 
-$shell = new MDN_Shell_AntidotExport();
+$shell = new MDN_Shell_AntidotExportProduct();
 $shell->run();

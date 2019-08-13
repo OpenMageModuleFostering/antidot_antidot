@@ -25,7 +25,7 @@ class MDN_Antidot_Model_System_Config_Facet
     {
         if (!$this->options) {
             try {
-                $search = Mage::getModel('Antidot/Search_Search');
+                $search = Mage::getSingleton('Antidot/search_search');
 
                 $this->options = array();
                 if (count($search->getFacets()) > 0) {
@@ -46,8 +46,9 @@ class MDN_Antidot_Model_System_Config_Facet
 
                     foreach ($search->getFacets() as $facetId => $facet) {
                         if ($typeExclude === null || $facet->get_type() !== $typeExclude) {
+                            //MCNX-235 : escape single quote for javascript, it cause error in javascript facet editor in BO
                             $this->options[] = array(
-                                'value' => $facetId.'|'.$facet->get_label(),
+                                'value' => $facetId.'|'.Mage::helper('core')->jsQuoteEscape($facet->get_label()),
                                 'label' => $facetId.' ('.$facet->get_type().')'
                             );
 

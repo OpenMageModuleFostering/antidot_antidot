@@ -159,7 +159,7 @@ class MDN_Antidot_Model_Catalog_Layer_Filter_Item extends Mage_Catalog_Model_Lay
         $selected = Mage::getSingleton('core/app')->getRequest()->getParam($filter);
 
         if ($selected) {
-            $antidotEngine = Mage::getResourceSingleton('Antidot/engine_Antidot');
+            $antidotEngine = Mage::getResourceSingleton('Antidot/engine_antidot');
             return $antidotEngine->extractMultiSelectValues($selected);
         } else {
             return array();

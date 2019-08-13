@@ -86,12 +86,12 @@ abstract class MDN_Antidot_Model_Resource_Engine_Abstract
      * @param string $type
      * @return array
      */
-    public function getIdsByQuery($query, $params = array(), $type = 'product')
+    public function getIdsByQuery($query, $params = array())
     {
        $paramsHash = md5(json_encode($params));
        if (!isset($this->_idsByQuery[$paramsHash])) {
 	        $ids = array();
-	        $resultTmp = $this->search($query, $params, $type);
+	        $resultTmp = $this->search($query, $params);
 	        if (!empty($resultTmp['ids'])) {
 	            foreach ($resultTmp['ids'] as $id) {
 	                $ids[] = $id['id'];
@@ -149,7 +149,7 @@ abstract class MDN_Antidot_Model_Resource_Engine_Abstract
      */
     public function getStats($query, $params = array(), $type = 'product')
     {
-        return $this->_search($query, $params, $type);
+        return $this->_search($query, $params);
     }
 
     /**
@@ -180,16 +180,16 @@ abstract class MDN_Antidot_Model_Resource_Engine_Abstract
      * @param string $type
      * @return array
      */
-    public function search($query, $params = array(), $type = 'product')
+    public function search($query, $params = array())
     {
         $result = array();
         try {
             Varien_Profiler::start('Antidot');
-            $result = $this->_search($query, $params, $type);
+            $result = $this->_search($query, $params);
             Varien_Profiler::stop('Antidot');
 
         } catch (Exception $e) {
-            Mage::logException($e, null, 'antidot.log');
+            Mage::log($e->getMessage(), null, 'antidot.log');
         }
         
         return $result;

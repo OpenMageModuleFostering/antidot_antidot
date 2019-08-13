@@ -85,8 +85,6 @@ class MDN_Antidot_Block_CatalogSearch_Result extends Mage_CatalogSearch_Block_Re
      */
     public function _toHtml()
     {
-        $this->setTemplate('antidot/catalogsearch/result.phtml');
-
         return parent::_toHtml();
     }
 }

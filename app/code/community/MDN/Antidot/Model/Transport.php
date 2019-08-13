@@ -28,7 +28,7 @@ class MDN_Antidot_Model_Transport extends Mage_Core_Model_Abstract
      */
     public function send($file, $type = self::TRANS_FILE) 
     {
-        if($transport = Mage::getModel('Antidot/Transport_'.ucfirst($type))) {
+        if($transport = Mage::getModel('Antidot/transport_'.ucfirst($type))) {
             return $transport->send($file);
         }
         

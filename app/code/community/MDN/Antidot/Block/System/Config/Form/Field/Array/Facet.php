@@ -76,7 +76,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_Facet extends Mage_Adminh
     {
         if (!$this->_facetRenderer) {
             $this->_facetRenderer = $this->getLayout()
-                   ->createBlock('Antidot/Html_Select')
+                   ->createBlock('Antidot/html_select')
                    ->setIsRenderToJsTemplate(true);
         }
         return $this->_facetRenderer;
@@ -89,7 +89,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_Facet extends Mage_Adminh
     {
         if (!$this->_orderRenderer) {
             $this->_orderRenderer = $this->getLayout()
-                   ->createBlock('Antidot/Html_Select')
+                   ->createBlock('Antidot/html_select')
                    ->setIsRenderToJsTemplate(true);
         }
         return $this->_orderRenderer;
@@ -102,7 +102,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_Facet extends Mage_Adminh
     {
         if (!$this->_multipleRenderer) {
             $this->_multipleRenderer = $this->getLayout()
-                ->createBlock('Antidot/Html_Select')
+                ->createBlock('Antidot/html_select')
                 ->setIsRenderToJsTemplate(true);
         }
         return $this->_multipleRenderer;
@@ -147,9 +147,10 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_Facet extends Mage_Adminh
         $element = $this->getElement();
         if ($element->getValue() && is_array($element->getValue())) {
             foreach ($element->getValue() as $rowId => $row) {
-                //foreach ($row as $key => $value) {
-                //    $row[$key] = $this->escapeHtml($value);
-                //}
+                //MCNX-232 : escape single quote for javascript, it cause error in javascript facet editor in BO
+                foreach ($row as $key => $value) {
+                    $row[$key] = $this->jsQuoteEscape($value);
+                }
                 $row['_id'] = $rowId;
                 $result[$rowId] = new Varien_Object($row);
                 $this->_prepareArrayRow($result[$rowId]);

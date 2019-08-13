@@ -18,10 +18,17 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <fields>
+                        <notice>
+                            <frontend_model>Antidot/System_Config_Fieldset_Notice</frontend_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </notice>
                         <afsstore translate="label">
                             <label>AFS@Store Back-Office</label>
                             <frontend_model>Antidot/System_Config_Button_AfsStore</frontend_model>
-                            <sort_order>1</sort_order>
+                            <sort_order>2</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -29,7 +36,7 @@
                         <version translate="label">
                             <label>AFS@Store Extension Version</label>
                             <frontend_model>Antidot/System_Config_Html_Version</frontend_model>
-                            <sort_order>2</sort_order>
+                            <sort_order>3</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>

@@ -23,7 +23,7 @@ class MDN_Antidot_Admin_PushController extends Mage_Adminhtml_Controller_Action
     {
         try
         {
-            if (Mage::getModel('Antidot/Observer')->categoriesFullExport('UI')) {
+            if (Mage::getModel('Antidot/observer')->categoriesFullExport('UI')) {
                 Mage::getSingleton('adminhtml/session')->addSuccess(
                     Mage::helper('Antidot')->__('Categories exported')
                 );
@@ -47,7 +47,7 @@ class MDN_Antidot_Admin_PushController extends Mage_Adminhtml_Controller_Action
     public function ProductAction()
     {
         try {
-            if (Mage::getModel('Antidot/Observer')->catalogFullExport('UI')) {
+            if (Mage::getModel('Antidot/observer')->catalogFullExport('UI')) {
                 Mage::getSingleton('adminhtml/session')->addSuccess(
                     Mage::helper('Antidot')->__('Catalog exported')
                 );

@@ -31,7 +31,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_ProductAttribute extends Mage_A
     protected function _getRenderer()
     {
         return $this->getLayout()
-             ->createBlock('Antidot/Html_Select')
+             ->createBlock('Antidot/html_select')
              ->setIsRenderToJsTemplate(true);
     }
 }

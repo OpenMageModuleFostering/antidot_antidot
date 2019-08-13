@@ -75,7 +75,7 @@ class MDN_Antidot_Model_Catalog_Layer_Filter_Category extends Mage_Catalog_Model
         }
 
         if (!$filter) {
-            $this->addCategoryFilter($category, null);
+            $this->addCategoryFilter($category);
             return $this;
         }
 

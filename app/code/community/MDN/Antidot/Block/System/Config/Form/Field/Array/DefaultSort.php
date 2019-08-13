@@ -64,7 +64,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_DefaultSort extends Mage_
     {
         if (!$this->_fieldRenderer) {
             $this->_fieldRenderer = $this->getLayout()
-                   ->createBlock('Antidot/Html_Select')
+                   ->createBlock('Antidot/html_select')
                    ->setIsRenderToJsTemplate(true);
         }
         return $this->_fieldRenderer;
@@ -77,7 +77,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_DefaultSort extends Mage_
     {
         if (!$this->_dirRenderer) {
             $this->_dirRenderer = $this->getLayout()
-                   ->createBlock('Antidot/Html_Select')
+                   ->createBlock('Antidot/html_select')
                    ->setIsRenderToJsTemplate(true);
         }
         return $this->_dirRenderer;

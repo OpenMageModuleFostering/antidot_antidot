@@ -1,0 +1,3 @@
+config:
+  default/antidot/export/gc_enabled: 1
+  default/antidot/export/gc_percentage_limit: 10

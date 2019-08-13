@@ -92,7 +92,7 @@ class MDN_Antidot_Model_Export_Article extends MDN_Antidot_Model_Export_Product
     {
         if ($manufacturer = $this->getField($article, 'manufacturer')) {
             $this->xml->push('brands');
-            $brandUrl = Mage::getModel('Antidot/Export_Brand')->getUrl($article->getAttributeText('manufacturer'));
+            $brandUrl = Mage::getModel('Antidot/export_brand')->getUrl($article->getAttributeText('manufacturer'));
             $this->xml->element('brand', $this->xml->encloseCData($article->getAttributeText('manufacturer')), array('id' => $manufacturer, 'url' => $brandUrl));
             $this->xml->pop();
         }

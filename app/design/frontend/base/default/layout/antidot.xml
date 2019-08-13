@@ -4,6 +4,7 @@
 
     <catalogsearch_result_index>
         <reference name="search.result">
+            <action method="setTemplate"><template>antidot/catalogsearch/result.phtml</template></action>
             <block type="Antidot/Catalogsearch_Category" name="search_result_category" as="search_result_category" template="antidot/catalogsearch/result/category.phtml" />
         </reference>
     </catalogsearch_result_index>

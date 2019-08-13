@@ -39,7 +39,7 @@ class MDN_Antidot_Helper_Compress extends Mage_Core_Helper_Abstract {
                     Mage::log('Add '.$file.' to archive', null, 'antidot.log');
                     $zip->addFile($file, basename($file));
                 }
-                $zip->close($zip);
+                $zip->close();
             }
             else
             {

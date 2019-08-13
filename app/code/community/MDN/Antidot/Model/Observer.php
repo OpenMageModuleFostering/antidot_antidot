@@ -49,52 +49,23 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         $this->begin        = microtime(true);
         $this->initTmpDirectory();
 
-        /*
+        /**
          * If the default memory limit is below 2048M set it to 2048M
          * else if it is above 2048M let it as it is
+         *
+         * @var $antidotHelper MDN_Antidot_Helper_Data
          */
-	    if ($this->return_bytes(ini_get('memory_limit')) < $this->return_bytes(self::MINIMUM_MEMORY_LIMIT)) {
-			ini_set('memory_limit', self::MINIMUM_MEMORY_LIMIT);
+        $antidotHelper = Mage::helper('Antidot');
+        $memoryLimit = Mage::getStoreConfig('antidot/export/memory_limit');
+        if (!$memoryLimit) {
+            $memoryLimit = self::MINIMUM_MEMORY_LIMIT;
+        }
+	    if ($antidotHelper->returnBytes(ini_get('memory_limit')) < $antidotHelper->returnBytes($memoryLimit)) {
+			ini_set('memory_limit', $memoryLimit);
 		}
 
     }
 
-    /**
-     * Gives the value in bytes
-     */
-    protected function return_bytes ($val)
-	{
-	    if(empty($val))return 0;
-
-	    $val = trim($val);
-	
-	    preg_match('#([0-9]+)[\s]*([a-z]+)#i', $val, $matches);
-	
-	    $last = '';
-	    if(isset($matches[2])){
-	        $last = $matches[2];
-	    }
-	
-	    if(isset($matches[1])){
-	        $val = (int) $matches[1];
-	    }
-	
-	    switch (strtolower($last))
-	    {
-	        case 'g':
-	        case 'gb':
-	            $val *= 1024;
-	        case 'm':
-	        case 'mb':
-	            $val *= 1024;
-	        case 'k':
-	        case 'kb':
-	            $val *= 1024;
-	    }
-	
-	    return (int) $val;
-	}
-	
     /**
      * Init the tmp directory
      */
@@ -124,7 +95,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     public function catalogFullExport($runContext = 'cron')
     {
         $this->log('FULL EXPORT');
-        return $this->generate(Mage::getModel('Antidot/Export_Product'), self::GENERATE_FULL, $runContext);
+        return $this->generate(Mage::getModel('Antidot/export_product'), self::GENERATE_FULL, $runContext);
     }
     
     /**
@@ -132,7 +103,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
      */
     public function catalogIncExport($runContext = 'cron')
     {
-        return $this->generate(Mage::getModel('Antidot/Export_Product'), self::GENERATE_INC, $runContext);
+        return $this->generate(Mage::getModel('Antidot/export_product'), self::GENERATE_INC, $runContext);
     }
     
     /**
@@ -140,7 +111,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
      */
     public function categoriesFullExport($runContext = 'cron')
     {
-        return $this->generate(Mage::getModel('Antidot/Export_Category'), self::GENERATE_FULL, $runContext);
+        return $this->generate(Mage::getModel('Antidot/export_category'), self::GENERATE_FULL, $runContext);
     }
     
     /**
@@ -208,7 +179,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
                 $log['status'] = 'SUCCESS';
             } else {
                 $log['status'] = 'FAILED';
-                $lastError = current(Mage::helper('Antidot/XmlWriter')->getErrors());
+                $lastError = current(Mage::helper('Antidot/xmlWriter')->getErrors());
                 if ($lastError) {
                     $log['error'][] = $lastError;
                 } else {
@@ -232,7 +203,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         $this->log('generate '.$exportModel::TYPE.' '.$context['owner']);
         $this->log('end');
 
-        Mage::helper('Antidot/LogExport')->add($log['reference'], $type, $exportModel::TYPE, $log['begin'], $log['end'], $log['items'], $log['status'], implode(',', $log['error']));
+        Mage::helper('Antidot/logExport')->add($log['reference'], $type, $exportModel::TYPE, $log['begin'], $log['end'], $log['items'], $log['status'], implode(',', $log['error']));
 
         if ( count($log['error']) ) {
             //send error alert mail
@@ -282,7 +253,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         $this->log('compress the file');
        
         $compressFile = dirname(current($files)).'/'.$compressFile;
-        Mage::helper('Antidot/Compress')->zip($files, $compressFile);
+        Mage::helper('Antidot/compress')->zip($files, $compressFile);
        
         return $compressFile;
    }
@@ -297,7 +268,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     {
        $this->log('send the file');
        
-       $transport = Mage::getModel('Antidot/Transport');
+       $transport = Mage::getModel('Antidot/transport');
        
        return $transport->send($filename, $transport::TRANS_FTP);
    }
@@ -315,9 +286,10 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
         $errors = array();
 
         //disable schema validation
-        if (Mage::getStoreConfig('antidot/xsd_verification/disable') == 1)
-        {
-            $this->log('schema validation is DISABLED');
+        if (Mage::getStoreConfig('antidot/export/xsd_validation_disable') == 1) {
+            $this->log('schema validation is DISABLED due to configuration');
+        } elseif (!class_exists('DOMDocument')) {
+            $this->log('schema validation is DISABLED due to lack of libxml DOMDocument Class');
         } else {
 
             libxml_use_internal_errors(true);
@@ -332,7 +304,7 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
                     $this->log('Schema validated');
                 } else {
 
-                    $errors = Mage::helper('Antidot/XmlWriter')->getErrors();
+                    $errors = Mage::helper('Antidot/xmlWriter')->getErrors();
 
                     $match = array();
                     if (preg_match('#Warning 1549: failed to load external entity "(.*)\.xsd"#', $errors[0], $match)) {

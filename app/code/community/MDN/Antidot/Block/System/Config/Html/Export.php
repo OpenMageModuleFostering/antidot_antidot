@@ -43,7 +43,7 @@ class MDN_Antidot_Block_System_Config_Html_Export extends Mage_Adminhtml_Block_S
         
         $rows = '';
         $rowExport = '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>';
-        foreach(Mage::helper('Antidot/LogExport')->getAllLastGeneration() as $export) {
+        foreach(Mage::helper('Antidot/logExport')->getAllLastGeneration() as $export) {
             $rows.= sprintf(
                 $rowExport, 
                 $export['begin_at'],

@@ -33,6 +33,11 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
     protected $afsSearch;
 
     /**
+     * @var array facets
+     */
+    protected $facets;
+
+    /**
      * {@inherit}
      */
     public function _construct()
@@ -52,6 +57,10 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         if ($this->isConfigured) {
             $this->afsSearch = new AfsSearch($this->afsHost, $this->afsService, $this->afsStatus);
         }
+    }
+
+    public function getLastSearchTranslations() {
+        return self::$lastSearchTranslations;
     }
 
     /**
@@ -167,16 +176,18 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
      */
     public function getFacets()
     {
-        $facets = array();
+        if (!$this->facets) {
+            $this->facets = array();
 
-        $resultAntidot = $this->search(null, array('limit' => 1), true);
-        if (isset($resultAntidot->replyset) && $resultAntidot->replyset) {
-            foreach ($resultAntidot->replyset->facets as $facet) {
-                $facets[$facet->id] = $facet;
+            $resultAntidot = $this->search(null, array('limit' => 1), true);
+            if (isset($resultAntidot->replyset) && $resultAntidot->replyset) {
+                foreach ($resultAntidot->replyset->facets as $facet) {
+                    $this->facets[$facet->id] = $facet;
+                }
             }
         }
 
-        return $facets;
+        return $this->facets;
     }
 
     /**

@@ -73,7 +73,14 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         Mage::log('Starting product XML export, filename = '.$filename, null, 'antidot.log');
 
         $db = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $db->getProfiler()->setEnabled(false);
+        if (Mage::getStoreConfig('antidot/export/profiler_enable')) {
+            $db->getProfiler()->setEnabled(true);
+            Varien_Profiler::enable();
+        } else {
+            $db->getProfiler()->setEnabled(false);
+        }
+
+        Varien_Profiler::start("export_product_writeXml");
 
         $this->onlyProductsWithStock = !(boolean)Mage::getStoreConfig('antidot/fields_product/in_stock_only');
         $this->autoCompleteProducts  = Mage::getStoreConfig('antidot/suggest/enable') === 'Antidot/engine_antidot' ? 'on' : 'off';
@@ -94,15 +101,25 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 
         if ($type === MDN_Antidot_Model_Observer::GENERATE_INC) {
             if($this->lastGeneration === null) {
-                $this->lastGeneration = Mage::helper('Antidot/LogExport')->getLastGeneration(self::TYPE);
+                $this->lastGeneration = Mage::helper('Antidot/logExport')->getLastGeneration(self::TYPE);
             }
             $collection->addAttributeToFilter('updated_at', array('gteq' => $this->lastGeneration));
         }
-        $collection->setPageSize(500);
+
+        $chunkSize = Mage::getStoreConfig('antidot/export/chunk_size');
+        if (!$chunkSize) {
+            $chunkSize = 500;
+        }
+        $collection->setPageSize($chunkSize);
 
         $productsCount = $collection->getSize();
         Mage::log('Products to export : '.$productsCount, null, 'antidot.log');
         $chunkCount = $collection->getLastPageNumber();
+
+        /** if profiling is enabled process only one chunk */
+        if (Mage::getStoreConfig('antidot/export/profiler_enable')) {
+            $chunkCount = 1;
+        }
 
         if ($productsCount > 0) {
         
@@ -142,7 +159,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                         $product->clearInstance();  //memory flush
                         $product = null;
                         unset($product);
-                        gc_collect_cycles();
+                        $this->garbageCollection();
                     }
 
 	            }
@@ -151,7 +168,9 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                 $collection->clear();
 
                  Mage::log('Process chunk # '.$chunkId .' / '.$chunkCount. ' - memory usage = '.memory_get_usage().' - took '.(time() - $lastExecutionTime).' sec', null, 'antidot.log');
-                 $lastExecutionTime = time();
+                $lastExecutionTime = time();
+
+                $this->profile();
 
             }
 	        $this->xml->pop();
@@ -160,6 +179,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 
         Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID); //in order to stay on the admin and not be redirected to the last indexed frontend store
         Mage::log('Products parsing complete', null, 'antidot.log');
+
+        Varien_Profiler::stop("export_product_writeXml");
 
         return $productsCount;
     }
@@ -186,7 +207,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         foreach($attributes as $att) {
             $k = $att->getAttributeCode();
             $this->propertyLabel[$k] = array();
-            $this->propertyLabel[$k]['default'] = $att->getfrontend_label();
+            $this->propertyLabel[$k]['default'] = $att->getFrontendLabel();
             $this->propertyLabel[$k]['per_store'] = $att->getStoreLabels();
 
             $this->propertyLabel[$k]['options'] = array();
@@ -197,14 +218,19 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                 }
 
                 $this->propertyLabel[$k]['options'][$option['value']] = array();
+                $this->propertyLabel[$k]['options'][$option['value']]['default'] = $option['label'];
                 $this->propertyLabel[$k]['options'][$option['value']]['per_store'] = array();
-                $query = 'SELECT store_id, value FROM '
-                    . Mage::getConfig()->getTablePrefix().'eav_attribute_option_value '
-                    . 'WHERE option_id = "'.$option['value'].'"';
+                if ($att->getSourceModel()=='eav/entity_attribute_source_table') {
+                    $query = 'SELECT store_id, value FROM '
+                        .Mage::getConfig()->getTablePrefix().'eav_attribute_option_value '
+                        .'WHERE option_id = "'.$option['value'].'"';
 
-                $valuesCollection = mage::getResourceModel('sales/order_item_collection')->getConnection()->fetchAll($query);
-                foreach($valuesCollection as $item) {
-                    $this->propertyLabel[$k]['options'][$option['value']]['per_store'][$item['store_id']] = $item['value'];
+                    $valuesCollection = Mage::getSingleton('core/resource')->getConnection('core_read')->fetchAll(
+                        $query
+                    );
+                    foreach ($valuesCollection as $item) {
+                        $this->propertyLabel[$k]['options'][$option['value']]['per_store'][$item['store_id']] = $item['value'];
+                    }
                 }
             }
         }
@@ -218,6 +244,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeProduct($product, $stores)
     {
+        Varien_Profiler::start("export_product_writeProduct");
 
         //skip product if no websites
         if (count($stores) == 0)
@@ -268,8 +295,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         }
         $this->xml->pop();
 
-        //$this->xml->element('created_at', $product->getCreated_at());     AFM-83
-        //$this->xml->element('last_updated_at', $product->getUpdated_at());    AFM-92
+        //$this->xml->writeElement('created_at', $product->getCreated_at());     AFM-83
+        //$this->xml->writeElement('last_updated_at', $product->getUpdated_at());    AFM-92
 
         $this->xml->element('name', $this->xml->encloseCData($this->utf8CharacterValidation($this->getField($product, 'name'))));
         if($shortName = $this->getField($product, 'short_name')) {
@@ -291,6 +318,9 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $this->writeVariants($product, $variantProducts, $stores);
 
         $this->xml->pop();
+
+        Varien_Profiler::stop("export_product_writeProduct");
+
     }
     
     /**
@@ -301,6 +331,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeStore($product, $stores, $variantProduct)
     {
+        Varien_Profiler::start("export_product_writeStore");
+
         $this->xml->push('stores');
 
         /* Qty is the same for all stores, better compute it outside the loop: */
@@ -345,28 +377,17 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                 $reloadedVariantProduct->clearInstance();  //memory flush
                 $reloadedVariantProduct = null;
                 unset($reloadedVariantProduct);
-                gc_collect_cycles();
+                $this->garbageCollection();
             }
 
 
         }
         $this->xml->pop();
+
+        Varien_Profiler::stop("export_product_writeStore");
+
     }
     
-    /**
-     * Get catalog/product model
-     *
-     * @return Model
-     */
-    protected function getCatalogProduct()
-    {
-        if(!$this->catalogProduct) {
-            $this->catalogProduct = Mage::getModel('catalog/product');
-        }
-
-        return $this->catalogProduct;
-    }
-
     /**
      * Get product stores
      * 
@@ -393,6 +414,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeDescriptions($product)
     {
+        Varien_Profiler::start("export_product_writeDescriptions");
+
         if(!empty($this->fields['description'])) {
             $this->xml->push('descriptions');
             foreach($this->fields['description'] as $description) {
@@ -403,6 +426,9 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             }
             $this->xml->pop();
         }
+
+        Varien_Profiler::stop("export_product_writeDescriptions");
+
     }
     
     /**
@@ -435,6 +461,9 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeIdentifiers($product)
     {
+
+        Varien_Profiler::start("export_product_writeIdentifiers");
+
         if($gtin = $this->getField($product, 'gtin')) {
             if(!preg_match('/^[0-9]{12,14}$/', $gtin)) {
                 $gtin = false;
@@ -464,6 +493,9 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
 
             $this->xml->pop();
         }
+
+        Varien_Profiler::stop("export_product_writeIdentifiers");
+
     }
     
     /**
@@ -473,6 +505,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeBrand($product)
     {
+        Varien_Profiler::start("export_product_writeBrand");
+
         if ($manufacturer = $this->getField($product, 'manufacturer')) {
             if(!empty($manufacturer)) {
                 $field = empty($this->fields['manufacturer']) ? 'manufacturer' : $this->fields['manufacturer'];
@@ -485,6 +519,9 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                 }
             }
         }
+
+        Varien_Profiler::stop("export_product_writeBrand");
+
     }
 
     /**
@@ -495,7 +532,10 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeProductUrl($product)
     {
+        Varien_Profiler::start("export_product_writeProductUrl");
         $this->xml->element('url', $this->xml->encloseCData($product->getProductUrl(false)));
+        Varien_Profiler::stop("export_product_writeProductUrl");
+
     }
 
 
@@ -507,8 +547,10 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeImageUrl($product, $urlImg = true)
     {
-    	
-    	//Set the current store to generate correct URls (even in unit tests)
+
+        Varien_Profiler::start("export_product_writeImageUrl");
+
+        //Set the current store to generate correct URls (even in unit tests)
     	Mage::app()->setCurrentStore($product->getStoreId());
     	
     	try {
@@ -516,7 +558,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             	$this->xml->element('url_thumbnail', $this->xml->encloseCData(Mage::getModel('catalog/product_media_config')->getMediaUrl($product->getThumbnail())));
             }
         } catch(Exception $e) {
-        	Mage::log($e, Zend_Log::ERR, 'antidot.log');	 
+        	Mage::log("writeImageUrl Exception : " . $e->getMessage(), Zend_Log::ERR, 'antidot.log');
         }
 
         try {
@@ -524,8 +566,11 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             	$this->xml->element('url_image', $this->xml->encloseCData(Mage::getModel('catalog/product_media_config')->getMediaUrl($product->getImage())));
             }
         } catch(Exception $e) {
-        	Mage::log($e, Zend_Log::ERR, 'antidot.log');	 
+        	Mage::log("writeImageUrl Exception : " .$e->getMessage(), Zend_Log::ERR, 'antidot.log');
         }
+
+        Varien_Profiler::stop("export_product_writeImageUrl");
+
     }
 
     /**
@@ -535,6 +580,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeClassification($product, $rootCategoriesIds)
     {
+        Varien_Profiler::start("export_product_writeClassification");
         $categories = $this->getProductCategories($product, $rootCategoriesIds);
         if(count($categories) > 0) {
             $this->xml->push('classification');
@@ -543,6 +589,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             }
             $this->xml->pop();
         }
+        Varien_Profiler::stop("export_product_writeClassification");
+
     }
 
     /**
@@ -628,6 +676,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         	$rootCategoryCondition[] = array('like' => '1/'.$rootCategoryId.'/%');
         }
         $categories->addAttributeToFilter('path', $rootCategoryCondition);
+        $categories->addAttributeToFilter('is_active', 1);  //MCNX-236
 
         //Mage::log($categories->getSelect()->__toString(), null, 'antidot.log');
         
@@ -663,11 +712,13 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeMaterials($product)
     {
+        Varien_Profiler::start("export_product_writeMaterials");
         if(!empty($this->fields['materials']) && $materials = $product->getAttributeText($this->fields['materials'])) {
             $this->xml->push('materials');
             $this->xml->element('material', $this->xml->encloseCData($materials));
             $this->xml->pop();
         }
+        Varien_Profiler::stop("export_product_writeMaterials");
     }
     
     /**
@@ -677,11 +728,13 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeColors($product)
     {
+        Varien_Profiler::start("export_product_writeColors");
         if(!empty($this->fields['colors']) && $color = $product->getAttributeText($this->fields['colors'])) {
             $this->xml->push('colors');
             $this->xml->element('color', $this->xml->encloseCData($color));
             $this->xml->pop();
         }
+        Varien_Profiler::stop("export_product_writeColors");
     }
     
     /**
@@ -691,11 +744,13 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeModels($product)
     {
+        Varien_Profiler::start("export_product_writeModels");
         if(!empty($this->fields['models']) && $models = $this->getField($product, $this->fields['models'])) {
             $this->xml->push('models', array('autocomplete' => 'off'));
             $this->xml->element('model', $this->xml->encloseCData(substr($models, 0, 40)));
             $this->xml->pop();
         }
+        Varien_Profiler::stop("export_product_writeModels");
     }
     
     /**
@@ -705,11 +760,13 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeSizes($product)
     {
+        Varien_Profiler::start("export_product_writeSizes");
         if(!empty($this->fields['sizes']) && $size = $product->getAttributeText($this->fields['sizes'])) {
             $this->xml->push('sizes');
             $this->xml->element('size', $this->xml->encloseCData($size));
             $this->xml->pop();
         }
+        Varien_Profiler::stop("export_product_writeSizes");
     }
 
     /**
@@ -719,6 +776,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeGenders($product)
     {
+        Varien_Profiler::start("export_product_writeGenders");
         if(!empty($this->fields['gender']) && $gender = $product->getAttributeText($this->fields['gender'])) {
             $this->xml->push('audience');
                 $this->xml->push('genders');
@@ -726,6 +784,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
                 $this->xml->pop();
             $this->xml->pop();
         }
+        Varien_Profiler::stop("export_product_writeGenders");
     }
     
   /**
@@ -735,6 +794,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeProperties($product)
     {
+        Varien_Profiler::start("export_product_writeProperties");
         $properties = array();
         if(!empty($this->fields['properties'])) {
             foreach($this->fields['properties'] as $property) {
@@ -803,6 +863,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             }
             $this->xml->pop();
         }
+        Varien_Profiler::stop("export_product_writeProperties");
+
     }
     
     /**
@@ -812,6 +874,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writePrices($product, $parentProduct, $context, $store)
     {
+        Varien_Profiler::start("export_product_writePrices");
 
         /**
          * MCNX-222 : Add Fixed Taxs to prices
@@ -863,6 +926,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         }
         
         $this->xml->pop();
+        Varien_Profiler::stop("export_product_writePrices");
+
     }
 
     /**
@@ -938,7 +1003,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             $product->clearInstance();  //memory flush
             $product = null;
             unset($product);
-            gc_collect_cycles();
+            $this->garbageCollection();
         }
         
         return $result;
@@ -952,6 +1017,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeMarketing($product, $operations)
     {
+        Varien_Profiler::start("export_product_writeMarketing");
+
         $this->xml->push('marketing');
         $this->xml->element('is_new', ($this->getField($product, 'is_new') ? 1 : 0));
         $this->xml->element('is_best_sale', ($this->getField($product, 'is_best_sale') ? 1 : 0));
@@ -968,6 +1035,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $this->xml->element('is_promotional', (int)$isPromotional);
         
         $this->xml->pop();
+        Varien_Profiler::stop("export_product_writeMarketing");
     }
 
     /**
@@ -1018,6 +1086,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeMisc($product)
     {
+        Varien_Profiler::start("export_product_writeMisc");
         $this->xml->push('misc');
         $this->xml->element('product_type', $this->xml->encloseCData($product->getTypeID()));
         if(!empty($this->fields['misc'])) {
@@ -1026,6 +1095,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             }
         }
         $this->xml->pop();
+        Varien_Profiler::stop("export_product_writeMisc");
     }
     
     /**
@@ -1037,6 +1107,7 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeVariants($product, $variantProducts, $stores)
     {
+        Varien_Profiler::start("export_product_writeVariants");
         $this->xml->push('variants');
         
         $this->xml->push('variant', array('id' => 'fake'));
@@ -1051,6 +1122,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         }
 
         $this->xml->pop();
+        Varien_Profiler::stop("export_product_writeVariants");
+
     }
     
     /**
@@ -1062,6 +1135,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writeVariant($variantProduct, $product, $stores)
     {
+        Varien_Profiler::start("export_product_writeVariant");
+
         $this->xml->element('name', $this->xml->encloseCData($this->utf8CharacterValidation($variantProduct->getName())));
         $this->writeDescriptions($variantProduct);
         $this->writeStore($product, $stores, $variantProduct);
@@ -1073,6 +1148,9 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $this->writeSizes($variantProduct);
         $this->writeGenders($product);
         $this->writeMisc($variantProduct);
+
+        Varien_Profiler::stop("export_product_writeVariant");
+
     }
     
     /**
@@ -1083,6 +1161,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
      */
     protected function writePart($xml, $close = false) 
     {
+        Varien_Profiler::start("export_product_writePart");
+
         $filename = $this->getFilename();
         if ($this->file === null) {
             $this->file = fopen($filename, 'a+');
@@ -1098,6 +1178,8 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
             fclose($this->file);
             $this->file = null;
         }
+        Varien_Profiler::stop("export_product_writePart");
+
     }
     
     /**

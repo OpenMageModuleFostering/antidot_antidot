@@ -48,7 +48,7 @@ class MDN_Antidot_Block_System_Config_Form_Field_Array_Identifier extends Mage_A
     {
         if (!$this->_valueRenderer) {
             $this->_valueRenderer = $this->getLayout()
-                   ->createBlock('Antidot/Html_Select')
+                   ->createBlock('Antidot/html_select')
                    ->setIsRenderToJsTemplate(true);
         }
         return $this->_valueRenderer;
