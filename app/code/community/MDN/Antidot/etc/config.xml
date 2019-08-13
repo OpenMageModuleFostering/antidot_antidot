@@ -18,7 +18,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.1.1</version>
+            <version>1.1.2</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -58,6 +58,11 @@
                     <result>MDN_Antidot_Block_Catalogsearch_Result</result>
                 </rewrite>
             </catalogsearch>
+            <enterprise_search>
+                <rewrite>
+                    <catalogsearch_layer>MDN_Antidot_Block_Catalogsearch_Layer</catalogsearch_layer>
+                </rewrite>
+            </enterprise_search>
         </blocks>
         <models>
    	   		            

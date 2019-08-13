@@ -13,7 +13,10 @@
  * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class MDN_Antidot_Block_Catalogsearch_Layer extends Mage_CatalogSearch_Block_Layer
+if ((string)Mage::getConfig()->getModuleConfig('Enterprise_Search')->active != 'true') {
+    class Enterprise_Search_Block_Catalogsearch_Layer extends Mage_CatalogSearch_Block_Layer {}
+}
+class MDN_Antidot_Block_Catalogsearch_Layer extends Enterprise_Search_Block_Catalogsearch_Layer
 {
     /**
      * Boolean block name.

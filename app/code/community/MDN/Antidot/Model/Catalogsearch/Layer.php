@@ -52,7 +52,7 @@ class MDN_Antidot_Model_Catalogsearch_Layer extends Mage_CatalogSearch_Model_Lay
             foreach($config as $facet) {
                 list($id, $label) = explode('|', $facet['facet']);
                 $key = sprintf('%02d', $facet['order']).'_'.$id;    //sptrinf to ensure order : 10 is after 09
-                $facets[$key] = array('id' => $id, 'label' => Mage::helper('Antidot')->translateFacetlabel($label));
+                $facets[$key] = array('id' => $id, 'label' => Mage::helper('Antidot')->__($label));
             }
         }
         ksort($facets);

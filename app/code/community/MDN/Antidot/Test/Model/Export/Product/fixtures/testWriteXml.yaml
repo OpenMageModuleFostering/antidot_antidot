@@ -69,19 +69,19 @@ config:
   default/antidot/fields_product/properties: a:2:{s:18:"_1426953698813_813";a:2:{s:5:"value";s:7:"authors";s:12:"autocomplete";s:1:"0";}s:18:"_1426953714346_346";a:2:{s:5:"value";s:6:"editor";s:12:"autocomplete";s:1:"0";}}
   default/web/secure/base_url: http://www.mywebsite.com/   
   default/web/unsecure/base_url: http://www.mywebsite.com/   
-  default/general/locale/code: zz
+  default/general/locale/code: zz_ZZ
   stores/usa/web/secure/base_url: http://www.mywebsite.com/
   stores/usa/web/unsecure/base_url: http://www.mywebsite.com/   
-  stores/usa/general/locale/code: en
+  stores/usa/general/locale/code: en_US
   stores/france/web/secure/base_url: http://www.monsiteweb.fr/   
   stores/france/web/unsecure/base_url: http://www.monsiteweb.fr/   
-  stores/france/general/locale/code: fr
+  stores/france/general/locale/code: fr_FR
   stores/germany/web/secure/base_url: http://www.meinwebseite.de/  
   stores/germany/web/unsecure/base_url: http://www.meinwebseite.de/   
-  stores/germany/general/locale/code: de
+  stores/germany/general/locale/code: de_DE
   stores/france_discount/web/secure/base_url: http://www.monsitediscount.fr/
   stores/france_discount/web/unsecure/base_url: http://www.monsitediscount.fr/
-  stores/france_discount/general/locale/code: fr
+  stores/france_discount/general/locale/code: fr_FR
 eav:
   catalog_product:
     - entity_id: 1

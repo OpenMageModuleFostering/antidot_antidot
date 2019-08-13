@@ -1,4 +1,58 @@
+scope:
+  website: # Initialize websites
+    - website_id: 2
+      code: usa_website
+      name: USA Website
+      default_group_id: 2
+    - website_id: 3
+      code: french_website
+      name: French Website
+      default_group_id: 3
+    - website_id: 4
+      code: german_website
+      name: German Website
+      default_group_id: 4
+  group: # Initializes store groups
+    - group_id: 2
+      website_id: 2
+      name: USA Store Group
+      default_store_id: 2
+      root_category_id: 2 # Default Category
+    - group_id: 3
+      website_id: 3
+      name: French Store Group
+      default_store_id: 3
+      root_category_id: 2 # Default Category
+    - group_id: 4
+      website_id: 4
+      name: German Store Group
+      default_store_id: 4
+      root_category_id: 2 # Default Category
+  store: # Initializes store views
+    - store_id: 2
+      website_id: 2
+      group_id: 2
+      code: usa
+      name: USA Store
+      is_active: 1
+    - store_id: 3
+      website_id: 3
+      group_id: 3
+      code: france
+      name: France Store
+      is_active: 1
+    - store_id: 4
+      website_id: 4
+      group_id: 4
+      code: germany
+      name: Germany Store
+      is_active: 1
+
 config:
+  default/general/locale/code: zz_ZZ
+  stores/usa/general/locale/code: en_US
+  stores/france/general/locale/code: fr_FR
+  stores/germany/general/locale/code: de_DE
   default/antidot/fields_product/is_new: null
   default/antidot/fields_product/is_best_sale: null
   default/antidot/fields_product/is_featured: null

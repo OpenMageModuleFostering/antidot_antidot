@@ -30,6 +30,6 @@ scope:
       is_active: 1
 
 config:
-  default/general/locale/code: zz
-  stores/france/general/locale/code: fr
-  stores/france_discount/general/locale/code: fr
+  default/general/locale/code: zz_ZZ
+  stores/france/general/locale/code: fr_FR
+  stores/france_discount/general/locale/code: fr_FR

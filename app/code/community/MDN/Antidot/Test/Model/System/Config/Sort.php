@@ -54,6 +54,10 @@ class MDN_Antidot_Test_Model_System_Config_Sort extends EcomDev_PHPUnit_Test_Cas
     private function toOptionArray(array $expected)
     {
 
+        Mage::app()->setCurrentStore(2);
+        Mage::app()->getLocale()->setLocaleCode('en_US');
+        Mage::app()->getTranslator()->setLocale('en_US')->init('adminhtml', true);
+
         /** @var $configSort MDN_Antidot_Model_System_Config_Sort */
         $configSort = Mage::getModel('Antidot/system_config_sort');
         $configSort->reinitOptions();

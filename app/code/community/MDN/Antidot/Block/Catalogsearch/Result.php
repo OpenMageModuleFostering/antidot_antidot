@@ -74,7 +74,7 @@ class MDN_Antidot_Block_CatalogSearch_Result extends Mage_CatalogSearch_Block_Re
         $availableOrders = array();
         foreach($availableSortable as $sort) {
             list($field, $label) = explode('|', $sort['sort']);
-            $availableOrders[$field] = Mage::helper('Antidot')->translateFacetlabel($label);
+            $availableOrders[$field] = Mage::helper('Antidot')->__($label);
         }
         
         return $availableOrders;

@@ -53,6 +53,3 @@ config:
   stores/usa/general/locale/code: en_US
   stores/france/general/locale/code: fr_FR
   stores/germany/general/locale/code: de_DE
-  default/antidot/fields_product/is_new: null
-  default/antidot/fields_product/is_best_sale: best
-  default/antidot/fields_product/is_featured: null
