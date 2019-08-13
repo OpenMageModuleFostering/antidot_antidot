@@ -374,8 +374,8 @@
                         </products>
                         <products_displayed translate="label">
                             <label>Number of products displayed</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>Antidot/System_Config_Number</source_model>
+                            <frontend_type>text</frontend_type>
+                            <validate>validate-digits</validate>
                             <sort_order>21</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -394,8 +394,8 @@
                         </brands>
                         <brands_displayed translate="label">
                             <label>Number of brands displayed</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>Antidot/System_Config_Number</source_model>
+                            <frontend_type>text</frontend_type>
+                            <validate>validate-digits</validate>
                             <sort_order>31</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -414,8 +414,8 @@
                         </categories>
                         <categories_displayed translate="label">
                             <label>Number of categories displayed</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>Antidot/System_Config_Number</source_model>
+                            <frontend_type>text</frontend_type>
+                            <validate>validate-digits</validate>
                             <sort_order>41</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -531,6 +531,7 @@
                         <facet_options translate="label">
                             <label>Max number of facet values</label>
                             <frontend_type>text</frontend_type>
+                            <validate>validate-digits</validate>
                             <sort_order>60</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>

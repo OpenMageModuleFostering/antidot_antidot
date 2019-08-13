@@ -18,7 +18,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.0.16</version>
+            <version>1.0.17</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -149,13 +149,13 @@
        
     <admin>
         <routers>
-            <Antidot>
+            <Antidotadmin>
                 <use>admin</use>
                 <args>
                     <module>MDN_Antidot</module>
-                    <frontName>Antidot</frontName>
+                    <frontName>Antidotadmin</frontName>
                 </args>
-            </Antidot>
+            </Antidotadmin>
         </routers>
     </admin>
     

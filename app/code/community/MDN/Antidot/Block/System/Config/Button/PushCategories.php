@@ -22,7 +22,7 @@ class MDN_Antidot_Block_System_Config_Button_PushCategories extends Mage_Adminht
     protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element)
     {
         $this->setElement($element);
-        $url = $this->getUrl('Antidot/Admin_Push/Category');
+        $url = $this->getUrl('Antidotadmin/Admin_Push/Category');
         
         $html = $this->getLayout()->createBlock('adminhtml/widget_button')
                     ->setType('button')

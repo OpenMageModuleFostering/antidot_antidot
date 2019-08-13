@@ -214,7 +214,7 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
 
             $attributes = array(
                 'key'   => $field,
-                'value' => str_replace('&', '&amp;', html_entity_decode($value)),
+                'value' => html_entity_decode($value),
             );
             $xml->emptyelement('afs:option', $attributes);
         }
@@ -304,15 +304,28 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
      */
     protected function transformToXml($suggestXml) 
     {
+
         libxml_use_internal_errors(true);
         $xml = simplexml_load_string($suggestXml);
+        if ($xml === false) {
+        	Mage::log('Error loading xml (suggest) : ', null, 'antidot.log');
+        	Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');
+        	return '';
+        }
         $xsl = simplexml_load_string($this->template);
+        if ($xsl === false) {
+        	Mage::log('Error loading xsl template (suggest) : ', null, 'antidot.log');
+        	Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');
+        	return '';
+        }
         
         $xslt = new XSLTProcessor();
         $xslt->importStylesheet($xsl);
         
-        if(!$xml = $xslt->transformToXml($xml)) {
-            Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');
+        $xml = $xslt->transformToXml($xml);
+        if ($xml === false) {
+        	Mage::log('Error during xslt transformation (suggest) : ', null, 'antidot.log');
+        	Mage::log(print_r(libxml_get_errors(), true), null, 'antidot.log');
             return '';
         }
 

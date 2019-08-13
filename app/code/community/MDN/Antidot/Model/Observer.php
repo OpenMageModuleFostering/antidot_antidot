@@ -278,16 +278,25 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
     {
         $listStore = array();
         foreach (Mage::app()->getStores() as $store) {
-            list($lang) = explode('_', Mage::getStoreConfig('general/locale/code', $store->getId()));
-            $listStore[$lang][$store->getId()] = $store;
+            if ($store->getIsActive()) {
+	            list($lang) = explode('_', Mage::getStoreConfig('general/locale/code', $store->getId()));
+	            $listStore[$lang][$store->getId()] = $store;
+            }
         }
         
         $listContext = array();
+        $context['website_ids'] = array();
         foreach($listStore as $lang => $stores) {
             $defaultOwner      = 'AFS@Store for Magento v'.Mage::getConfig()->getNode()->modules->MDN_Antidot->version;
             $context['owner']  = Mage::getStoreConfig('antidot/general/owner') === '' ? $defaultOwner : Mage::getStoreConfig('antidot/general/owner');
             $context['lang']   = $lang;
             $context['stores'] = $stores;
+            foreach ($stores as $store) {
+            	$websiteId = $store->getWebsite()->getId();
+            	if (!in_array($websiteId, $context['website_ids'])) {
+		            $context['website_ids'][] = $websiteId;
+            	}
+            }
             $context['langs']  = count($listStore);
             
             $listContext[] = $context;

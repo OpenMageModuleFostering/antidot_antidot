@@ -81,7 +81,11 @@ class MDN_Antidot_Block_Catalogsearch_Layer extends Mage_CatalogSearch_Block_Lay
      */
     public function canShowBlock()
     {
-        return ($this->canShowOptions() || count($this->getLayer()->getState()->getFilters()));
+    	$helper = Mage::helper('Antidot');
+        if ($helper->isActiveEngine()) {
+        	return ($this->canShowOptions() || count($this->getLayer()->getState()->getFilters()));
+        }
+        return parent::canShowBlock();
     }
 
     /**

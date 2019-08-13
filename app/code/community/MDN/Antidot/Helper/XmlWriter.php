@@ -17,7 +17,8 @@ class MDN_Antidot_Helper_XmlWriter extends Mage_Core_Helper_Abstract
 {
 
     protected $xml;
-    protected $indent;
+    protected $indent = "";
+    protected $cr = "";
     protected $stack = array();
 
     /**
@@ -25,10 +26,14 @@ class MDN_Antidot_Helper_XmlWriter extends Mage_Core_Helper_Abstract
      * 
      * @param string $indent
      */
-    public function init($indent = '  ') 
+    public function init($debug = false) 
     {
-        $this->indent = $indent;
-        $this->xml = '<?xml version="1.0" encoding="utf-8"?>' . "\n";
+    	if ($debug) {
+    		$this->indent= "  ";
+    		$this->cr= "\n";
+    	}
+
+        $this->xml = '<?xml version="1.0" encoding="utf-8"?>' . $this->cr;
     }
 
     /**
@@ -56,7 +61,7 @@ class MDN_Antidot_Helper_XmlWriter extends Mage_Core_Helper_Abstract
                 $this->xml.= ' ' . $key . '="' . $value . '"';
             }
         }
-        $this->xml.= ">\n";
+        $this->xml.= ">".$this->cr;
         $this->stack[] = $element;
     }
 
@@ -78,7 +83,7 @@ class MDN_Antidot_Helper_XmlWriter extends Mage_Core_Helper_Abstract
         }
         
         $content = Mage::helper('Antidot/Url')->isUtf8($content) === false ? mb_convert_encoding($content, "UTF-8") : $content;
-        $this->xml.= '>' . ($content) . '</' . $element . '>' . "\n";
+        $this->xml.= '>' . ($content) . '</' . $element . '>' . $this->cr;
     }
 
     /**
@@ -96,7 +101,7 @@ class MDN_Antidot_Helper_XmlWriter extends Mage_Core_Helper_Abstract
                 $this->xml.= ' ' . $key . '="' . $value . '"';
             }
         }
-        $this->xml.= " />\n";
+        $this->xml.= " />".$this->cr;
     }
     
     /**
@@ -121,7 +126,7 @@ class MDN_Antidot_Helper_XmlWriter extends Mage_Core_Helper_Abstract
     {
         $element = array_pop($this->stack);
         $this->indent();
-        $this->xml.= "</$element>\n";
+        $this->xml.= "</$element>".$this->cr;
     }
 
     /**

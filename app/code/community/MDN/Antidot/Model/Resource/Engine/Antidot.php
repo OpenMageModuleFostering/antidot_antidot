@@ -337,7 +337,7 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
             );
         }
 
-        if ($resultAntidot->replyset !== null && $resultAntidot->replyset->has_facet()) {
+        if (isset($resultAntidot->replyset) && $resultAntidot->replyset !== null && $resultAntidot->replyset->has_facet()) {
             $result['facets'] = $this->prepareFacetsQueryResponse($resultAntidot->replyset->get_facets());
         }
         
@@ -345,7 +345,7 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
             $result['category_ids'] = $this->prepareQueryResponse($resultAntidot->replysetCategories, 'Categories');
         }
 
-        if($promote = $resultAntidot->promote && $replies = $resultAntidot->promote->get_replies()) {
+        if(isset($resultAntidot->promote) && $resultAntidot->promote && $replies = $resultAntidot->promote->get_replies()) {
             if((Mage::getStoreConfig('antidot/promote/redirect') === 'no_result' && $result['total_count'] == 0) || Mage::getStoreConfig('antidot/promote/redirect') === 'always') {
                 $promote = current($replies);
                 if($promote->uri !== 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']) {
@@ -355,7 +355,7 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
             }
         }
         
-        if (!$this->addedNote && $result['total_count'] == 0) {
+        if (!$this->addedNote && $result['total_count'] == 0 && isset($resultAntidot->spellcheck)) {
             if($spellcheck = $resultAntidot->spellcheck) {
                 $link = '<a href="'.Mage::helper('catalogsearch')->getResultUrl($spellcheck).'">'.$spellcheck.'</a>';
                 $spellcheck = str_replace('{spellcheck}', $link, Mage::getStoreConfig('antidot/engine/spellcheck'));
@@ -402,5 +402,19 @@ class MDN_Antidot_Model_Resource_Engine_Antidot extends MDN_Antidot_Model_Resour
     public function allowAdvancedIndex()
     {
     	return false;
+    }
+    
+    /**
+     * Checks search engine availability.
+     *	- Antidot search is disabled on the magento advanced search
+     *  - TODO : see Jira MCNX-19 : Extension should be able to detect bad web service configuration,
+     *       set antidotServiceAvailable to false if the webservice isn't available
+     * @return bool
+     */
+    public function test()
+    {
+        $notInAdvancedSearch = (Mage::app()->getRequest()->getControllerName() != 'advanced');
+        $antidotServiceAvailable = true;
+        return $antidotServiceAvailable && $notInAdvancedSearch;
     }
 }

@@ -220,8 +220,12 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
             }
         }
 
-        if (isset($params['limit']) && is_numeric($params['limit'])) {
+        if (isset($params['limit']) && is_numeric($params['limit']) && $params['limit']>0) {
             $query = $query->set_replies((int)$params['limit']);
+        } else {
+            $query = $query->set_replies(100); 
+            //when limit=all or limit=0, set limit to 100 in order to have enought results and avoid 
+            //performances issues on very big numbers of results (instead AFStore defaut of 20 is used)
         }
 
         if (isset($params['page']) && is_numeric($params['page'])) {

@@ -384,4 +384,15 @@ class MDN_Antidot_Model_Resource_Catalog_Product_Collection extends Mage_Catalog
     {
         return $this->_searchQueryText;
     }
+    
+    /**
+     * Stub method for compatibility with other search engine in magento E.E
+     * (TODO : check is it normal that Enterprise_Search_Model_Catalog_Layer get a MDN_Antidot_Model_Resource_Catalog_Product_Collection ? )
+     *
+     * @return MDN_Antidot_Model_Resource_Catalog_Product_Collection
+     */
+    public function setGeneralDefaultQuery()
+    {
+    	return $this;
+    }
 }
