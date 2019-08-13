@@ -13,6 +13,11 @@
  * @author : Antidot devmagento@antidot.net
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
+
+require_once('lib/antidot/COMMON/php-SAI/lib/CurlStub.php');
+require_once('lib/antidot/AFS/SEARCH/TEST/DATA/introspection_responses.php');
+require_once('lib/antidot/afs_lib.php');
+
 class MDN_Antidot_Test_Model_Search_Search extends EcomDev_PHPUnit_Test_Case
 {
 
@@ -52,4 +57,66 @@ class MDN_Antidot_Test_Model_Search_Search extends EcomDev_PHPUnit_Test_Case
 
     }
 
+    /**
+     * Check the facets
+     * @test
+     */
+    public function testGetFacets() {
+
+        $curlConnector = new SAI_CurlStub();
+        $mockBaseUrl = "localhost";
+        $aboutRequestOpts = array(CURLOPT_URL => "http://$mockBaseUrl/bo-ws/about");
+        $aboutResponse = ABOUT_RESPONSE;
+
+        $curlConnector->setResponse($aboutResponse, $aboutRequestOpts);
+        $curlConnector->setResponse(RESPONSE_FACETS_MULTIFEED);
+        $afsSearch = new AfsSearch($mockBaseUrl, '71003', AfsServiceStatus::STABLE, $curlConnector);
+
+        Mage::unregister('test_afsSearch');
+        Mage::register('test_afsSearch', $afsSearch);
+
+        /** @var $search MDN_Antidot_Model_Search_Search */
+        $search = Mage::getModel('Antidot/search_search');
+
+        $facets = $search->getFacets();
+
+        $this->assertEquals(
+            1,
+            count($facets)
+        );
+
+        $this->assertTrue(
+            array_key_exists('model',$facets)
+        );
+
+    }
+
+    /**
+     * Check instant search
+     * @test
+     */
+    public function testIsInstantSearch() {
+
+        $curlConnector = new SAI_CurlStub();
+        $mockBaseUrl = "localhost";
+        $aboutRequestOpts = array(CURLOPT_URL => "http://$mockBaseUrl/bo-ws/about");
+        $aboutResponse = ABOUT_RESPONSE;
+
+        $curlConnector->setResponse($aboutResponse, $aboutRequestOpts);
+        $curlConnector->setResponse(RESULT_WITH_FACETS_FLAT);
+
+        $afsSearch = new AfsSearch($mockBaseUrl, '71003', AfsServiceStatus::STABLE, $curlConnector);
+
+        Mage::unregister('test_afsSearch');
+        Mage::register('test_afsSearch', $afsSearch);
+
+        /** @var $search MDN_Antidot_Model_Search_Search */
+        $search = Mage::getModel('Antidot/search_search');
+
+        $instantSearch = $search->isInstantSearch();
+
+        $this->assertTrue($instantSearch);
+
+
+    }
 }

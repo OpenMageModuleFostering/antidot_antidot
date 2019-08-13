@@ -97,10 +97,15 @@ class MDN_Antidot_Model_Export_Product extends MDN_Antidot_Model_Export_Abstract
         $productsInStock = $this->onlyProductsWithStock ? ' AND is_in_stock = 1' : '';
         $collection = Mage::getModel('Antidot/export_model_product')
             ->getCollection()
-            ->addWebsiteFilter($context->getWebsiteIds())
-            ->addAttributeToFilter('visibility', $this->productVisible)
-            ->addAttributeToFilter('status', 1)
-            ->joinTable('cataloginventory/stock_item',
+            ->addWebsiteFilter($context->getWebsiteIds());
+
+        $allProducts = Mage::getStoreConfig('antidot/export/select_allproduct_globally');
+        if (!$allProducts) {
+            $collection->addAttributeToFilter('visibility', $this->productVisible)
+                ->addAttributeToFilter('status', 1);
+        }
+
+        $collection->joinTable('cataloginventory/stock_item',
                         'product_id=entity_id', // warning : no spaces between = and entity_id , magento1.5 isn't robust enought
                         array('qty', 'is_in_stock'),
                         '{{table}}.stock_id = 1'.$productsInStock)

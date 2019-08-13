@@ -10,6 +10,8 @@
        label: Is promotional
      - value: stock|Stock
        label: Stock
+     - value: model|Modèle
+       label: model (STRING)
 1-2:
   options:
      - value: afs:relevance|Relevance
@@ -24,6 +26,8 @@
        label: Stock
      - value: is_best_sale|Is top sale
        label: Is top sale
+     - value: model|Modèle
+       label: model (STRING)
 1-3:
   options:
      - value: afs:relevance|Relevance
@@ -42,3 +46,5 @@
        label: Is top sale
      - value: is_featured|Is featured
        label: Is featured
+     - value: model|Modèle
+       label: model (STRING)

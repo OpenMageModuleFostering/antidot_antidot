@@ -28,6 +28,9 @@ class MDN_Antidot_Test_Model_System_Config_Facet extends EcomDev_PHPUnit_Test_Ca
         $mockAFSHelper->expects($this->any())
             ->method('get_labels')
             ->will($this->returnValue(array('de'=>'Verfügbarkeit', 'fr' => 'Disponibilité', 'en' => 'Availability')));
+        $mockAFSHelper->expects($this->any())
+            ->method('is_filter')
+            ->will($this->returnValue(true));
 
         $mockSearch = $this->getModelMock('Antidot/search_search', array('getFacets'));
         $mockSearch->expects($this->any())
@@ -40,7 +43,7 @@ class MDN_Antidot_Test_Model_System_Config_Facet extends EcomDev_PHPUnit_Test_Ca
         /** @var $configSort MDN_Antidot_Model_System_Config_Facet */
         $configFacet = Mage::getModel('Antidot/system_config_facet');
 
-    	$values = $configFacet->toOptionArray('STRING');
+    	$values = $configFacet->toOptionArray(true);
 
         $this->assertEquals(
             array(array('value'=>'is_available|Verfügbarkeit', 'label' => 'is_available (boolean)')),
@@ -98,6 +101,9 @@ class MDN_Antidot_Test_Model_System_Config_Facet extends EcomDev_PHPUnit_Test_Ca
         $mockAFSHelper->expects($this->any())
             ->method('get_labels')
             ->will($this->returnValue(array("fr"=>"Type d'accessoire")));
+        $mockAFSHelper->expects($this->any())
+            ->method('is_filter')
+            ->will($this->returnValue(true));
 
         $mockSearch = $this->getModelMock('Antidot/search_search', array('getFacets'));
         $mockSearch->expects($this->any())
@@ -110,7 +116,7 @@ class MDN_Antidot_Test_Model_System_Config_Facet extends EcomDev_PHPUnit_Test_Ca
         /** @var $configSort MDN_Antidot_Model_System_Config_Facet */
         $configFacet = Mage::getModel('Antidot/system_config_facet');
 
-        $values = $configFacet->toOptionArray('STRING');
+        $values = $configFacet->toOptionArray(true);
 
         $this->assertEquals(
             array(array("value"=>"type_accessoire|Type d\'accessoire", 'label' => 'type_accessoire (boolean)')),
@@ -126,4 +132,5 @@ class MDN_Antidot_Test_Model_System_Config_Facet_MockAFSHelper
     function  get_type() {}
     function  get_label() {}
     function  get_labels() {}
+    function  is_filter() {}
 }

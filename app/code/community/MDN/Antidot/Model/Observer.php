@@ -519,4 +519,5 @@ class MDN_Antidot_Model_Observer extends Mage_Core_Model_Abstract
 
     	return $filename;
     }
+
 }

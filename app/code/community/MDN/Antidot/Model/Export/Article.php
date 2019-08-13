@@ -133,7 +133,11 @@ class MDN_Antidot_Model_Export_Article extends MDN_Antidot_Model_Export_Product
                             'subtitle',
                             $this->xml->encloseCData($this->getField($article, 'content_heading'))
                         );
-                        $this->xml->element('text', $this->xml->encloseCData($this->getField($article, 'content')));
+
+                        //remove html tags, and script tags, can cause xml validation failure
+                        $content = $this->getField($article, 'content');
+                        $content = html_entity_decode(strip_tags( str_replace( '<', ' <',$content )));
+                        $this->xml->element('text', $this->xml->encloseCData($content));
 
                         $urlStoreId = $website->getDefaultStore()->getId();
                         if (!in_array($urlStoreId, $storeIds) && count($storeIds) && $storeIds[0]!=0) {

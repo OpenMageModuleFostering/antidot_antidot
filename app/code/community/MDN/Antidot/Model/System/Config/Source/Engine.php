@@ -54,10 +54,14 @@ class MDN_Antidot_Model_System_Config_Source_Engine extends Enterprise_Search_Mo
     {
         $options = array_reverse(parent::toOptionArray());
 
-        $options[] = array(
-            'value' => 'Antidot/engine_antidot',
-            'label' => Mage::helper('adminhtml')->__('AFS@Store')
-        );
+        /** @var MDN_Antidot_Model_Search_Search $search */
+        $search = Mage::getSingleton('Antidot/search_search');
+        if (!$search->isInstantSearch()) {
+            $options[] = array(
+                'value' => 'Antidot/engine_antidot',
+                'label' => Mage::helper('adminhtml')->__('AFS@Store')
+            );
+        }
 
         return array_reverse($options);
     }

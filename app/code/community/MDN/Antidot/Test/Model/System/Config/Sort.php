@@ -1,8 +1,27 @@
 <?php
 
+require_once('lib/antidot/COMMON/php-SAI/lib/CurlStub.php');
+require_once('lib/antidot/AFS/SEARCH/TEST/DATA/introspection_responses.php');
+require_once('lib/antidot/afs_lib.php');
 
 class MDN_Antidot_Test_Model_System_Config_Sort extends EcomDev_PHPUnit_Test_Case
 {
+
+
+    public static function setUpBeforeClass()
+    {
+        $curlConnector = new SAI_CurlStub();
+        $mockBaseUrl = "localhost";
+        $aboutRequestOpts = array(CURLOPT_URL => "http://$mockBaseUrl/bo-ws/about");
+        $aboutResponse = ABOUT_RESPONSE;
+
+        $curlConnector->setResponse($aboutResponse, $aboutRequestOpts);
+        $curlConnector->setResponse(RESPONSE_FACETS_MULTIFEED);
+        $afsSearch = new AfsSearch($mockBaseUrl, '71003', AfsServiceStatus::STABLE, $curlConnector);
+
+        Mage::unregister('test_afsSearch');
+        Mage::register('test_afsSearch', $afsSearch);
+    }
 
     /**
      * Test toOptionArray method

@@ -54,4 +54,21 @@ class MDN_Antidot_Model_Search_Abstract extends Mage_Core_Model_Abstract
         
         return $antidotSession;
     }
+
+    /**
+     * Return the user Id
+     *
+     * @return string
+     */
+    protected function getUserId()
+    {
+        $session = Mage::getSingleton('customer/session');
+        if ($session->isLoggedIn()) {
+            $customerSession = $session->getCustomerId();
+        } else {
+            $customerSession = $this->getSession();
+        }
+        return $customerSession;
+    }
+
 }

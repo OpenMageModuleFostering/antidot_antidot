@@ -16,7 +16,7 @@
 class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract 
 {
 
-    const URI    = 'http://%s/acp?afs:service=%s&afs:status=%s&afs:output=xml&afs:feed=%s&afs:feedOrder=%s&afs:replies=%s&afs:query=%s&afs:sessionId=%s';
+    const URI    = 'http://%s/acp?afs:service=%s&afs:status=%s&afs:output=xml&afs:feed=%s&afs:feedOrder=%s&afs:replies=%s&afs:query=%s&afs:sessionId=%s&afs:userId=%s';
 
     const DEFAULT_REPLIES_NUMBER = 10;
     /**
@@ -257,7 +257,8 @@ class MDN_Antidot_Model_Search_Suggest extends MDN_Antidot_Model_Search_Abstract
                 $this->getFeedOrder(),
             	$this->getReplies(),
                 urlencode($query),
-                $this->getSession());
+                $this->getSession(),
+                $this->getUserId());
         return $url;
     }
     

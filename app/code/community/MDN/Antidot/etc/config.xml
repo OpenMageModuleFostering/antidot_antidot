@@ -26,7 +26,7 @@
     </crontab>
     <modules>
         <MDN_Antidot>
-            <version>1.2.3</version>
+            <version>1.2.4</version>
         </MDN_Antidot>
     </modules>
     <global>
@@ -120,10 +120,30 @@
                     <use>core_read</use>
                 </connection>
             </Antidot_read>
-        </resources>	
-      
+        </resources>
+        <events>
+            <adminhtml_init_system_config>
+                <observers>
+                    <antidot_init_system_config>
+                        <class>Antidot/system_config_observer</class>
+                        <method>onInstantSearchHideEngine</method>
+                    </antidot_init_system_config>
+                </observers>
+            </adminhtml_init_system_config>
+        </events>
     </global>
     <adminhtml>
+        <events>
+            <controller_action_predispatch>
+                <observers>
+                    <antidot_notification>
+                        <type>singleton</type>
+                        <class>MDN_Antidot_Model_Feed</class>
+                        <method>observe</method>
+                    </antidot_notification>
+                </observers>
+            </controller_action_predispatch>
+        </events>
         <translate>
             <modules>
                 <MDN_Antidot>
@@ -636,6 +656,9 @@
                 <gc_percentage_limit>80</gc_percentage_limit>
                 <!-- number of product processed before flush xml in file -->
                 <chunk_size>500</chunk_size>
+                <!-- Select all the product (even disabled ones) in the first global scope loop : can be useful if
+                 you have disabled prduct on the global scope but activated on store scope , careful ; can reduce performances -->
+                <select_allproduct_globally>0</select_allproduct_globally>
                 <!-- disable xsd validation -->
                 <xsd_validation_disable>0</xsd_validation_disable>
                 <!-- enable profiler and debug mode -->

@@ -43,6 +43,11 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
     protected $additionalFeeds = array();
 
     /**
+     * @var AfsIntrospection
+     */
+    protected $introspector;
+
+    /**
      * {@inherit}
      */
     public function _construct()
@@ -70,6 +75,11 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
 
         if ($this->isConfigured) {
             $this->afsSearch = new AfsSearch($this->afsHost, $this->afsService, $this->afsStatus);
+        } else {
+            //FOR UNIT TEST only : pass the afsSearch mock objetc through Mage::registry
+            if (Mage::registry('test_afsSearch')) {
+                $this->afsSearch = Mage::registry('test_afsSearch');
+            }
         }
     }
 
@@ -218,12 +228,19 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         if (!$this->facets) {
             $this->facets = array();
 
-            $resultAntidot = $this->search(null, array('limit' => 1), true);
-            if (isset($resultAntidot->replyset) && $resultAntidot->replyset) {
-                foreach ($resultAntidot->replyset->facets as $facet) {
-                    $this->facets[$facet->id] = $facet;
+            $introspector = $this->getAfsIntrospector();
+            $metadata = $introspector->get_all_metadata();
+
+            if (isset($metadata['Catalog']) ) {
+                foreach ($metadata['Catalog']->get_facets_and_filters_info() as $facet) {
+                    //exclude some facets from AFSStore
+                    $excludedFacets = array('afs:PaFId', 'afs:uri', 'afs:validity', 'magento_type', 'name', 'product', 'product_id', 'price', 'price_from', 'price_off');
+                    if (!in_array($facet->get_id() , $excludedFacets)) {
+                        $this->facets[$facet->get_id()] = $facet;
+                    }
                 }
             }
+
         }
 
         return $this->facets;
@@ -241,6 +258,7 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         $query = new AfsQuery();
         $query = $query->set_query($search);
         $query = $query->set_session_id($this->getSession());
+        $query = $query->set_user_id($this->getUserId());
 
         foreach ($this->feeds as $feed) {
             $query = $query->add_feed($feed);
@@ -328,5 +346,42 @@ class MDN_Antidot_Model_Search_Search extends MDN_Antidot_Model_Search_Abstract
         }
 
         return $query;
+    }
+
+    /**
+     * @return AfsIntrospection
+     */
+    private function getAfsIntrospector()
+    {
+        if (!$this->introspector && $this->afsSearch) {
+            $this->introspector = (new AfsIntrospection($this->afsSearch));
+        }
+        return $this->introspector;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isInstantSearch() {
+
+        if (Mage::app()->getRequest()->getActionName()=='save') {
+            //no need to call introspection on save
+            return false;
+        }
+        if (!$this->getAfsIntrospector()) {
+            Mage::getSingleton('adminhtml/session')->addWarning(
+                Mage::helper('Antidot')->__('You need to configure your AFS@Store credentials and your webservices settings')
+            );
+            //if the webservice host is not yet configured, we consider as instant search and hide engine config
+            return true;
+        }
+        if ($this->getAfsIntrospector()->in_error()) {
+            Mage::getSingleton('adminhtml/session')->addWarning(
+                Mage::helper('Antidot')->__('Your AFS@Store credentials or webservices settings are incorrects')
+            );
+            //if the webservice is not well configured, we consider as instant search and hide engine config
+            return true;
+        }
+        return  ("instantSearch" === $this->getAfsIntrospector()->get_query_parameter("afs:storeContract"));
     }
 }

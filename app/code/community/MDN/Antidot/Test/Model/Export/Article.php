@@ -99,9 +99,9 @@ class MDN_Antidot_Test_Model_Export_Article extends EcomDev_PHPUnit_Test_Case
         /**
          * test the xml contains the correct text tag
          */
-        $this->assertEquals('test contenu A<br>test', (string)$xml->article[0]->text);
-        $this->assertEquals('test contenu B<br>test', (string)$xml->article[1]->text);
-        $this->assertEquals('test contenu B<br>test', (string)$xml->article[2]->text);
+        $this->assertEquals('test contenu A test', (string)$xml->article[0]->text);
+        $this->assertEquals('test contenu B test', (string)$xml->article[1]->text);
+        $this->assertEquals('test contenu B test', (string)$xml->article[2]->text);
 
 
         /**

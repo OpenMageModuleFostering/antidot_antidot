@@ -47,11 +47,15 @@ class MDN_Antidot_Model_System_Config_Sort
                 }
             }
 
-            foreach(Mage::getModel("Antidot/System_Config_Facet")->toOptionArray('STRING') as $facetOption) {
-                if(!preg_match('/^price_/', $facetOption['value'])) {
+            foreach(Mage::getModel("Antidot/System_Config_Facet")->toOptionArray(true) as $facetOption) {
+                //exclude some filters from AFSStore, and the ones already set up there
+                $excludedFilters = array('is_best_sale', 'is_featured', 'is_new', 'is_promotional');
+                $filter = explode('|', $facetOption['value']);
+                if (!in_array($filter[0], $excludedFilters)) {
                     $options[] = $facetOption;
                 }
             }
+
 
             self::$options = $options;
         }

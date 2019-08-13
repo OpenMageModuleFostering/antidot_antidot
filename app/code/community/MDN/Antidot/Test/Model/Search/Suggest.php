@@ -93,4 +93,62 @@ class MDN_Antidot_Test_Model_Search_Suggest extends EcomDev_PHPUnit_Test_Case
 
 
     }
+    
+    public function testUserIdInBuildedUrl() {
+        $mock = $this->getMockBuilder('MDN_Antidot_Model_Search_Suggest')->setMethods(array('getSession', 'getUserId'))->getMock();
+        // We mock the getSession and getUserId as we don't have sessions in test env
+        $mock->method('getSession')->willReturn('testSession');
+        $mock->method('getUserId')->willReturn('testUserId');
+
+        $buildedUrl = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($mock, 'buildUrl', array(''));
+        $this->assertRegExp('/.*(afs:userId=testUserId($|&)).*/', $buildedUrl);
+    }
+
+    public function testgetUserIdLoggedIn() {
+        $defaultCustomerId = 42;
+
+        // We force the return of an customer id
+        $mockSession = $this->getMockBuilder('Mage_Customer_Model_Session')
+        ->disableOriginalConstructor()
+        ->getMock();
+        $mockSession->method('isLoggedIn')->willReturn(true);
+        $mockSession->method('getCustomerId')->willReturn($defaultCustomerId);
+        $this->replaceByMock('singleton', 'customer/session', $mockSession);
+
+        // We also mock this Session model to avoid a warning when getSession
+        // is called into buildUrl function
+        $mockCoreSession = $this->getMockBuilder('Mage_Core_Model_Session')
+        ->disableOriginalConstructor()
+        ->getMock();
+        $this->replaceByMock('singleton', 'core/session', $mockCoreSession);
+
+
+        $suggest = Mage::getModel('Antidot/search_suggest');
+        $buildedUrl = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($suggest, 'buildUrl', array(''));
+
+        $this->assertRegExp('/.*(afs:userId='.$defaultCustomerId.'($|&)).*/', $buildedUrl);
+    }
+
+    public function testgetUserIdNotLoggedIn() {
+        $defaultCustomerId = 42;
+
+        $mockSession = $this->getMockBuilder('Mage_Customer_Model_Session')
+        ->disableOriginalConstructor()
+        ->getMock();
+        $mockSession->method('isLoggedIn')->willReturn(false);
+        $this->replaceByMock('singleton', 'customer/session', $mockSession);
+
+        // We force the return of an antidot session id
+        $mockCoreSession = $this->getMockBuilder('Mage_Core_Model_Session')
+        ->disableOriginalConstructor()
+        ->getMock();
+        $mockCoreSession->method('getData')->with('antidot_session')->will($this->returnValue($defaultCustomerId));
+        $this->replaceByMock('singleton', 'core/session', $mockCoreSession);
+
+        $suggest = Mage::getModel('Antidot/search_suggest');
+        $buildedUrl = MDN_Antidot_Test_PHPUnitUtil::callPrivateMethod($suggest, 'buildUrl', array(''));
+
+        $this->assertRegExp('/.*(afs:userId='.$defaultCustomerId.'($|&)).*/', $buildedUrl);
+    }
+
 }

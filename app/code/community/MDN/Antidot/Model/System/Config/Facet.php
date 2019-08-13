@@ -16,18 +16,21 @@
 class MDN_Antidot_Model_System_Config_Facet
 {
 
-    protected $options = false;
+    protected $facetsOptions = false;
+    protected $filtersOptions = false;
 
     /**
      * {@inherit}
      */
-    public function toOptionArray($typeExclude = null) 
+    public function toOptionArray($forSortOptions = false)
     {
-        if (!$this->options) {
+        if (!$this->facetsOptions) {
             try {
+
                 $search = Mage::getSingleton('Antidot/search_search');
 
-                $this->options = array();
+                $this->facetsOptions = array();
+                $this->filtersOptions = array();
                 if (count($search->getFacets()) > 0) {
 
                     /*
@@ -44,43 +47,61 @@ class MDN_Antidot_Model_System_Config_Facet
                     /* @var $resource Mage_Core_Model_Mysql4_Translate_String */
                     $resource = Mage::getResourceModel('core/translate_string');
 
+                    /* @var $facet AfsFacetInfo */
                     foreach ($search->getFacets() as $facetId => $facet) {
-                        if ($typeExclude === null || $facet->get_type() !== $typeExclude) {
-                            //MCNX-235 : escape single quote for javascript, it cause error in javascript facet editor in BO
-                            $this->options[] = array(
-                                'value' => $facetId.'|'.Mage::helper('core')->jsQuoteEscape($facet->get_label()),
-                                'label' => $facetId.' ('.$facet->get_type().')'
-                            );
-
-                            //MCNX-217 : Store translated labels in magento core_translate table
-                            // use the original label as the key string in order to let module upgrade ok
-                            if ($typeExclude != null) {
-                                $originLabel = $facet->get_label();
-                                $translatedlabels = $facet->get_labels();
-                                foreach ($translatedlabels as $lang => $translatedLabel) {
-                                    if (isset($locales[$lang])) {
-                                        $locale = $locales[$lang];
-                                        $resource->saveTranslate($originLabel, $translatedLabel, $locale, 0);
-                                    }
-                                }
+                        //MCNX-217 : Store translated labels in magento core_translate table
+                        $translatedlabels = $facet->get_labels();
+                        $originLabel = null;
+                        foreach ($translatedlabels as $lang => $translatedLabel) {
+                            $lang = mb_strtolower($lang);
+                            if ($originLabel == null) { //on prend le premier libellé renvoyé => rétro compatibilité avec MCNX-217, c'est ce qui était fait dans get_label() du ws de search
+                                $originLabel = $translatedLabel;
+                            }
+                            if (isset($locales[$lang])) {
+                                $locale = $locales[$lang];
+                                $resource->saveTranslate($originLabel, $translatedLabel, $locale, 0);
                             }
                         }
+
+                        //cas de afs:lang qui n'a pas de label dans le WS d'introspection ..
+                        if ($originLabel == null) {
+                            $originLabel=$facetId;
+                            if ($originLabel=='afs:lang') {
+                                $originLabel='Language';
+                            }
+                        }
+
+                        //MCNX-235 : escape single quote for javascript, it cause error in javascript facet editor in BO
+                        $option = array(
+                            'value' => $facetId.'|'.Mage::helper('core')->jsQuoteEscape($originLabel),
+                            'label' => $facetId.' ('.$facet->get_type().')'
+                        );
+
+                        if (!$facet->is_filter()) {
+                            $this->facetsOptions[] = $option;
+                        }
+                        $this->sortOptions[] = $option;
+
                     }
 
                     //MCNX-217 : flush the translations cache in order to make this nes translation immediatly availables
                     Mage::app()->getCacheInstance()->cleanType('translate');
 
                     //sort facets
-                    usort($this->options, array("MDN_Antidot_Model_System_Config_Facet", "sortFacetPerLabel"));
+                    usort($this->facetsOptions, array("MDN_Antidot_Model_System_Config_Facet", "sortFacetPerLabel"));
+                    usort($this->filtersOptions, array("MDN_Antidot_Model_System_Config_Facet", "sortFacetPerLabel"));
                 }
 
-                return $this->options;
             } catch(Exception $e) {
                 $this->options = array();
             }
         }
-        
-        return $this->options;
+
+        if ($forSortOptions) {
+            return $this->sortOptions;
+        } else {
+            return $this->facetsOptions;
+        }
     }
 
     public static function sortFacetPerLabel($a, $b)
